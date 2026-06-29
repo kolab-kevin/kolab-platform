@@ -12,7 +12,7 @@ describe('RolesGuard', () => {
     guard = new RolesGuard(reflector);
   });
 
-  const createContext = (user?: { role: string }): ExecutionContext =>
+  const createContext = (user?: Record<string, unknown>): ExecutionContext =>
     ({
       getHandler: () => ({}),
       getClass: () => ({}),
@@ -26,13 +26,27 @@ describe('RolesGuard', () => {
     expect(guard.canActivate(createContext())).toBe(true);
   });
 
-  it('throws ForbiddenException when user lacks required role', () => {
+  it('throws ForbiddenException when user lacks required legacy role', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ADMIN']);
     expect(() => guard.canActivate(createContext({ role: 'USER' }))).toThrow(ForbiddenException);
   });
 
-  it('allows when user has required role', () => {
+  it('allows when user has required legacy role', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ADMIN', 'SUPER_ADMIN']);
-    expect(guard.canActivate(createContext({ role: 'ADMIN' }))).toBe(true);
+    expect(guard.canActivate(createContext({ role: 'ADMIN', isSystemAdmin: false }))).toBe(true);
+  });
+
+  it('allows ORG_ADMIN organizationRole for legacy ADMIN decorator', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ADMIN']);
+    expect(
+      guard.canActivate(
+        createContext({ role: 'USER', organizationRole: 'ORG_ADMIN', isSystemAdmin: false }),
+      ),
+    ).toBe(true);
+  });
+
+  it('allows system administrator override', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['SUPER_ADMIN']);
+    expect(guard.canActivate(createContext({ role: 'USER', isSystemAdmin: true }))).toBe(true);
   });
 });
