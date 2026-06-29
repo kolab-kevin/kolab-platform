@@ -1,5 +1,5 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import type { AccessTokenPayload } from '@kolab/auth';
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 export const CurrentUser = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): AccessTokenPayload => {

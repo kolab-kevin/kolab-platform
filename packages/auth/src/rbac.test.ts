@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { hasAnyRole, hasMinimumRole } from './rbac';
 
 describe('rbac', () => {

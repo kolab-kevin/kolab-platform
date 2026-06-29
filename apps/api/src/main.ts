@@ -1,14 +1,21 @@
 import 'reflect-metadata';
+
+import { apiEnvSchema, parseEnv } from '@kolab/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
-import { apiEnvSchema, parseEnv } from '@kolab/config';
+import helmet from 'helmet';
+
 import { AppModule } from './app.module';
+import { appLogger } from './observability/observability.module';
 
 async function bootstrap() {
   const env = parseEnv(apiEnvSchema);
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: false,
+  });
 
+  app.use(helmet());
   app.use(cookieParser());
 
   app.enableCors({
@@ -16,7 +23,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.setGlobalPrefix('api', { exclude: ['health', 'ready'] });
+  app.setGlobalPrefix('api', { exclude: ['health', 'ready', 'metrics'] });
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('KŌLAB Platform API')
@@ -34,8 +41,11 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   await app.listen(env.PORT, '0.0.0.0');
-  console.log(`@kolab/api listening on port ${env.PORT}`);
-  console.log(`Swagger docs at http://localhost:${env.PORT}/api/docs`);
+  appLogger.info({ port: env.PORT }, '@kolab/api started');
+  appLogger.info({ url: `http://localhost:${env.PORT}/api/docs` }, 'Swagger docs available');
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  appLogger.fatal({ err }, 'Failed to start @kolab/api');
+  process.exit(1);
+});

@@ -62,7 +62,7 @@ export class AuthClient {
       let message = 'Request failed';
       try {
         const body = (await response.json()) as { message?: string | string[] };
-        message = Array.isArray(body.message) ? body.message.join('; ') : body.message ?? message;
+        message = Array.isArray(body.message) ? body.message.join('; ') : (body.message ?? message);
       } catch {
         // ignore parse errors
       }

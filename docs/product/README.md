@@ -13,15 +13,15 @@ KŌLAB Platform is the unified foundation for Kolab's product ecosystem — not 
 
 ## Application mapping
 
-| Audience | Application |
-|----------|-------------|
-| Public / brands | web |
-| Internal ops | admin |
-| Creators | creator-portal |
-| Trust & safety | moderator |
-| Mobile clients | mobile-api |
-| Third-party integrations | public-api |
-| AI workloads | ai-services |
+| Audience                 | Application    |
+| ------------------------ | -------------- |
+| Public / brands          | web            |
+| Internal ops             | admin          |
+| Creators                 | creator-portal |
+| Trust & safety           | moderator      |
+| Mobile clients           | mobile-api     |
+| Third-party integrations | public-api     |
+| AI workloads             | ai-services    |
 
 ## Roadmap
 

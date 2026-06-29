@@ -1,13 +1,9 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { hasAnyRole } from '@kolab/auth';
 import type { AccessTokenPayload } from '@kolab/auth';
+import { hasAnyRole } from '@kolab/auth';
 import type { Role } from '@kolab/types';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+
 import { ROLES_KEY } from '../decorators/auth.decorators';
 
 @Injectable()

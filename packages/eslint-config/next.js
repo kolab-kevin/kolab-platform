@@ -1,3 +1,9 @@
 import baseConfig from './base.js';
 
-export default [...baseConfig];
+/** @type {import('eslint').Linter.Config[]} */
+export default [
+  ...baseConfig,
+  {
+    ignores: ['next-env.d.ts'],
+  },
+];

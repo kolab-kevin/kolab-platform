@@ -1,11 +1,12 @@
 'use client';
 
-import * as React from 'react';
 import { LoginSchema, RegisterSchema } from '@kolab/types';
+import * as React from 'react';
+
 import { Button } from '../ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 
 type LoginFormProps = {
   onSubmit: (data: { email: string; password: string }) => Promise<void>;
@@ -138,7 +139,7 @@ export function RegisterForm({ onSubmit, error }: RegisterFormProps) {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Min 8 chars, uppercase, lowercase, and number required
             </p>
           </div>

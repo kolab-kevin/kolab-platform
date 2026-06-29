@@ -1,0 +1,32 @@
+name: Feature request
+description: Propose a new capability or enhancement
+title: 'feat: '
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: dropdown
+    id: vertical
+    attributes:
+      label: Business vertical
+      options:
+        - Kolab Agency
+        - TikTok Creator Management
+        - TikTok Shop
+        - AI Services
+        - Live Streaming
+        - SYMLCAST
+        - Platform (cross-cutting)
+    validations:
+      required: true

@@ -1,10 +1,4 @@
 import {
-  ConflictException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { prisma, Role as PrismaRole } from '@kolab/database';
-import {
   generateRefreshToken,
   hashPassword,
   hashRefreshToken,
@@ -13,7 +7,10 @@ import {
   verifyPassword,
 } from '@kolab/auth';
 import { apiEnvSchema, parseEnv } from '@kolab/config';
+import { prisma, Role as PrismaRole } from '@kolab/database';
 import type { AuthResponse, LoginInput, RegisterInput, UserProfile } from '@kolab/types';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+
 import { RedisService } from '../redis/redis.service';
 
 const REFRESH_COOKIE_NAME = 'kolab_refresh_token';
@@ -157,7 +154,10 @@ export class AuthService {
   }
 
   private async revokeAllUserRefreshTokens(userId: string): Promise<void> {
-    const tokens = await prisma.refreshToken.findMany({ where: { userId }, select: { tokenHash: true } });
+    const tokens = await prisma.refreshToken.findMany({
+      where: { userId },
+      select: { tokenHash: true },
+    });
     await prisma.refreshToken.deleteMany({ where: { userId } });
     await Promise.all(tokens.map((t) => this.redis.revokeRefreshToken(t.tokenHash)));
     await this.redis.invalidateUserSession(userId);

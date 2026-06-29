@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { DashboardShell, useAuth } from '@kolab/ui';
 import { SERVICE_NAMES } from '@kolab/config';
+import { DashboardShell, useAuth } from '@kolab/ui';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();

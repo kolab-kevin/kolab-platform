@@ -1,29 +1,16 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Post,
-  Req,
-  Res,
-} from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiCookieAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import type { Request, Response } from 'express';
-import { LoginSchema, RegisterSchema } from '@kolab/types';
-import type { LoginInput, RegisterInput } from '@kolab/types';
-import { apiEnvSchema, parseEnv } from '@kolab/config';
+import type { AccessTokenPayload } from '@kolab/auth';
 import { parseDurationToMs } from '@kolab/auth';
-import { AuthService, REFRESH_COOKIE_NAME } from './auth.service';
-import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { apiEnvSchema, parseEnv } from '@kolab/config';
+import type { LoginInput, RegisterInput } from '@kolab/types';
+import { LoginSchema, RegisterSchema } from '@kolab/types';
+import { Body, Controller, Get, HttpCode, Post, Req, Res } from '@nestjs/common';
+import { ApiBearerAuth, ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import type { Request, Response } from 'express';
+
 import { Public } from '../common/decorators/auth.decorators';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import type { AccessTokenPayload } from '@kolab/auth';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { AuthService, REFRESH_COOKIE_NAME } from './auth.service';
 
 @ApiTags('auth')
 @Controller('auth')

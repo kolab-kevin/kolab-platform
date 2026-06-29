@@ -1,0 +1,41 @@
+name: Bug report
+description: Report a defect or unexpected behavior
+title: 'fix: '
+labels: ['bug']
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - API
+        - Web
+        - Admin
+        - Creator Portal
+        - Moderator
+        - Infrastructure
+        - Other
+    validations:
+      required: true

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { observabilityEnvSchema } from './observability';
+
 export const baseEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 });
@@ -26,7 +28,7 @@ export const coreApiEnvSchema = baseEnvSchema
     CORS_ORIGINS: z.string().default('http://localhost:3000'),
   });
 
-export const apiEnvSchema = coreApiEnvSchema.merge(jwtEnvSchema);
+export const apiEnvSchema = coreApiEnvSchema.merge(jwtEnvSchema).merge(observabilityEnvSchema);
 
 export type CoreApiEnv = z.infer<typeof coreApiEnvSchema>;
 export type ApiEnv = z.infer<typeof apiEnvSchema>;
@@ -43,4 +45,5 @@ export function parseEnv<T extends z.ZodTypeAny>(
   return result.data;
 }
 
+export * from './observability';
 export * from './services';

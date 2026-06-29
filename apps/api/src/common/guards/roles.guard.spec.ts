@@ -1,5 +1,6 @@
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+
 import { RolesGuard } from './roles.guard';
 
 describe('RolesGuard', () => {
@@ -27,9 +28,7 @@ describe('RolesGuard', () => {
 
   it('throws ForbiddenException when user lacks required role', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['ADMIN']);
-    expect(() => guard.canActivate(createContext({ role: 'USER' }))).toThrow(
-      ForbiddenException,
-    );
+    expect(() => guard.canActivate(createContext({ role: 'USER' }))).toThrow(ForbiddenException);
   });
 
   it('allows when user has required role', () => {

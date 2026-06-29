@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { AuthApiError } from '@kolab/sdk';
+import { RegisterForm, useAuth } from '@kolab/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { RegisterForm, useAuth } from '@kolab/ui';
-import { AuthApiError } from '@kolab/sdk';
+import { useEffect, useState } from 'react';
 
 export default function RegisterPage() {
   const { register, user } = useAuth();
@@ -29,7 +29,7 @@ export default function RegisterPage() {
           }
         }}
       />
-      <p className="mt-6 text-sm text-kolab-muted">
+      <p className="text-kolab-muted mt-6 text-sm">
         Already have an account?{' '}
         <Link href="/login" className="text-kolab-accent hover:underline">
           Sign in

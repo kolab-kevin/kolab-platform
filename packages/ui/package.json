@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "license": "UNLICENSED",
-  "sideEffects": ["**/*.css"],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

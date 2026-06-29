@@ -45,15 +45,22 @@ services:
   api:
     build:
       context: .
-      dockerfile: docker/api.Dockerfile
+      dockerfile: docker/nest-service.Dockerfile
+      args:
+        APP_FILTER: '@kolab/api'
+        APP_DIR: api
+        APP_PORT: 4000
+        IMAGE_TITLE: KOLAB API
     restart: unless-stopped
     ports:
       - '4000:4000'
     environment:
       NODE_ENV: production
       PORT: 4000
+      LOG_LEVEL: info
       DATABASE_URL: postgresql://${POSTGRES_USER:-kolab}:${POSTGRES_PASSWORD:-kolab}@postgres:5432/${POSTGRES_DB:-kolab}
       REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production-min-32-chars}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003}
     depends_on:
       migrate:
@@ -64,7 +71,12 @@ services:
   public-api:
     build:
       context: .
-      dockerfile: docker/public-api.Dockerfile
+      dockerfile: docker/nest-service.Dockerfile
+      args:
+        APP_FILTER: '@kolab/public-api'
+        APP_DIR: public-api
+        APP_PORT: 4001
+        IMAGE_TITLE: KOLAB Public API
     restart: unless-stopped
     ports:
       - '4001:4001'
@@ -73,7 +85,7 @@ services:
       PORT: 4001
       DATABASE_URL: postgresql://${POSTGRES_USER:-kolab}:${POSTGRES_PASSWORD:-kolab}@postgres:5432/${POSTGRES_DB:-kolab}
       REDIS_URL: redis://redis:6379
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production-min-32-chars}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -83,7 +95,12 @@ services:
   mobile-api:
     build:
       context: .
-      dockerfile: docker/mobile-api.Dockerfile
+      dockerfile: docker/nest-service.Dockerfile
+      args:
+        APP_FILTER: '@kolab/mobile-api'
+        APP_DIR: mobile-api
+        APP_PORT: 4002
+        IMAGE_TITLE: KOLAB Mobile API
     restart: unless-stopped
     ports:
       - '4002:4002'
@@ -92,6 +109,7 @@ services:
       PORT: 4002
       DATABASE_URL: postgresql://${POSTGRES_USER:-kolab}:${POSTGRES_PASSWORD:-kolab}@postgres:5432/${POSTGRES_DB:-kolab}
       REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production-min-32-chars}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -101,7 +119,12 @@ services:
   ai-services:
     build:
       context: .
-      dockerfile: docker/ai-services.Dockerfile
+      dockerfile: docker/nest-service.Dockerfile
+      args:
+        APP_FILTER: '@kolab/ai-services'
+        APP_DIR: ai-services
+        APP_PORT: 4003
+        IMAGE_TITLE: KOLAB AI Services
     restart: unless-stopped
     ports:
       - '4003:4003'
@@ -110,6 +133,7 @@ services:
       PORT: 4003
       DATABASE_URL: postgresql://${POSTGRES_USER:-kolab}:${POSTGRES_PASSWORD:-kolab}@postgres:5432/${POSTGRES_DB:-kolab}
       REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production-min-32-chars}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -119,7 +143,12 @@ services:
   web:
     build:
       context: .
-      dockerfile: docker/web.Dockerfile
+      dockerfile: docker/next-service.Dockerfile
+      args:
+        APP_FILTER: '@kolab/web'
+        APP_DIR: web
+        APP_PORT: 3000
+        IMAGE_TITLE: KOLAB Web
     restart: unless-stopped
     ports:
       - '3000:3000'
@@ -133,7 +162,12 @@ services:
   admin:
     build:
       context: .
-      dockerfile: docker/admin.Dockerfile
+      dockerfile: docker/next-service.Dockerfile
+      args:
+        APP_FILTER: '@kolab/admin'
+        APP_DIR: admin
+        APP_PORT: 3001
+        IMAGE_TITLE: KOLAB Admin
     restart: unless-stopped
     ports:
       - '3001:3001'
@@ -147,7 +181,12 @@ services:
   creator-portal:
     build:
       context: .
-      dockerfile: docker/creator-portal.Dockerfile
+      dockerfile: docker/next-service.Dockerfile
+      args:
+        APP_FILTER: '@kolab/creator-portal'
+        APP_DIR: creator-portal
+        APP_PORT: 3002
+        IMAGE_TITLE: KOLAB Creator Portal
     restart: unless-stopped
     ports:
       - '3002:3002'
@@ -161,7 +200,12 @@ services:
   moderator:
     build:
       context: .
-      dockerfile: docker/moderator.Dockerfile
+      dockerfile: docker/next-service.Dockerfile
+      args:
+        APP_FILTER: '@kolab/moderator'
+        APP_DIR: moderator
+        APP_PORT: 3003
+        IMAGE_TITLE: KOLAB Moderator
     restart: unless-stopped
     ports:
       - '3003:3003'

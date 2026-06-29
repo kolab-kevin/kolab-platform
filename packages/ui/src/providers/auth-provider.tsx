@@ -1,9 +1,10 @@
 'use client';
 
-import * as React from 'react';
-import type { UserProfile, Role } from '@kolab/types';
-import { AuthClient } from '@kolab/sdk';
 import { hasAnyRole } from '@kolab/auth';
+import { AuthClient } from '@kolab/sdk';
+import type { Role, UserProfile } from '@kolab/types';
+import * as React from 'react';
+
 import { Button } from '../components/ui/button';
 
 export type AuthContextValue = {
@@ -133,10 +134,10 @@ export function DashboardShell({ appName, children }: DashboardShellProps) {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div>
             <p className="text-lg font-semibold">{appName}</p>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
+            <p className="text-muted-foreground text-sm">{user.email}</p>
           </div>
           <div className="flex items-center gap-4">
-            <span className="rounded-full bg-primary/20 px-3 py-1 text-xs font-medium text-primary">
+            <span className="bg-primary/20 text-primary rounded-full px-3 py-1 text-xs font-medium">
               {user.role}
             </span>
             <Button variant="outline" size="sm" onClick={() => logout()}>

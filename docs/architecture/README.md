@@ -4,27 +4,27 @@ Enterprise monorepo powering multiple business verticals from a single foundatio
 
 ## Platform Pillars
 
-| Vertical | App surfaces | Backend |
-|----------|--------------|---------|
-| Kolab Agency | web, admin | api |
-| TikTok Creator Management | creator-portal, admin | api, mobile-api |
-| TikTok Shop | web, creator-portal | api, public-api, payments |
-| AI Services | web, ai-services | ai-services, ai package |
-| Live Streaming | web, creator-portal | api, streaming |
-| SYMLCAST (future) | web | streaming, api |
+| Vertical                  | App surfaces          | Backend                   |
+| ------------------------- | --------------------- | ------------------------- |
+| Kolab Agency              | web, admin            | api                       |
+| TikTok Creator Management | creator-portal, admin | api, mobile-api           |
+| TikTok Shop               | web, creator-portal   | api, public-api, payments |
+| AI Services               | web, ai-services      | ai-services, ai package   |
+| Live Streaming            | web, creator-portal   | api, streaming            |
+| SYMLCAST (future)         | web                   | streaming, api            |
 
 ## Applications (independently deployable)
 
-| Service | Port | Stack |
-|---------|------|-------|
-| web | 3000 | Next.js 15 |
-| admin | 3001 | Next.js 15 |
+| Service        | Port | Stack      |
+| -------------- | ---- | ---------- |
+| web            | 3000 | Next.js 15 |
+| admin          | 3001 | Next.js 15 |
 | creator-portal | 3002 | Next.js 15 |
-| moderator | 3003 | Next.js 15 |
-| api | 4000 | NestJS |
-| public-api | 4001 | NestJS |
-| mobile-api | 4002 | NestJS |
-| ai-services | 4003 | NestJS |
+| moderator      | 3003 | Next.js 15 |
+| api            | 4000 | NestJS     |
+| public-api     | 4001 | NestJS     |
+| mobile-api     | 4002 | NestJS     |
+| ai-services    | 4003 | NestJS     |
 
 ## Shared packages
 

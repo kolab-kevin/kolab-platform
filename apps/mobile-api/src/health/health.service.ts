@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { prisma } from '@kolab/database';
-import Redis from 'ioredis';
 import { coreApiEnvSchema, parseEnv } from '@kolab/config';
+import { prisma } from '@kolab/database';
 import type { HealthResponse } from '@kolab/types';
+import { Injectable } from '@nestjs/common';
+import Redis from 'ioredis';
 
 @Injectable()
 export class HealthService {

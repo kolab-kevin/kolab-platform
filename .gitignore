@@ -38,6 +38,9 @@ packages/database/prisma/*.db
 # TypeScript
 *.tsbuildinfo
 
+# Husky
+.husky/_
+
 # Debug
 .temp/
 tmp/

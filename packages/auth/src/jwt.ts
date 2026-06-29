@@ -1,5 +1,5 @@
-import jwt, { type SignOptions } from 'jsonwebtoken';
 import type { Role } from '@kolab/types';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 
 export type AccessTokenPayload = {
   sub: string;
@@ -25,9 +25,7 @@ export function signAccessToken(
   const token = jwt.sign(payload, config.secret, options);
 
   const decoded = jwt.decode(token) as jwt.JwtPayload | null;
-  const expiresIn = decoded?.exp
-    ? decoded.exp - Math.floor(Date.now() / 1000)
-    : 900;
+  const expiresIn = decoded?.exp ? decoded.exp - Math.floor(Date.now() / 1000) : 900;
 
   return { token, expiresIn };
 }

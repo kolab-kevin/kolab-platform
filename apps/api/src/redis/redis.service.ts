@@ -1,11 +1,7 @@
-import {
-  Injectable,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common';
-import Redis from 'ioredis';
 import { coreApiEnvSchema, parseEnv } from '@kolab/config';
 import type { UserProfile } from '@kolab/types';
+import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import Redis from 'ioredis';
 
 const SESSION_PREFIX = 'session:';
 const REFRESH_PREFIX = 'refresh:';

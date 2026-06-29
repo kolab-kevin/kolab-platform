@@ -8,24 +8,24 @@ Each backend service exposes health endpoints. The core `api` service provides a
 
 ## Swagger
 
-Interactive docs: **http://localhost:4000/api/docs**
+Interactive docs: **<http://localhost:4000/api/docs>**
 
 ## Auth endpoints
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/api/auth/register` | Public | Create account (returns access token + refresh cookie) |
-| POST | `/api/auth/login` | Public | Login (returns access token + refresh cookie) |
-| POST | `/api/auth/refresh` | Refresh cookie | Rotate refresh token, issue new access token |
-| POST | `/api/auth/logout` | Bearer + cookie | Revoke refresh token |
-| GET | `/api/auth/me` | Bearer | Current user profile |
+| Method | Path                 | Auth            | Description                                            |
+| ------ | -------------------- | --------------- | ------------------------------------------------------ |
+| POST   | `/api/auth/register` | Public          | Create account (returns access token + refresh cookie) |
+| POST   | `/api/auth/login`    | Public          | Login (returns access token + refresh cookie)          |
+| POST   | `/api/auth/refresh`  | Refresh cookie  | Rotate refresh token, issue new access token           |
+| POST   | `/api/auth/logout`   | Bearer + cookie | Revoke refresh token                                   |
+| GET    | `/api/auth/me`       | Bearer          | Current user profile                                   |
 
 ## Health
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Liveness |
-| GET | `/ready` | Readiness (PostgreSQL + Redis) |
+| Method | Path      | Description                    |
+| ------ | --------- | ------------------------------ |
+| GET    | `/health` | Liveness                       |
+| GET    | `/ready`  | Readiness (PostgreSQL + Redis) |
 
 ## Authentication flow
 

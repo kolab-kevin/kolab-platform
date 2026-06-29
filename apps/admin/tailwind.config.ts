@@ -1,5 +1,5 @@
-import type { Config } from 'tailwindcss';
 import sharedConfig from '@kolab/tailwind-config';
+import type { Config } from 'tailwindcss';
 
 const config: Config = {
   ...sharedConfig,

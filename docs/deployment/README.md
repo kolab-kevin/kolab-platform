@@ -13,16 +13,16 @@ docker compose up -d --build
 
 After startup:
 
-| URL | Service |
-|-----|---------|
-| http://localhost:3000 | Web |
-| http://localhost:3001 | Admin |
-| http://localhost:3002 | Creator Portal |
-| http://localhost:3003 | Moderator |
-| http://localhost:4000 | API |
-| http://localhost:4001 | Public API |
-| http://localhost:4002 | Mobile API |
-| http://localhost:4003 | AI Services |
+| URL                     | Service        |
+| ----------------------- | -------------- |
+| <http://localhost:3000> | Web            |
+| <http://localhost:3001> | Admin          |
+| <http://localhost:3002> | Creator Portal |
+| <http://localhost:3003> | Moderator      |
+| <http://localhost:4000> | API            |
+| <http://localhost:4001> | Public API     |
+| <http://localhost:4002> | Mobile API     |
+| <http://localhost:4003> | AI Services    |
 
 ## Independent deployment
 

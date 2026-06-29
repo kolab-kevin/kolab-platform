@@ -1,4 +1,4 @@
-import baseConfig from '@kolab/eslint-config/base';
+import nodeConfig from '@kolab/eslint-config/node';
 
 /** @type {import('eslint').Linter.Config[]} */
-export default [...baseConfig];
+export default [...nodeConfig];

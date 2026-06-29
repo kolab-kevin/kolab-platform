@@ -1,7 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { RedisService } from '../redis/redis.service';
+import { AuthService } from './auth.service';
 
 const mockVerifyPassword = jest.fn();
 const mockSignAccessToken = jest.fn();

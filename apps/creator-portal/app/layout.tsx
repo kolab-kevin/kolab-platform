@@ -1,7 +1,9 @@
+import './globals.css';
+
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+
 import { AppProviders } from '../components/app-providers';
-import './globals.css';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -26,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-kolab font-sans text-kolab-foreground antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-kolab text-kolab-foreground font-sans antialiased`}
       >
         <AppProviders>{children}</AppProviders>
       </body>
