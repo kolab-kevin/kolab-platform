@@ -1,3 +1,4 @@
+export * from './invitation-token';
 export * from './jwt';
 export * from './organization-rbac';
 export * from './password';

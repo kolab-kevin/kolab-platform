@@ -185,6 +185,10 @@ Legacy planning paths below remain for future org CRUD work:
 
 ## Invitations
 
+**Release 0.2 (implemented):** See [Invitations API](./invitations.md) for `/api/invitations/*` endpoints.
+
+Legacy planning paths below remain for reference:
+
 | Method | Path                               | Permission       | Description       |
 | ------ | ---------------------------------- | ---------------- | ----------------- |
 | POST   | `/api/orgs/:orgId/invitations`     | `members:invite` | Create invitation |

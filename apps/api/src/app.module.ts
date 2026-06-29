@@ -7,12 +7,20 @@ import { OrganizationRolesGuard } from './common/guards/organization-roles.guard
 import { PermissionsGuard } from './common/guards/permissions.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { HealthModule } from './health/health.module';
+import { InvitationModule } from './invitation/invitation.module';
 import { ObservabilityModule } from './observability/observability.module';
 import { OrganizationModule } from './organization/organization.module';
 import { RedisModule } from './redis/redis.module';
 
 @Module({
-  imports: [ObservabilityModule, RedisModule, HealthModule, AuthModule, OrganizationModule],
+  imports: [
+    ObservabilityModule,
+    RedisModule,
+    HealthModule,
+    AuthModule,
+    OrganizationModule,
+    InvitationModule,
+  ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
