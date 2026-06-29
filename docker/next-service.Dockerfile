@@ -24,8 +24,10 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
 
 FROM base AS builder
 ARG APP_FILTER
-COPY --from=pruner /app/out/full/ .
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/packages ./packages
+COPY --from=deps /app/apps ./apps
+COPY --from=pruner /app/out/full/ .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm turbo build --filter=${APP_FILTER}...
 
