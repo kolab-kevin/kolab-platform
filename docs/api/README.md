@@ -44,3 +44,5 @@ Interactive docs: **<http://localhost:4000/api/docs>**
 `USER`, `CREATOR`, `MODERATOR`, `ADMIN`, `SUPER_ADMIN`
 
 Frontend apps enforce role access client-side; API guards enforce server-side on protected routes.
+
+**Release 0.2 (planned):** Full identity API specification — [Authentication API (Release 0.2)](./authentication.md).

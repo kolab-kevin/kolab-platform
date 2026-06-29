@@ -34,3 +34,5 @@ Migrations run automatically via the `migrate` service in `docker-compose.yml` b
 ## Platforms
 
 `KOLAB_AGENCY`, `TIKTOK_CREATOR`, `TIKTOK_SHOP`, `AI_SERVICES`, `LIVE_STREAMING`, `SYMLCAST`
+
+**Release 0.2 (planned):** Organization-scoped identity model — [Identity ERD](./identity-erd.md).
