@@ -36,6 +36,8 @@ Enterprise monorepo powering multiple business verticals from a single foundatio
 - Refresh tokens (stored in PostgreSQL, Redis-backed session cache)
 - RBAC: USER, CREATOR, MODERATOR, ADMIN, SUPER_ADMIN
 
+**Release 0.2 (planned):** Organization-scoped identity — see [Identity architecture](./identity.md) and [Release 0.2 planning](../product/release-0.2.md).
+
 ## Infrastructure
 
 - PostgreSQL 16 — primary datastore (Prisma ORM)
