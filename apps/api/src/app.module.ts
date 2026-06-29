@@ -8,10 +8,11 @@ import { PermissionsGuard } from './common/guards/permissions.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { HealthModule } from './health/health.module';
 import { ObservabilityModule } from './observability/observability.module';
+import { OrganizationModule } from './organization/organization.module';
 import { RedisModule } from './redis/redis.module';
 
 @Module({
-  imports: [ObservabilityModule, RedisModule, HealthModule, AuthModule],
+  imports: [ObservabilityModule, RedisModule, HealthModule, AuthModule, OrganizationModule],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },

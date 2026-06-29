@@ -135,6 +135,10 @@ Revokes current session + refresh token. Requires Bearer + refresh cookie.
 
 ## Organization endpoints
 
+**Release 0.2 (implemented):** See [Organization API](./organizations.md) for `/api/organizations/*` endpoints (current org, list, switch, members).
+
+Legacy planning paths below remain for future org CRUD work:
+
 | Method | Path                        | Permission    | Description               |
 | ------ | --------------------------- | ------------- | ------------------------- |
 | GET    | `/api/orgs`                 | authenticated | List user's organizations |
