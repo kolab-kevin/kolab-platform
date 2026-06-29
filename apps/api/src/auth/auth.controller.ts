@@ -1,8 +1,8 @@
 import type { AccessTokenPayload } from '@kolab/auth';
 import { parseDurationToMs } from '@kolab/auth';
 import { apiEnvSchema, parseEnv } from '@kolab/config';
-import type { LoginInput, RegisterInput } from '@kolab/types';
-import { LoginSchema, RegisterSchema } from '@kolab/types';
+import type { LoginWithOrganizationInput, RegisterInput } from '@kolab/types';
+import { LoginWithOrganizationSchema, RegisterSchema } from '@kolab/types';
 import { Body, Controller, Get, HttpCode, Post, Req, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
@@ -43,7 +43,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Login successful' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(
-    @Body(new ZodValidationPipe(LoginSchema)) body: LoginInput,
+    @Body(new ZodValidationPipe(LoginWithOrganizationSchema)) body: LoginWithOrganizationInput,
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.authService.login(body);
