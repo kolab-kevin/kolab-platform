@@ -1,0 +1,33 @@
+{
+  "name": "kolab-platform",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,md,json}\"",
+    "db:generate": "pnpm --filter @kolab/database db:generate",
+    "db:migrate": "pnpm --filter @kolab/database db:migrate:dev",
+    "db:migrate:deploy": "pnpm --filter @kolab/database db:migrate:deploy",
+    "db:studio": "pnpm --filter @kolab/database db:studio",
+    "db:seed": "pnpm --filter @kolab/database db:seed",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:build": "docker compose build",
+    "docker:logs": "docker compose logs -f"
+  },
+  "devDependencies": {
+    "@kolab/eslint-config": "workspace:*",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "prettier-plugin-tailwindcss": "^0.6.9",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  }
+}
