@@ -51,9 +51,15 @@ describe('JwtAuthGuard', () => {
       sub: 'user-1',
       email: 'user@example.com',
       role: 'USER',
+      organizationId: 'org-1',
+      organizationRole: 'VIEWER',
+      sessionId: 'session-1',
+      isSystemAdmin: false,
     });
 
-    const request = { headers: { authorization: 'Bearer valid-token' } };
+    const request: { headers: { authorization: string }; user?: unknown } = {
+      headers: { authorization: 'Bearer valid-token' },
+    };
     const ctx = {
       getHandler: () => ({}),
       getClass: () => ({}),
@@ -61,6 +67,14 @@ describe('JwtAuthGuard', () => {
     } as ExecutionContext;
 
     expect(guard.canActivate(ctx)).toBe(true);
-    expect(request).toHaveProperty('user');
+    expect(request.user).toEqual(
+      expect.objectContaining({
+        sub: 'user-1',
+        organizationId: 'org-1',
+        organizationRole: 'VIEWER',
+        sessionId: 'session-1',
+        isSystemAdmin: false,
+      }),
+    );
   });
 });

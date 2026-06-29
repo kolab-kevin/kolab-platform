@@ -21,15 +21,16 @@
 
 ## JWT access token claims (Release 0.2)
 
-| Claim           | Type    | Description                      |
-| --------------- | ------- | -------------------------------- |
-| `sub`           | string  | User id                          |
-| `email`         | string  | User email                       |
-| `orgId`         | string  | Active organization id           |
-| `orgRole`       | string  | Role in active org               |
-| `sessionId`     | string  | Session id for revocation checks |
-| `isSystemAdmin` | boolean | Platform admin flag              |
-| `iat` / `exp`   | number  | Standard JWT timestamps          |
+| Claim              | Type    | Description                      |
+| ------------------ | ------- | -------------------------------- |
+| `sub`              | string  | User id                          |
+| `email`            | string  | User email                       |
+| `organizationId`   | string  | Active organization id           |
+| `organizationRole` | string  | Role in active org               |
+| `sessionId`        | string  | Session id for revocation checks |
+| `isSystemAdmin`    | boolean | Platform admin flag              |
+| `role`             | string  | Phase 1 legacy role (dual-write) |
+| `iat` / `exp`      | number  | Standard JWT timestamps          |
 
 **Backward compatibility:** Phase 1 tokens without `orgId` rejected after migration cutover (configurable grace period).
 
@@ -297,12 +298,12 @@ Logout → revoke session + refresh
 
 ## Phase 1 compatibility
 
-| Phase 1 endpoint          | Release 0.2                     |
-| ------------------------- | ------------------------------- |
-| `POST /api/auth/register` | Extended body; creates org      |
-| `POST /api/auth/login`    | Optional `organizationId`       |
-| `GET /api/auth/me`        | Extended response               |
-| Role in JWT               | Replaced by `orgRole` + `orgId` |
+| Phase 1 endpoint          | Release 0.2                                                                  |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| `POST /api/auth/register` | Extended body; creates org                                                   |
+| `POST /api/auth/login`    | Optional `organizationId`                                                    |
+| `GET /api/auth/me`        | Extended response                                                            |
+| Role in JWT               | Legacy `role` retained; org context in `organizationId` + `organizationRole` |
 
 Deprecated: global `role` and `platforms` in `@kolab/types` user profile (removed after migration).
 

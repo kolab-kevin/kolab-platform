@@ -10,10 +10,12 @@ import { UserProfileResponseSchema } from './user-profile';
 export const JwtAccessTokenClaimsSchema = z.object({
   sub: z.string(),
   email: z.string().email(),
-  orgId: z.string().optional(),
-  orgRole: OrganizationRoleSchema.optional(),
+  organizationId: z.string().optional(),
+  organizationRole: OrganizationRoleSchema.optional(),
   sessionId: z.string().optional(),
   isSystemAdmin: z.boolean().optional(),
+  /** Phase 1 legacy claim — retained during migration. */
+  role: z.enum(['USER', 'CREATOR', 'MODERATOR', 'ADMIN', 'SUPER_ADMIN']).optional(),
   iat: z.number().optional(),
   exp: z.number().optional(),
 });
