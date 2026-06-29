@@ -97,6 +97,7 @@ Run locally: `pnpm validate`
 - [API](docs/api/README.md)
 - [Deployment](docs/deployment/README.md)
 - [Product](docs/product/README.md)
+- [**Release 0.2 planning**](docs/product/release-0.2.md) — identity & organization foundation
 
 ### Engineering
 
@@ -121,14 +122,15 @@ Run locally: `pnpm validate`
 
 ## Development roadmap
 
-| Phase                    | Status  | Scope                                                  |
-| ------------------------ | ------- | ------------------------------------------------------ |
-| 0 — Foundation           | ✅      | Monorepo, Docker, Prisma, Redis, CI                    |
-| 1 — Auth                 | ✅      | JWT, refresh rotation, RBAC, shadcn, 4 frontends       |
-| **1.5 — Engineering**    | **✅**  | **DX tooling, observability, security, quality gates** |
-| 2 — Vertical shells      | Next    | Domain features, E2E, staging                          |
-| 3 — Domain services      | Planned | Payments, AI, streaming                                |
-| 4 — Production hardening | Planned | SYMLCAST, Sentry, OTel SDK                             |
+| Phase                    | Status  | Scope                                                                                 |
+| ------------------------ | ------- | ------------------------------------------------------------------------------------- |
+| 0 — Foundation           | ✅      | Monorepo, Docker, Prisma, Redis, CI                                                   |
+| 1 — Auth                 | ✅      | JWT, refresh rotation, RBAC, shadcn, 4 frontends                                      |
+| **1.5 — Engineering**    | **✅**  | **DX tooling, observability, security, quality gates**                                |
+| **0.2 — Identity & org** | **📋**  | **Organizations, invitations, sessions, audit ([plan](docs/product/release-0.2.md))** |
+| 2 — Vertical shells      | Next    | Domain features, E2E, staging                                                         |
+| 3 — Domain services      | Planned | Payments, AI, streaming                                                               |
+| 4 — Production hardening | Planned | SYMLCAST, Sentry, OTel SDK                                                            |
 
 ## License
 

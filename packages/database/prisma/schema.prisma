@@ -7,6 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Phase 1 legacy enums — retained during Release 0.2 migration (Phase A)
 enum Role {
   USER
   CREATOR
@@ -24,18 +25,125 @@ enum Platform {
   SYMLCAST
 }
 
+enum OrganizationType {
+  STANDARD
+  AGENCY
+  CREATOR
+  MERCHANT
+  ENTERPRISE
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum OrganizationRole {
+  ORG_OWNER
+  ORG_ADMIN
+  AGENCY_MANAGER
+  RECRUITER
+  CREATOR
+  MODERATOR
+  FINANCE
+  SUPPORT
+  VIEWER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  SUSPENDED
+  REMOVED
+}
+
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  role         Role     @default(USER)
-  platforms    Platform[] @default([])
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id             String     @id @default(cuid())
+  email          String     @unique
+  passwordHash   String     @map("password_hash")
+  role           Role       @default(USER)
+  platforms      Platform[] @default([])
+  isSystemAdmin  Boolean    @default(false) @map("is_system_admin")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  profile                 UserProfile?
+  refreshTokens           RefreshToken[]
+  sessions                Session[]
+  memberships             OrganizationMembership[] @relation("MemberUser")
+  invitedMemberships      OrganizationMembership[] @relation("MembershipInviter")
+  sentInvitations         Invitation[]             @relation("InvitationInviter")
+  auditLogs               AuditLog[]               @relation("AuditActor")
+
+  @@map("users")
+}
+
+model UserProfile {
+  userId      String  @id @map("user_id")
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName String? @map("display_name")
+  avatarUrl   String? @map("avatar_url")
+  bio         String?
+  language    String  @default("en")
+  timezone    String  @default("UTC")
+  country     String?
+
+  @@map("user_profiles")
+}
+
+model Organization {
+  id        String             @id @default(cuid())
+  name      String
+  slug      String             @unique
+  type      OrganizationType   @default(STANDARD)
+  status    OrganizationStatus @default(ACTIVE)
+  settings  Json               @default("{}")
+  createdAt DateTime           @default(now()) @map("created_at")
+  updatedAt DateTime           @updatedAt @map("updated_at")
+
+  memberships OrganizationMembership[]
+  invitations Invitation[]
+  sessions    Session[]
+  auditLogs   AuditLog[]
+
+  @@index([status])
+  @@map("organizations")
+}
+
+model OrganizationMembership {
+  organizationId String           @map("organization_id")
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String           @map("user_id")
+  user           User             @relation("MemberUser", fields: [userId], references: [id], onDelete: Cascade)
+  role           OrganizationRole
+  status         MembershipStatus @default(ACTIVE)
+  invitedBy      String?          @map("invited_by")
+  inviter        User?            @relation("MembershipInviter", fields: [invitedBy], references: [id], onDelete: SetNull)
+  joinedAt       DateTime         @default(now()) @map("joined_at")
+
+  @@id([organizationId, userId])
+  @@index([userId])
+  @@index([organizationId, status])
+  @@map("organization_memberships")
+}
+
+model Session {
+  id               String    @id @default(cuid())
+  userId           String    @map("user_id")
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId   String?   @map("organization_id")
+  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  refreshTokenHash String?   @unique @map("refresh_token_hash")
+  ipAddress        String?   @map("ip_address")
+  userAgent        String?   @map("user_agent")
+  expiresAt        DateTime  @map("expires_at")
+  revokedAt        DateTime? @map("revoked_at")
 
   refreshTokens RefreshToken[]
 
-  @@map("users")
+  @@index([userId, revokedAt])
+  @@index([organizationId])
+  @@map("sessions")
 }
 
 model RefreshToken {
@@ -43,9 +151,47 @@ model RefreshToken {
   tokenHash String   @unique @map("token_hash")
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId String?  @map("session_id")
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([userId])
+  @@index([sessionId])
   @@map("refresh_tokens")
+}
+
+model Invitation {
+  id             String           @id @default(cuid())
+  organizationId String           @map("organization_id")
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           OrganizationRole
+  tokenHash      String           @unique @map("token_hash")
+  expiresAt      DateTime         @map("expires_at")
+  acceptedAt     DateTime?        @map("accepted_at")
+  invitedBy      String           @map("invited_by")
+  inviter        User             @relation("InvitationInviter", fields: [invitedBy], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, email])
+  @@index([expiresAt])
+  @@map("invitations")
+}
+
+model AuditLog {
+  id             String        @id @default(cuid())
+  organizationId String?       @map("organization_id")
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  actorUserId    String?       @map("actor_user_id")
+  actor          User?         @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  targetType     String        @map("target_type")
+  targetId       String        @map("target_id")
+  action         String
+  metadata       Json          @default("{}")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([actorUserId, createdAt(sort: Desc)])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
 }

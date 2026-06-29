@@ -22,10 +22,22 @@ pnpm db:studio
 
 Migrations run automatically via the `migrate` service in `docker-compose.yml` before API services start.
 
-## Core models (Phase 0)
+## Core models
 
-- **User** — identity, role, platform access
-- **RefreshToken** — refresh token storage for JWT auth (Phase 1)
+### Phase 1 (auth)
+
+- **User** — identity, legacy role, platform access
+- **RefreshToken** — refresh token storage for JWT auth
+
+### Release 0.2 (identity)
+
+Organization-scoped identity model — see [Identity ERD](./identity-erd.md):
+
+- **Organization**, **OrganizationMembership**, **UserProfile**
+- **Session**, **Invitation**, **AuditLog**
+- **RefreshToken.sessionId** — optional link to Session (Phase A migration)
+
+Legacy `User.role` and `User.platforms` remain until Phase D cleanup.
 
 ## Roles
 
@@ -34,3 +46,5 @@ Migrations run automatically via the `migrate` service in `docker-compose.yml` b
 ## Platforms
 
 `KOLAB_AGENCY`, `TIKTOK_CREATOR`, `TIKTOK_SHOP`, `AI_SERVICES`, `LIVE_STREAMING`, `SYMLCAST`
+
+**Release 0.2 (planned):** Organization-scoped identity model — [Identity ERD](./identity-erd.md).
