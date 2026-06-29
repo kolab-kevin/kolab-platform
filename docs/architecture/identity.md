@@ -102,15 +102,18 @@ sequenceDiagram
 | `audit:read`          | ✓         | ✓         | —       | —      |
 | `sessions:revoke`     | ✓         | ✓         | —       | —      |
 
-### Guard stack (NestJS)
+### Guard stack (NestJS — Release 0.2 RBAC implemented)
 
 ```text
-Request → JwtAuthGuard → OrgMembershipGuard → PermissionsGuard → Controller
+Request → JwtAuthGuard → RolesGuard → OrganizationRolesGuard → PermissionsGuard → Controller
 ```
 
-- `JwtAuthGuard` — validates JWT, attaches `userId`, `sessionId`
-- `OrgMembershipGuard` — resolves `orgId`, loads membership
-- `PermissionsGuard` — checks `@RequirePermissions('members:invite')`
+- `JwtAuthGuard` — validates JWT; attaches `request.user` with `organizationRole`, `organizationId`, `sessionId`
+- `RolesGuard` — `@Roles()` Phase 1 legacy checks + org-role equivalent mapping
+- `OrganizationRolesGuard` — `@OrganizationRoles()` checks JWT `organizationRole`
+- `PermissionsGuard` — `@RequirePermissions()` resolves permissions from JWT `organizationRole` (legacy `role` fallback)
+
+`isSystemAdmin` bypasses all authorization guards. Permission matrix lives in `@kolab/auth` (`ORGANIZATION_ROLE_PERMISSIONS`).
 
 ### Frontend
 
