@@ -24,6 +24,27 @@ export const LoginSchema = z.object({
 
 export type LoginInput = z.infer<typeof LoginSchema>;
 
+export const OrganizationRoleSchema = z.enum([
+  'ORG_OWNER',
+  'ORG_ADMIN',
+  'AGENCY_MANAGER',
+  'RECRUITER',
+  'CREATOR',
+  'MODERATOR',
+  'FINANCE',
+  'SUPPORT',
+  'VIEWER',
+]);
+
+export type OrganizationRole = z.infer<typeof OrganizationRoleSchema>;
+
+/** Release 0.2 login body — optional org selection; backward compatible with LoginSchema. */
+export const LoginWithOrganizationSchema = LoginSchema.extend({
+  organizationId: z.string().optional(),
+});
+
+export type LoginWithOrganizationInput = z.infer<typeof LoginWithOrganizationSchema>;
+
 export const UserProfileSchema = z.object({
   id: z.string(),
   email: z.string().email(),

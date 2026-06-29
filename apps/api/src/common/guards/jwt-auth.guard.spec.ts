@@ -45,15 +45,21 @@ describe('JwtAuthGuard', () => {
     expect(() => guard.canActivate(createContext({}))).toThrow(UnauthorizedException);
   });
 
-  it('validates bearer token and attaches user', () => {
+  it('validates bearer token and attaches Release 0.2 user claims', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
     mockVerifyAccessToken.mockReturnValue({
       sub: 'user-1',
       email: 'user@example.com',
       role: 'USER',
+      organizationId: 'org-1',
+      organizationRole: 'VIEWER',
+      sessionId: 'session-1',
+      isSystemAdmin: false,
     });
 
-    const request = { headers: { authorization: 'Bearer valid-token' } };
+    const request: { headers: { authorization: string }; user?: unknown } = {
+      headers: { authorization: 'Bearer valid-token' },
+    };
     const ctx = {
       getHandler: () => ({}),
       getClass: () => ({}),
@@ -61,6 +67,41 @@ describe('JwtAuthGuard', () => {
     } as ExecutionContext;
 
     expect(guard.canActivate(ctx)).toBe(true);
-    expect(request).toHaveProperty('user');
+    expect(request.user).toEqual(
+      expect.objectContaining({
+        sub: 'user-1',
+        organizationId: 'org-1',
+        organizationRole: 'VIEWER',
+        sessionId: 'session-1',
+        isSystemAdmin: false,
+      }),
+    );
+  });
+
+  it('accepts legacy Phase 1 tokens with role claim only', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
+    mockVerifyAccessToken.mockReturnValue({
+      sub: 'user-1',
+      email: 'legacy@example.com',
+      role: 'ADMIN',
+      isSystemAdmin: false,
+    });
+
+    const request: { headers: { authorization: string }; user?: unknown } = {
+      headers: { authorization: 'Bearer legacy-token' },
+    };
+    const ctx = {
+      getHandler: () => ({}),
+      getClass: () => ({}),
+      switchToHttp: () => ({ getRequest: () => request }),
+    } as ExecutionContext;
+
+    expect(guard.canActivate(ctx)).toBe(true);
+    expect(request.user).toEqual({
+      sub: 'user-1',
+      email: 'legacy@example.com',
+      role: 'ADMIN',
+      isSystemAdmin: false,
+    });
   });
 });
