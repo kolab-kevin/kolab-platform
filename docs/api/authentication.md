@@ -58,7 +58,7 @@ Create user account. **Behavior change in 0.2:** creates User, UserProfile, defa
   "user": {
     "id": "clx...",
     "email": "owner@example.com",
-    "profile": { "displayName": null, "avatarUrl": null, "locale": "en", "timezone": "UTC" }
+    "profile": { "displayName": null, "avatarUrl": null, "language": "en", "timezone": "UTC" }
   },
   "organization": { "id": "clx...", "name": "Acme Agency", "slug": "acme-agency" },
   "membership": { "role": "ORG_OWNER", "status": "ACTIVE" },
@@ -116,7 +116,7 @@ Revokes current session + refresh token. Requires Bearer + refresh cookie.
     "profile": {
       "displayName": "Jane",
       "avatarUrl": null,
-      "locale": "en",
+      "language": "en",
       "timezone": "America/New_York"
     },
     "createdAt": "2026-01-15T12:00:00.000Z"
@@ -225,10 +225,10 @@ If user exists, `password` omitted; link membership only.
 
 ## Profile
 
-| Method | Path                    | Auth   | Description                                     |
-| ------ | ----------------------- | ------ | ----------------------------------------------- |
-| GET    | `/api/users/me/profile` | Bearer | Get own profile                                 |
-| PATCH  | `/api/users/me/profile` | Bearer | Update displayName, avatarUrl, locale, timezone |
+| Method | Path                    | Auth   | Description                                       |
+| ------ | ----------------------- | ------ | ------------------------------------------------- |
+| GET    | `/api/users/me/profile` | Bearer | Get own profile                                   |
+| PATCH  | `/api/users/me/profile` | Bearer | Update displayName, avatarUrl, language, timezone |
 
 ---
 
@@ -258,8 +258,8 @@ If user exists, `password` omitted; link membership only.
   "id": "clx...",
   "action": "membership.role_changed",
   "actorUserId": "clx...",
-  "resourceType": "membership",
-  "resourceId": "clx...",
+  "targetType": "membership",
+  "targetId": "clx...",
   "metadata": { "previousRole": "VIEWER", "newRole": "RECRUITER" },
   "requestId": "req_abc",
   "createdAt": "2026-06-28T10:00:00.000Z"
