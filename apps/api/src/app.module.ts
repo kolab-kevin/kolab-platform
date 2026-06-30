@@ -11,6 +11,7 @@ import { InvitationModule } from './invitation/invitation.module';
 import { ObservabilityModule } from './observability/observability.module';
 import { OrganizationModule } from './organization/organization.module';
 import { RedisModule } from './redis/redis.module';
+import { SessionModule } from './session/session.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { RedisModule } from './redis/redis.module';
     AuthModule,
     OrganizationModule,
     InvitationModule,
+    SessionModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

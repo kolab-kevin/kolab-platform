@@ -243,11 +243,14 @@ If user exists, `password` omitted; link membership only.
 
 ## Sessions
 
+**Release 0.2 (implemented):** See [Sessions API](./sessions.md) for `/api/sessions/*` user-scoped endpoints (list, current, revoke, revoke-others).
+
 | Method | Path                                        | Permission        | Description                  |
 | ------ | ------------------------------------------- | ----------------- | ---------------------------- |
-| GET    | `/api/users/me/sessions`                    | authenticated     | List active sessions         |
-| DELETE | `/api/users/me/sessions/:sessionId`         | authenticated     | Revoke one session           |
-| DELETE | `/api/users/me/sessions`                    | authenticated     | Revoke all except current    |
+| GET    | `/api/sessions`                             | authenticated     | List active sessions         |
+| GET    | `/api/sessions/current`                     | authenticated     | Current session from JWT     |
+| POST   | `/api/sessions/:id/revoke`                  | authenticated     | Revoke one session           |
+| POST   | `/api/sessions/revoke-others`               | authenticated     | Revoke all except current    |
 | DELETE | `/api/orgs/:orgId/members/:userId/sessions` | `sessions:revoke` | Admin revoke member sessions |
 
 ---

@@ -45,4 +45,10 @@ Interactive docs: **<http://localhost:4000/api/docs>**
 
 Frontend apps enforce role access client-side; API guards enforce server-side on protected routes.
 
-**Release 0.2 (planned):** Full identity API specification — [Authentication API (Release 0.2)](./authentication.md).
+**Release 0.2:** Identity API specification — [Authentication API (Release 0.2)](./authentication.md).
+
+Implemented Release 0.2 modules:
+
+- [Organizations](./organizations.md)
+- [Invitations](./invitations.md)
+- [Sessions](./sessions.md)
