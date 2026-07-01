@@ -11,6 +11,7 @@ import { HealthModule } from './health/health.module';
 import { InvitationModule } from './invitation/invitation.module';
 import { ObservabilityModule } from './observability/observability.module';
 import { OrganizationModule } from './organization/organization.module';
+import { ProfileModule } from './profile/profile.module';
 import { RedisModule } from './redis/redis.module';
 import { SessionModule } from './session/session.module';
 
@@ -24,6 +25,7 @@ import { SessionModule } from './session/session.module';
     InvitationModule,
     SessionModule,
     AuditModule,
+    ProfileModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

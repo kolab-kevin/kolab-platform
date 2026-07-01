@@ -234,10 +234,12 @@ If user exists, `password` omitted; link membership only.
 
 ## Profile
 
-| Method | Path                    | Auth   | Description                                     |
-| ------ | ----------------------- | ------ | ----------------------------------------------- |
-| GET    | `/api/users/me/profile` | Bearer | Get own profile                                 |
-| PATCH  | `/api/users/me/profile` | Bearer | Update displayName, avatarUrl, locale, timezone |
+**Release 0.2 (implemented):** See [Profile API](./profile.md) for `/api/profile`.
+
+| Method | Path           | Auth   | Description                                                     |
+| ------ | -------------- | ------ | --------------------------------------------------------------- |
+| GET    | `/api/profile` | Bearer | Get own profile and basic account info                          |
+| PATCH  | `/api/profile` | Bearer | Update displayName, avatarUrl, bio, language, timezone, country |
 
 ---
 
