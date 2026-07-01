@@ -105,9 +105,40 @@ model Organization {
   invitations Invitation[]
   sessions    Session[]
   auditLogs   AuditLog[]
+  agencyProfile  AgencyProfile?
+  agencySettings AgencySettings?
 
   @@index([status])
   @@map("organizations")
+}
+
+model AgencyProfile {
+  organizationId     String       @id @map("organization_id")
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  description        String?
+  logoUrl            String?      @map("logo_url")
+  website            String?
+  primaryContact     String?      @map("primary_contact")
+  phone              String?
+  country            String?
+  timezone           String       @default("UTC")
+  supportedLanguages String[]     @default(["en"]) @map("supported_languages")
+  socialLinks        Json         @default("{}") @map("social_links")
+  businessSettings   Json         @default("{}") @map("business_settings")
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+
+  @@map("agency_profiles")
+}
+
+model AgencySettings {
+  organizationId String       @id @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  settings       Json         @default("{}")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  @@map("agency_settings")
 }
 
 model OrganizationMembership {

@@ -1,4 +1,5 @@
 export * from './admin';
+export * from './agency';
 export * from './audit';
 export * from './auth';
 export * from './invitation';
