@@ -1,22 +1,22 @@
 import type { AccessTokenPayload } from '@kolab/auth';
-import { isSystemAdminUser, satisfiesLegacyRoles } from '@kolab/auth';
-import type { Role } from '@kolab/types';
+import { isSystemAdminUser, userHasAllPermissions } from '@kolab/auth';
+import type { Permission } from '@kolab/types';
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import { ROLES_KEY } from '../decorators/auth.decorators';
+import { PERMISSIONS_KEY } from '../decorators/auth.decorators';
 
 @Injectable()
-export class RolesGuard implements CanActivate {
+export class PermissionsGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+    const requiredPermissions = this.reflector.getAllAndOverride<Permission[]>(PERMISSIONS_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    if (!requiredRoles?.length) {
+    if (!requiredPermissions?.length) {
       return true;
     }
 
@@ -31,7 +31,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    if (!satisfiesLegacyRoles(user, requiredRoles)) {
+    if (!userHasAllPermissions(user, requiredPermissions)) {
       throw new ForbiddenException('Insufficient permissions');
     }
 

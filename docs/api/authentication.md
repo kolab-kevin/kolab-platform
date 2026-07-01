@@ -21,17 +21,18 @@
 
 ## JWT access token claims (Release 0.2)
 
-| Claim           | Type    | Description                      |
-| --------------- | ------- | -------------------------------- |
-| `sub`           | string  | User id                          |
-| `email`         | string  | User email                       |
-| `orgId`         | string  | Active organization id           |
-| `orgRole`       | string  | Role in active org               |
-| `sessionId`     | string  | Session id for revocation checks |
-| `isSystemAdmin` | boolean | Platform admin flag              |
-| `iat` / `exp`   | number  | Standard JWT timestamps          |
+| Claim              | Type    | Description                                 |
+| ------------------ | ------- | ------------------------------------------- |
+| `sub`              | string  | User id                                     |
+| `email`            | string  | User email                                  |
+| `organizationId`   | string  | Active organization id (optional)           |
+| `organizationRole` | string  | Role in active org (optional)               |
+| `sessionId`        | string  | Session id for revocation checks (optional) |
+| `isSystemAdmin`    | boolean | Platform admin flag                         |
+| `role`             | string  | Phase 1 legacy role (dual-write)            |
+| `iat` / `exp`      | number  | Standard JWT timestamps                     |
 
-**Backward compatibility:** Phase 1 tokens without `orgId` rejected after migration cutover (configurable grace period).
+**Backward compatibility:** Phase 1 tokens with only `role` continue to verify. Organization claims are optional until clients migrate.
 
 ---
 
@@ -134,6 +135,10 @@ Revokes current session + refresh token. Requires Bearer + refresh cookie.
 
 ## Organization endpoints
 
+**Release 0.2 (implemented):** See [Organization API](./organizations.md) for `/api/organizations/*` endpoints (current org, list, switch, members).
+
+Legacy planning paths below remain for future org CRUD work:
+
 | Method | Path                        | Permission    | Description               |
 | ------ | --------------------------- | ------------- | ------------------------- |
 | GET    | `/api/orgs`                 | authenticated | List user's organizations |
@@ -179,6 +184,10 @@ Revokes current session + refresh token. Requires Bearer + refresh cookie.
 ---
 
 ## Invitations
+
+**Release 0.2 (implemented):** See [Invitations API](./invitations.md) for `/api/invitations/*` endpoints.
+
+Legacy planning paths below remain for reference:
 
 | Method | Path                               | Permission       | Description       |
 | ------ | ---------------------------------- | ---------------- | ----------------- |
@@ -234,20 +243,25 @@ If user exists, `password` omitted; link membership only.
 
 ## Sessions
 
+**Release 0.2 (implemented):** See [Sessions API](./sessions.md) for `/api/sessions/*` user-scoped endpoints (list, current, revoke, revoke-others).
+
 | Method | Path                                        | Permission        | Description                  |
 | ------ | ------------------------------------------- | ----------------- | ---------------------------- |
-| GET    | `/api/users/me/sessions`                    | authenticated     | List active sessions         |
-| DELETE | `/api/users/me/sessions/:sessionId`         | authenticated     | Revoke one session           |
-| DELETE | `/api/users/me/sessions`                    | authenticated     | Revoke all except current    |
+| GET    | `/api/sessions`                             | authenticated     | List active sessions         |
+| GET    | `/api/sessions/current`                     | authenticated     | Current session from JWT     |
+| POST   | `/api/sessions/:id/revoke`                  | authenticated     | Revoke one session           |
+| POST   | `/api/sessions/revoke-others`               | authenticated     | Revoke all except current    |
 | DELETE | `/api/orgs/:orgId/members/:userId/sessions` | `sessions:revoke` | Admin revoke member sessions |
 
 ---
 
 ## Audit logs
 
-| Method | Path                          | Permission   | Description         |
-| ------ | ----------------------------- | ------------ | ------------------- |
-| GET    | `/api/orgs/:orgId/audit-logs` | `audit:read` | Paginated audit log |
+**Release 0.2 (implemented):** See [Audit Logs API](./audit-logs.md) for `/api/audit-logs`.
+
+| Method | Path              | Permission   | Description         |
+| ------ | ----------------- | ------------ | ------------------- |
+| GET    | `/api/audit-logs` | `audit:read` | Paginated audit log |
 
 **Query params:** `cursor`, `limit` (max 100), `action`, `actorUserId`, `from`, `to`
 
@@ -256,12 +270,12 @@ If user exists, `password` omitted; link membership only.
 ```json
 {
   "id": "clx...",
-  "action": "membership.role_changed",
+  "organizationId": "clx...",
   "actorUserId": "clx...",
-  "resourceType": "membership",
-  "resourceId": "clx...",
+  "action": "membership.updated",
+  "targetType": "membership",
+  "targetId": "clx...",
   "metadata": { "previousRole": "VIEWER", "newRole": "RECRUITER" },
-  "requestId": "req_abc",
   "createdAt": "2026-06-28T10:00:00.000Z"
 }
 ```
@@ -297,12 +311,12 @@ Logout → revoke session + refresh
 
 ## Phase 1 compatibility
 
-| Phase 1 endpoint          | Release 0.2                     |
-| ------------------------- | ------------------------------- |
-| `POST /api/auth/register` | Extended body; creates org      |
-| `POST /api/auth/login`    | Optional `organizationId`       |
-| `GET /api/auth/me`        | Extended response               |
-| Role in JWT               | Replaced by `orgRole` + `orgId` |
+| Phase 1 endpoint          | Release 0.2                                                                  |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| `POST /api/auth/register` | Extended body; creates org                                                   |
+| `POST /api/auth/login`    | Optional `organizationId`                                                    |
+| `GET /api/auth/me`        | Extended response                                                            |
+| Role in JWT               | Legacy `role` retained; org context in `organizationId` + `organizationRole` |
 
 Deprecated: global `role` and `platforms` in `@kolab/types` user profile (removed after migration).
 
