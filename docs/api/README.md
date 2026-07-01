@@ -54,3 +54,4 @@ Implemented Release 0.2 modules:
 - [Sessions](./sessions.md)
 - [Audit logs](./audit-logs.md)
 - [Profile](./profile.md)
+- [System administration](./admin.md)

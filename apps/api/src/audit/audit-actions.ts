@@ -6,6 +6,7 @@ export const AUDIT_ACTION = {
   SESSION_REVOKED: 'session.revoked',
   SESSIONS_REVOKED_OTHERS: 'sessions.revoked_others',
   PROFILE_UPDATED: 'profile.updated',
+  ADMIN_USER_UPDATED: 'admin.user.updated',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {
@@ -13,4 +14,5 @@ export const AUDIT_TARGET_TYPE = {
   MEMBERSHIP: 'membership',
   SESSION: 'session',
   PROFILE: 'profile',
+  USER: 'user',
 } as const;
