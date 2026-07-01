@@ -2,6 +2,7 @@ import type { AccessTokenPayload } from '@kolab/auth';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { AuditService } from '../audit/audit.service';
 import { OrganizationService } from './organization.service';
 
 const mockSignAccessToken = jest.fn();
@@ -80,10 +81,15 @@ const userToken: AccessTokenPayload = {
 
 describe('OrganizationService', () => {
   let service: OrganizationService;
+  let auditService: jest.Mocked<AuditService>;
 
   beforeEach(async () => {
+    auditService = {
+      record: jest.fn().mockResolvedValue({}),
+    } as unknown as jest.Mocked<AuditService>;
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [OrganizationService],
+      providers: [OrganizationService, { provide: AuditService, useValue: auditService }],
     }).compile();
 
     service = module.get(OrganizationService);
@@ -207,6 +213,13 @@ describe('OrganizationService', () => {
       const result = await service.updateMember(userToken, 'user-2', { role: 'RECRUITER' });
 
       expect(result.member.role).toBe('RECRUITER');
+      expect(auditService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'membership.updated',
+          targetType: 'membership',
+          targetId: 'user-2',
+        }),
+      );
     });
 
     it('throws when member is not found', async () => {

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { AuditService } from '../audit/audit.service';
 import { InvitationService } from './invitation.service';
 
 const mockGenerateInvitationToken = jest.fn();
@@ -71,10 +72,15 @@ const pendingInvitation = {
 
 describe('InvitationService', () => {
   let service: InvitationService;
+  let auditService: jest.Mocked<AuditService>;
 
   beforeEach(async () => {
+    auditService = {
+      record: jest.fn().mockResolvedValue({}),
+    } as unknown as jest.Mocked<AuditService>;
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [InvitationService],
+      providers: [InvitationService, { provide: AuditService, useValue: auditService }],
     }).compile();
 
     service = module.get(InvitationService);
@@ -104,6 +110,12 @@ describe('InvitationService', () => {
             tokenHash: 'hashed-token',
             invitedBy: 'admin-1',
           }),
+        }),
+      );
+      expect(auditService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'invitation.created',
+          targetType: 'invitation',
         }),
       );
     });
@@ -172,6 +184,12 @@ describe('InvitationService', () => {
       const result = await service.revokeInvitation(inviterToken, 'invite-1');
 
       expect(result).toEqual({ id: 'invite-1', revoked: true });
+      expect(auditService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'invitation.revoked',
+          targetId: 'invite-1',
+        }),
+      );
     });
 
     it('throws when invitation is not found', async () => {
@@ -208,6 +226,12 @@ describe('InvitationService', () => {
         expect.objectContaining({
           where: { id: 'invite-1' },
           data: { acceptedAt: expect.any(Date) },
+        }),
+      );
+      expect(auditService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'invitation.accepted',
+          targetId: 'invite-1',
         }),
       );
     });

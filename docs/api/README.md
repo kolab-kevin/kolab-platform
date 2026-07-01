@@ -52,3 +52,4 @@ Implemented Release 0.2 modules:
 - [Organizations](./organizations.md)
 - [Invitations](./invitations.md)
 - [Sessions](./sessions.md)
+- [Audit logs](./audit-logs.md)

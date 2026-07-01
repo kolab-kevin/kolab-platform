@@ -257,9 +257,11 @@ If user exists, `password` omitted; link membership only.
 
 ## Audit logs
 
-| Method | Path                          | Permission   | Description         |
-| ------ | ----------------------------- | ------------ | ------------------- |
-| GET    | `/api/orgs/:orgId/audit-logs` | `audit:read` | Paginated audit log |
+**Release 0.2 (implemented):** See [Audit Logs API](./audit-logs.md) for `/api/audit-logs`.
+
+| Method | Path              | Permission   | Description         |
+| ------ | ----------------- | ------------ | ------------------- |
+| GET    | `/api/audit-logs` | `audit:read` | Paginated audit log |
 
 **Query params:** `cursor`, `limit` (max 100), `action`, `actorUserId`, `from`, `to`
 
@@ -268,12 +270,12 @@ If user exists, `password` omitted; link membership only.
 ```json
 {
   "id": "clx...",
-  "action": "membership.role_changed",
+  "organizationId": "clx...",
   "actorUserId": "clx...",
-  "resourceType": "membership",
-  "resourceId": "clx...",
+  "action": "membership.updated",
+  "targetType": "membership",
+  "targetId": "clx...",
   "metadata": { "previousRole": "VIEWER", "newRole": "RECRUITER" },
-  "requestId": "req_abc",
   "createdAt": "2026-06-28T10:00:00.000Z"
 }
 ```

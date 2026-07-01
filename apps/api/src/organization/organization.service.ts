@@ -25,9 +25,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
+import { AuditService } from '../audit/audit.service';
+import { AUDIT_ACTION, AUDIT_TARGET_TYPE } from '../audit/audit-actions';
+
 @Injectable()
 export class OrganizationService {
   private readonly env = parseEnv(apiEnvSchema);
+
+  constructor(private readonly auditService: AuditService) {}
 
   async getCurrentOrganization(user: AccessTokenPayload): Promise<CurrentOrganizationResponse> {
     const organizationId = this.requireOrganizationContext(user);
@@ -194,6 +199,21 @@ export class OrganizationService {
         user: {
           include: { profile: true },
         },
+      },
+    });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.MEMBERSHIP_UPDATED,
+      targetType: AUDIT_TARGET_TYPE.MEMBERSHIP,
+      targetId: memberUserId,
+      metadata: {
+        userId: memberUserId,
+        previousRole: existing.role,
+        newRole: updated.role,
+        previousStatus: existing.status,
+        newStatus: updated.status,
       },
     });
 

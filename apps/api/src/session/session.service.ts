@@ -9,6 +9,8 @@ import type {
 } from '@kolab/types';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
+import { AuditService } from '../audit/audit.service';
+import { AUDIT_ACTION, AUDIT_TARGET_TYPE } from '../audit/audit-actions';
 import { RedisService } from '../redis/redis.service';
 
 type SessionWithCreatedAt = Session & {
@@ -17,7 +19,10 @@ type SessionWithCreatedAt = Session & {
 
 @Injectable()
 export class SessionService {
-  constructor(private readonly redis: RedisService) {}
+  constructor(
+    private readonly redis: RedisService,
+    private readonly auditService: AuditService,
+  ) {}
 
   async listActiveSessions(user: AccessTokenPayload): Promise<ListSessionsResponse> {
     const sessions = await prisma.session.findMany({
@@ -81,6 +86,17 @@ export class SessionService {
       await this.redis.invalidateUserSession(user.sub);
     }
 
+    await this.auditService.record({
+      organizationId: session.organizationId ?? user.organizationId ?? null,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.SESSION_REVOKED,
+      targetType: AUDIT_TARGET_TYPE.SESSION,
+      targetId: session.id,
+      metadata: {
+        isCurrentSession: user.sessionId === session.id,
+      },
+    });
+
     return { id: session.id, revoked: true };
   }
 
@@ -108,6 +124,18 @@ export class SessionService {
     await prisma.session.updateMany({
       where: { id: { in: sessionIds }, userId: user.sub },
       data: { revokedAt: new Date() },
+    });
+
+    await this.auditService.record({
+      organizationId: user.organizationId ?? null,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.SESSIONS_REVOKED_OTHERS,
+      targetType: AUDIT_TARGET_TYPE.SESSION,
+      targetId: currentSessionId,
+      metadata: {
+        revokedSessionIds: sessionIds,
+        count: sessionIds.length,
+      },
     });
 
     return { revokedSessionIds: sessionIds };
