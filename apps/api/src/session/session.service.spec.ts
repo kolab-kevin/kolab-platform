@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { AuditService } from '../audit/audit.service';
 import { RedisService } from '../redis/redis.service';
 import { SessionService } from './session.service';
 
@@ -47,6 +48,7 @@ const activeSession = {
 describe('SessionService', () => {
   let service: SessionService;
   let redis: jest.Mocked<RedisService>;
+  let auditService: jest.Mocked<AuditService>;
 
   beforeEach(async () => {
     redis = {
@@ -54,8 +56,16 @@ describe('SessionService', () => {
       invalidateUserSession: jest.fn(),
     } as unknown as jest.Mocked<RedisService>;
 
+    auditService = {
+      record: jest.fn().mockResolvedValue({}),
+    } as unknown as jest.Mocked<AuditService>;
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [SessionService, { provide: RedisService, useValue: redis }],
+      providers: [
+        SessionService,
+        { provide: RedisService, useValue: redis },
+        { provide: AuditService, useValue: auditService },
+      ],
     }).compile();
 
     service = module.get(SessionService);
@@ -140,6 +150,12 @@ describe('SessionService', () => {
       });
       expect(redis.revokeRefreshToken).toHaveBeenCalledWith('token-hash-1');
       expect(redis.invalidateUserSession).toHaveBeenCalledWith('user-1');
+      expect(auditService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'session.revoked',
+          targetId: 'session-current',
+        }),
+      );
     });
 
     it('cannot revoke another users session', async () => {
@@ -160,6 +176,14 @@ describe('SessionService', () => {
       const result = await service.revokeOtherSessions(userToken);
 
       expect(result.revokedSessionIds).toEqual(['session-other']);
+      expect(auditService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'sessions.revoked_others',
+          metadata: expect.objectContaining({
+            revokedSessionIds: ['session-other'],
+          }),
+        }),
+      );
       expect(prisma.session.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({

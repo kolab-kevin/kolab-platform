@@ -26,10 +26,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
+import { AuditService } from '../audit/audit.service';
+import { AUDIT_ACTION, AUDIT_TARGET_TYPE } from '../audit/audit-actions';
+
 const INVITATION_EXPIRY = '7d';
 
 @Injectable()
 export class InvitationService {
+  constructor(private readonly auditService: AuditService) {}
+
   async createInvitation(
     user: AccessTokenPayload,
     input: CreateInvitationInput,
@@ -68,6 +73,18 @@ export class InvitationService {
         tokenHash,
         expiresAt,
         invitedBy: user.sub,
+      },
+    });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.INVITATION_CREATED,
+      targetType: AUDIT_TARGET_TYPE.INVITATION,
+      targetId: invitation.id,
+      metadata: {
+        email,
+        role: input.role,
       },
     });
 
@@ -120,6 +137,18 @@ export class InvitationService {
     }
 
     await prisma.invitation.delete({ where: { id: invitationId } });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.INVITATION_REVOKED,
+      targetType: AUDIT_TARGET_TYPE.INVITATION,
+      targetId: invitationId,
+      metadata: {
+        email: invitation.email,
+        role: invitation.role,
+      },
+    });
 
     return { id: invitationId, revoked: true };
   }
@@ -205,6 +234,19 @@ export class InvitationService {
     await prisma.invitation.update({
       where: { id: invitation.id },
       data: { acceptedAt: new Date() },
+    });
+
+    await this.auditService.record({
+      organizationId: invitation.organizationId,
+      actorUserId: existingUser.id,
+      action: AUDIT_ACTION.INVITATION_ACCEPTED,
+      targetType: AUDIT_TARGET_TYPE.INVITATION,
+      targetId: invitation.id,
+      metadata: {
+        email: invitation.email,
+        role: invitation.role,
+        userId: existingUser.id,
+      },
     });
 
     return {
