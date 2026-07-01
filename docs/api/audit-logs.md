@@ -68,6 +68,7 @@ Security-sensitive mutations write append-only audit entries via `AuditService.r
 | `membership.updated`      | Organization member role or status updated |
 | `session.revoked`         | User revoked one session                   |
 | `sessions.revoked_others` | User revoked all other active sessions     |
+| `profile.updated`         | User updated their profile                 |
 
 Each entry includes `organizationId`, `actorUserId`, `action`, `targetType`, `targetId`, and `metadata`. Secrets and raw invitation tokens are never stored in metadata.
 
