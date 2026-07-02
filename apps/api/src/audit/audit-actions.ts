@@ -17,6 +17,7 @@ export const AUDIT_ACTION = {
   LEAD_NOTE_ADDED: 'lead.note_added',
   LEAD_NOTE_UPDATED: 'lead.note_updated',
   LEAD_NOTE_DELETED: 'lead.note_deleted',
+  LEAD_FOLLOWUP_UPDATED: 'lead.followup_updated',
   RECRUITER_CREATED: 'recruiter.created',
   RECRUITER_UPDATED: 'recruiter.updated',
 } as const;

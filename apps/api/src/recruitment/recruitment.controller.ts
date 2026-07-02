@@ -2,6 +2,7 @@ import type { AccessTokenPayload } from '@kolab/auth';
 import type {
   CreateLeadInput,
   ReassignLeadInput,
+  UpdateLeadFollowUpInput,
   UpdateLeadInput,
   UpdateLeadStatusInput,
 } from '@kolab/types';
@@ -10,6 +11,7 @@ import {
   AddLeadNoteSchema,
   CreateLeadSchema,
   ReassignLeadSchema,
+  UpdateLeadFollowUpSchema,
   type UpdateLeadNoteInput,
   UpdateLeadNoteSchema,
   UpdateLeadSchema,
@@ -28,6 +30,7 @@ import {
   UnassignLeadSchema,
 } from './recruitment.queries';
 import { RecruitmentService } from './recruitment.service';
+import { RecruitmentFollowUpsService } from './recruitment-followups.service';
 import { RecruitmentNotesService } from './recruitment-notes.service';
 
 @ApiTags('recruitment')
@@ -37,6 +40,7 @@ export class RecruitmentController {
   constructor(
     private readonly recruitmentService: RecruitmentService,
     private readonly recruitmentNotesService: RecruitmentNotesService,
+    private readonly recruitmentFollowUpsService: RecruitmentFollowUpsService,
   ) {}
 
   @Get()
@@ -153,6 +157,20 @@ export class RecruitmentController {
     @Body(new ZodValidationPipe(UpdateLeadStatusSchema)) body: UpdateLeadStatusInput,
   ) {
     return this.recruitmentService.updateLeadStatus(user, leadId, body);
+  }
+
+  @Patch(':id/follow-up')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Set, update, or clear lead follow-up date' })
+  @ApiResponse({ status: 200, description: 'Lead follow-up updated' })
+  @ApiResponse({ status: 403, description: 'Not authorized for this lead' })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  updateLeadFollowUp(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') leadId: string,
+    @Body(new ZodValidationPipe(UpdateLeadFollowUpSchema)) body: UpdateLeadFollowUpInput,
+  ) {
+    return this.recruitmentFollowUpsService.updateLeadFollowUp(user, leadId, body);
   }
 
   @Delete(':id')

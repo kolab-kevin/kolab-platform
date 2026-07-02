@@ -54,13 +54,15 @@ Role matrix (Release 0.3):
 | POST   | `/api/recruitment/leads/:id/reassign`      | `crm:assign` | Manager reassign to another recruiter    |
 | POST   | `/api/recruitment/leads/:id/unassign`      | `crm:assign` | Manager return lead to unassigned pool   |
 | GET    | `/api/recruitment/my-leads`                | `crm:assign` | List leads assigned to current recruiter |
+| GET    | `/api/recruitment/follow-ups`              | `crm:read`   | List scheduled follow-ups for recruiter  |
+| PATCH  | `/api/recruitment/leads/:id/follow-up`     | `crm:update` | Set, update, or clear lead follow-up     |
 | GET    | `/api/recruitment/leads/:id/timeline`      | `crm:read`   | Combined chronological activity timeline |
 | GET    | `/api/recruitment/leads/:id/notes`         | `crm:read`   | List lead notes (newest first)           |
 | POST   | `/api/recruitment/leads/:id/notes`         | `crm:update` | Add lead communication note              |
 | PATCH  | `/api/recruitment/leads/:id/notes/:noteId` | `crm:update` | Edit note (author or manager)            |
 | DELETE | `/api/recruitment/leads/:id/notes/:noteId` | `crm:update` | Soft delete note                         |
 
-Creator conversion, follow-up reminders, and payments are **not** implemented in this release. Pipeline status transitions are available via `POST /api/recruitment/leads/:id/status` (without creator onboarding side effects).
+Creator conversion and payments are **not** implemented in this release. Pipeline status transitions are available via `POST /api/recruitment/leads/:id/status` (without creator onboarding side effects). Follow-up scheduling and due/overdue workflows are available via `/api/recruitment/follow-ups` and `PATCH /api/recruitment/leads/:id/follow-up`.
 
 ---
 
@@ -137,6 +139,68 @@ Query parameters:
 | `search`         | string | Match name, nickname, email, or username |
 | `platform`       | enum   | Filter by platform account               |
 | `followUpBefore` | ISO    | Leads with follow-up on or before date   |
+
+---
+
+## Follow-up workflow
+
+Follow-ups use the existing `CreatorLead.nextFollowUpAt` field. History is stored in `CreatorLead.metadata.followUpHistory` (no schema migration).
+
+### Follow-up rules
+
+1. Only leads **assigned to the authenticated recruiter** appear in the follow-ups list.
+2. List results include only leads with `nextFollowUpAt` set; soft-deleted leads are excluded; `REJECTED` leads are excluded unless filtered explicitly by `status`.
+3. Recruiters may set, update, or clear follow-ups only on **their own assigned** leads.
+4. `ORG_OWNER`, `ORG_ADMIN`, and `AGENCY_MANAGER` may update follow-ups on **any** org lead.
+5. **Rejected** and **soft-deleted** leads cannot have a new follow-up scheduled (`400` / `404`).
+6. Clearing a follow-up (`nextFollowUpAt: null`) is allowed, including on rejected leads.
+7. An optional `note` on PATCH creates a `LeadNote` row (`contactType: OTHER`).
+8. Every follow-up change records audit action `lead.followup_updated` and appends timeline event `followup.updated`.
+
+### GET `/api/recruitment/follow-ups`
+
+Returns paginated leads assigned to the current recruiter with a scheduled follow-up.
+
+Query parameters:
+
+| Param         | Type    | Description                                     |
+| ------------- | ------- | ----------------------------------------------- |
+| `cursor`      | string  | Pagination cursor (lead id)                     |
+| `limit`       | number  | Max 100, default 20                             |
+| `dueBefore`   | ISO     | Follow-ups scheduled on or before this datetime |
+| `overdueOnly` | boolean | When true, only follow-ups before now           |
+| `status`      | enum    | Filter by lead status                           |
+| `platform`    | enum    | Filter by platform account                      |
+
+Results are ordered by `nextFollowUpAt` ascending (soonest first).
+
+### PATCH `/api/recruitment/leads/:id/follow-up`
+
+Set, update, or clear the follow-up date.
+
+**Request:**
+
+```json
+{
+  "nextFollowUpAt": "2026-06-28T12:00:00.000Z",
+  "note": "Reschedule after vacation"
+}
+```
+
+Pass `"nextFollowUpAt": null` to clear the follow-up.
+
+Validation uses `UpdateLeadFollowUpSchema` from `@kolab/types`.
+
+**Response (200):**
+
+```json
+{
+  "lead": { "...": "CreatorLead fields" },
+  "note": { "...": "LeadNote fields when note provided" }
+}
+```
+
+**Errors:** `403` recruiter updating another recruiter's lead; `400` scheduling on rejected lead; `404` missing or soft-deleted lead.
 
 ---
 
@@ -380,6 +444,7 @@ Returns a unified chronological stream (**newest first**) combining:
 | `assignment.ended`   | `LeadAssignment.unassignedAt` |
 | `status.changed`     | `LeadStatusHistory` rows      |
 | `note.added`         | Active `LeadNote` rows        |
+| `followup.updated`   | `metadata.followUpHistory`    |
 
 The `type` field is extensible for future CRM timeline events.
 
@@ -420,18 +485,19 @@ Soft-deleted leads are hidden from list and detail endpoints.
 
 ## Audit events
 
-| Action                | When                |
-| --------------------- | ------------------- |
-| `lead.created`        | Lead created        |
-| `lead.updated`        | Lead fields updated |
-| `lead.deleted`        | Lead soft deleted   |
-| `lead.claimed`        | Lead claimed        |
-| `lead.reassigned`     | Lead reassigned     |
-| `lead.unassigned`     | Lead unassigned     |
-| `lead.status_changed` | Lead status changed |
-| `lead.note_added`     | Lead note added     |
-| `lead.note_updated`   | Lead note updated   |
-| `lead.note_deleted`   | Lead note deleted   |
+| Action                  | When                   |
+| ----------------------- | ---------------------- |
+| `lead.created`          | Lead created           |
+| `lead.updated`          | Lead fields updated    |
+| `lead.deleted`          | Lead soft deleted      |
+| `lead.claimed`          | Lead claimed           |
+| `lead.reassigned`       | Lead reassigned        |
+| `lead.unassigned`       | Lead unassigned        |
+| `lead.status_changed`   | Lead status changed    |
+| `lead.note_added`       | Lead note added        |
+| `lead.note_updated`     | Lead note updated      |
+| `lead.note_deleted`     | Lead note deleted      |
+| `lead.followup_updated` | Lead follow-up changed |
 
 Target type: `lead`.
 
