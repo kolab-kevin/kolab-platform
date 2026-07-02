@@ -10,7 +10,7 @@
 
 Creator Management provides roster read/update APIs for creators produced by the Recruitment CRM conversion workflow (`POST /api/recruitment/leads/:id/convert`).
 
-Creator roster records are stored on converted leads (`CreatorLead.metadata.creatorProfile`) and linked to organization memberships with role `CREATOR`.
+Creator roster records are currently stored on converted leads (`CreatorLead.metadata.creatorProfile`) and linked to organization memberships with role `CREATOR`. First-class database tables (`CreatorProfile`, `CreatorPlatformAccount`) are now available in Prisma — see [Storage transition](#storage-transition).
 
 Release 0.3 does **not** include creator dashboards, campaigns, payments, or analytics.
 
@@ -216,12 +216,24 @@ See [Recruitment CRM API](./recruitment.md#creator-conversion) for conversion wo
 
 After conversion, roster data lives in:
 
-- `CreatorLead.metadata.creatorProfile` — creator roster profile
-- `CreatorLead.metadata.creatorPlatformAccounts` — copied platform accounts
+- `CreatorLead.metadata.creatorProfile` — creator roster profile (**current API read/write**)
+- `CreatorLead.metadata.creatorPlatformAccounts` — copied platform accounts (**current API**)
 - `CreatorLead.convertedUserId` / `convertedAt` — conversion linkage
 - `OrganizationMembership` — role `CREATOR`
 
 The lead row is retained for CRM history.
+
+### Storage transition
+
+| Layer                          | Status          | Notes                                                                    |
+| ------------------------------ | --------------- | ------------------------------------------------------------------------ |
+| Lead metadata                  | **Active**      | Conversion + `/api/creators` read/write today                            |
+| `CreatorProfile` table         | **Schema only** | One profile per `(organizationId, userId)`; optional `sourceLeadId` link |
+| `CreatorPlatformAccount` table | **Schema only** | Reuses `PlatformType` + `LeadPlatformAccountStatus`                      |
+
+A follow-up API milestone will dual-write or migrate reads to the new tables without breaking existing converted leads. Commission plan and recruiter assignment remain on the source lead until that migration.
+
+See [Recruitment CRM ERD](../database/recruitment-crm-erd.md#creator-profile-transition) for the data model transition plan.
 
 ---
 

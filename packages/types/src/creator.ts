@@ -17,6 +17,10 @@ export type CreatorAvailability = z.infer<typeof CreatorAvailabilitySchema>;
 
 const languageCodeSchema = z.string().min(2).max(10);
 
+export const CreatorStatusSchema = z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'ARCHIVED']);
+
+export type CreatorStatus = z.infer<typeof CreatorStatusSchema>;
+
 export const CreatorPlatformAccountStatusSchema = z.enum([
   'ACTIVE',
   'UNVERIFIED',
@@ -25,6 +29,42 @@ export const CreatorPlatformAccountStatusSchema = z.enum([
 ]);
 
 export type CreatorPlatformAccountStatus = z.infer<typeof CreatorPlatformAccountStatusSchema>;
+
+export const CreatorProfileSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  userId: z.string(),
+  sourceLeadId: z.string().nullable(),
+  displayName: z.string(),
+  bio: z.string().nullable(),
+  country: z.string().nullable(),
+  languages: z.array(languageCodeSchema),
+  availability: CreatorAvailabilitySchema,
+  status: CreatorStatusSchema,
+  metadata: z.record(z.unknown()),
+  recruiterUserId: z.string().nullable(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+export type CreatorProfile = z.infer<typeof CreatorProfileSchema>;
+
+export const CreatorProfilePlatformAccountSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  creatorProfileId: z.string(),
+  platform: PlatformTypeSchema,
+  username: z.string(),
+  profileUrl: z.string().nullable(),
+  followers: z.number().int().nullable(),
+  verified: z.boolean(),
+  status: CreatorPlatformAccountStatusSchema,
+  metadata: z.record(z.unknown()),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+export type CreatorProfilePlatformAccount = z.infer<typeof CreatorProfilePlatformAccountSchema>;
 
 export const CreatorPlatformAccountSchema = z.object({
   id: z.string(),
