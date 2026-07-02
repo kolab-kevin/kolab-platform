@@ -48,13 +48,14 @@ Role matrix (Release 0.3):
 | GET    | `/api/recruitment/leads/:id`          | `crm:read`   | Get lead detail with related records     |
 | POST   | `/api/recruitment/leads`              | `crm:create` | Create lead                              |
 | PATCH  | `/api/recruitment/leads/:id`          | `crm:update` | Update lead profile fields only          |
+| POST   | `/api/recruitment/leads/:id/status`   | `crm:update` | Transition lead pipeline status          |
 | DELETE | `/api/recruitment/leads/:id`          | `crm:delete` | Soft delete lead                         |
 | POST   | `/api/recruitment/leads/:id/claim`    | `crm:assign` | Claim an unassigned lead                 |
 | POST   | `/api/recruitment/leads/:id/reassign` | `crm:assign` | Manager reassign to another recruiter    |
 | POST   | `/api/recruitment/leads/:id/unassign` | `crm:assign` | Manager return lead to unassigned pool   |
 | GET    | `/api/recruitment/my-leads`           | `crm:assign` | List leads assigned to current recruiter |
 
-Status transitions, conversion, follow-up reminders, and payments are **not** implemented in this release.
+Creator conversion, follow-up reminders, and payments are **not** implemented in this release. Pipeline status transitions are available via `POST /api/recruitment/leads/:id/status` (without creator onboarding side effects).
 
 ---
 
@@ -278,6 +279,62 @@ Validation uses `UpdateLeadSchema` from `@kolab/types`. At least one field is re
 
 ---
 
+## POST `/api/recruitment/leads/:id/status`
+
+Transitions lead pipeline status using controlled rules. Requires `crm:update`.
+
+Does **not** create creator accounts when transitioning to `SIGNED` or `ACTIVE_CREATOR` — only records the status change and history.
+
+### Status transition request
+
+```json
+{
+  "status": "CONTACTED",
+  "reason": "Initial outreach completed"
+}
+```
+
+Validation uses `UpdateLeadStatusSchema` from `@kolab/types`.
+
+### Status transition response (200)
+
+```json
+{
+  "lead": {
+    "id": "clx...",
+    "status": "CONTACTED"
+  },
+  "statusHistory": {
+    "id": "clx...",
+    "previousStatus": "NEW",
+    "newStatus": "CONTACTED",
+    "changedById": "clx...",
+    "changedAt": "2026-06-21T08:00:00.000Z",
+    "reason": "Initial outreach completed"
+  }
+}
+```
+
+**Errors:** `400` invalid transition; `404` missing or soft-deleted lead.
+
+### Transition matrix
+
+| From             | Allowed to                                             |
+| ---------------- | ------------------------------------------------------ |
+| `NEW`            | `CONTACTED`, `INTERESTED`, `REJECTED`                  |
+| `CONTACTED`      | `INTERESTED`, `APPLICATION`, `INACTIVE`, `REJECTED`    |
+| `INTERESTED`     | `APPLICATION`, `CONTRACT_SENT`, `INACTIVE`, `REJECTED` |
+| `APPLICATION`    | `CONTRACT_SENT`, `REJECTED`, `INACTIVE`                |
+| `CONTRACT_SENT`  | `SIGNED`, `REJECTED`, `INACTIVE`                       |
+| `SIGNED`         | `ACTIVE_CREATOR`, `INACTIVE`                           |
+| `ACTIVE_CREATOR` | `INACTIVE`                                             |
+| `INACTIVE`       | `CONTACTED`, `INTERESTED`                              |
+| `REJECTED`       | `CONTACTED`                                            |
+
+Each successful transition appends a `LeadStatusHistory` row inside a database transaction.
+
+---
+
 ## DELETE `/api/recruitment/leads/:id`
 
 Soft deletes the lead by setting `metadata.deleted = true`. The row is not physically removed.
@@ -297,14 +354,15 @@ Soft-deleted leads are hidden from list and detail endpoints.
 
 ## Audit events
 
-| Action            | When                |
-| ----------------- | ------------------- |
-| `lead.created`    | Lead created        |
-| `lead.updated`    | Lead fields updated |
-| `lead.deleted`    | Lead soft deleted   |
-| `lead.claimed`    | Lead claimed        |
-| `lead.reassigned` | Lead reassigned     |
-| `lead.unassigned` | Lead unassigned     |
+| Action                | When                |
+| --------------------- | ------------------- |
+| `lead.created`        | Lead created        |
+| `lead.updated`        | Lead fields updated |
+| `lead.deleted`        | Lead soft deleted   |
+| `lead.claimed`        | Lead claimed        |
+| `lead.reassigned`     | Lead reassigned     |
+| `lead.unassigned`     | Lead unassigned     |
+| `lead.status_changed` | Lead status changed |
 
 Target type: `lead`.
 

@@ -19,6 +19,7 @@ import type {
   LeadSummary,
   ReassignLeadInput,
   UpdateLeadInput,
+  UpdateLeadStatusInput,
 } from '@kolab/types';
 import {
   BadRequestException,
@@ -38,6 +39,7 @@ import type {
   RecruitmentLeadListQuery,
   UnassignLeadInput,
 } from './recruitment.queries';
+import { isAllowedLeadStatusTransition } from './recruitment.status-transitions';
 import { activeLeadMetadataFilter, buildSoftDeleteMetadata, toRecord } from './recruitment.utils';
 
 export type RecruitmentLeadDetailResponse = {
@@ -57,6 +59,11 @@ export type LeadAssignmentActionResponse = {
 export type LeadUnassignActionResponse = {
   lead: CreatorLead;
   assignment: LeadAssignment;
+};
+
+export type LeadStatusChangeResponse = {
+  lead: CreatorLead;
+  statusHistory: LeadStatusHistory;
 };
 
 @Injectable()
@@ -256,6 +263,59 @@ export class RecruitmentService {
     });
 
     return this.toCreatorLead(lead);
+  }
+
+  async updateLeadStatus(
+    user: AccessTokenPayload,
+    leadId: string,
+    input: UpdateLeadStatusInput,
+  ): Promise<LeadStatusChangeResponse> {
+    const organizationId = await this.requireActiveOrganization(user);
+    const existing = await this.findActiveLead(organizationId, leadId);
+
+    if (!isAllowedLeadStatusTransition(existing.status, input.status)) {
+      throw new BadRequestException(
+        `Invalid status transition from ${existing.status} to ${input.status}`,
+      );
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const lead = await tx.creatorLead.update({
+        where: { id: existing.id },
+        data: { status: input.status },
+      });
+
+      const statusHistory = await tx.leadStatusHistory.create({
+        data: {
+          organizationId,
+          leadId: lead.id,
+          previousStatus: existing.status,
+          newStatus: input.status,
+          changedById: user.sub,
+          reason: input.reason ?? null,
+        },
+      });
+
+      return { lead, statusHistory };
+    });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.LEAD_STATUS_CHANGED,
+      targetType: AUDIT_TARGET_TYPE.LEAD,
+      targetId: existing.id,
+      metadata: {
+        previousStatus: existing.status,
+        newStatus: input.status,
+        reason: input.reason ?? null,
+      },
+    });
+
+    return {
+      lead: this.toCreatorLead(result.lead),
+      statusHistory: this.toLeadStatusHistory(result.statusHistory),
+    };
   }
 
   async deleteLead(user: AccessTokenPayload, leadId: string): Promise<DeleteLeadResponse> {
