@@ -1,6 +1,16 @@
 import type { AccessTokenPayload } from '@kolab/auth';
-import type { CreateLeadInput, ReassignLeadInput, UpdateLeadInput } from '@kolab/types';
-import { CreateLeadSchema, ReassignLeadSchema, UpdateLeadSchema } from '@kolab/types';
+import type {
+  CreateLeadInput,
+  ReassignLeadInput,
+  UpdateLeadInput,
+  UpdateLeadStatusInput,
+} from '@kolab/types';
+import {
+  CreateLeadSchema,
+  ReassignLeadSchema,
+  UpdateLeadSchema,
+  UpdateLeadStatusSchema,
+} from '@kolab/types';
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
@@ -64,6 +74,21 @@ export class RecruitmentController {
     @Body(new ZodValidationPipe(UpdateLeadSchema)) body: UpdateLeadInput,
   ) {
     return this.recruitmentService.updateLead(user, leadId, body);
+  }
+
+  @Post(':id/status')
+  @HttpCode(200)
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Transition recruitment lead pipeline status' })
+  @ApiResponse({ status: 200, description: 'Lead status updated' })
+  @ApiResponse({ status: 400, description: 'Invalid status transition' })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  updateLeadStatus(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') leadId: string,
+    @Body(new ZodValidationPipe(UpdateLeadStatusSchema)) body: UpdateLeadStatusInput,
+  ) {
+    return this.recruitmentService.updateLeadStatus(user, leadId, body);
   }
 
   @Delete(':id')

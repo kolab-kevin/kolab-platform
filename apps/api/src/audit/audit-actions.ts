@@ -13,6 +13,7 @@ export const AUDIT_ACTION = {
   LEAD_CLAIMED: 'lead.claimed',
   LEAD_REASSIGNED: 'lead.reassigned',
   LEAD_UNASSIGNED: 'lead.unassigned',
+  LEAD_STATUS_CHANGED: 'lead.status_changed',
   RECRUITER_CREATED: 'recruiter.created',
   RECRUITER_UPDATED: 'recruiter.updated',
 } as const;

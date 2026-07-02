@@ -28,6 +28,7 @@ describe('RecruitmentController authorization', () => {
             claimLead: jest.fn(),
             reassignLead: jest.fn(),
             unassignLead: jest.fn(),
+            updateLeadStatus: jest.fn(),
           },
         },
       ],
@@ -167,6 +168,30 @@ describe('RecruitmentController authorization', () => {
 
     expect(() => permissionsGuard.canActivate(createContext('claimLead', supportUser))).toThrow(
       ForbiddenException,
+    );
+  });
+
+  it('allows recruiters to transition lead status with crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(permissionsGuard.canActivate(createContext('updateLeadStatus', recruiterUser))).toBe(
+      true,
+    );
+  });
+
+  it('denies viewers from transitioning lead status', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('updateLeadStatus', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows system administrators to bypass status transition permission checks', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(permissionsGuard.canActivate(createContext('updateLeadStatus', systemAdminUser))).toBe(
+      true,
     );
   });
 });
