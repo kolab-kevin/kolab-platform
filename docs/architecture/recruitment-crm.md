@@ -52,13 +52,28 @@ The Recruitment module lives in `apps/api` and depends on existing auth guards, 
 
 ## Tenancy and access
 
-| Rule                 | Behavior                                                                            |
-| -------------------- | ----------------------------------------------------------------------------------- |
-| Scope                | All CRM data is keyed by `organizationId`                                           |
-| Org type gate        | Routes require active org with `type = AGENCY`                                      |
-| Membership           | User must have active `OrganizationMembership`                                      |
-| Recruiter visibility | Recruiters see leads where `assignedRecruiterId = self` unless granted manager read |
-| Manager visibility   | `AGENCY_MANAGER`, `ORG_ADMIN`, `ORG_OWNER` see all org leads                        |
+| Rule                 | Behavior                                                                                |
+| -------------------- | --------------------------------------------------------------------------------------- |
+| Scope                | All CRM data is keyed by `organizationId`                                               |
+| Org type gate        | Routes require active org with `type = AGENCY`                                          |
+| Membership           | User must have active `OrganizationMembership`                                          |
+| Authorization        | **Always** from `OrganizationMembership` + permission matrix — never `RecruiterProfile` |
+| Recruiter visibility | Recruiters see leads where `assignedRecruiterId = self` unless granted manager read     |
+| Manager visibility   | `AGENCY_MANAGER`, `ORG_ADMIN`, `ORG_OWNER` see all org leads                            |
+
+---
+
+## Recruiter profile vs membership
+
+| Concern            | `OrganizationMembership`      | `RecruiterProfile`                           |
+| ------------------ | ----------------------------- | -------------------------------------------- |
+| Purpose            | Access control (role, status) | Recruiting business data                     |
+| Grants permissions | Yes                           | **No**                                       |
+| Unique key         | `(organizationId, userId)`    | `(organizationId, userId)`                   |
+| Typical fields     | `role`, `status`, `joinedAt`  | territory, goals, manager, commission plan   |
+| API (Release 0.3)  | Existing org/member APIs      | Schema + types only (API in later milestone) |
+
+A user with `OrganizationRole = RECRUITER` may have zero or one `RecruiterProfile` row per organization. Profile `status` (`RecruiterStatus`) is operational metadata and does not replace `MembershipStatus`.
 
 ---
 

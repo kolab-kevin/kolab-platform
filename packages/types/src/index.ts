@@ -7,5 +7,6 @@ export * from './organization';
 export * from './permissions';
 export * from './platform';
 export * from './profile';
+export * from './recruiter-profile';
 export * from './recruitment-crm';
 export * from './session';

@@ -11,7 +11,9 @@ The Recruitment CRM extends the organization-scoped identity model with lead pip
 
 Legacy `User.platforms` is **not** used for lead platform tracking. Leads use dedicated **platform account** rows.
 
-**Prisma model names:** `CreatorLead`, `LeadPlatformAccount`, `LeadAssignment`, `LeadNote`, `LeadStatusHistory`.
+**Prisma model names:** `CreatorLead`, `LeadPlatformAccount`, `LeadAssignment`, `LeadNote`, `LeadStatusHistory`, `RecruiterProfile`.
+
+`RecruiterProfile` stores recruiter business data per organization membership user. **Access control remains on `OrganizationMembership`** — the profile does not grant permissions.
 
 ---
 
@@ -22,8 +24,10 @@ erDiagram
   Organization ||--o{ CreatorLead : has
   Organization ||--o{ LeadPlatformAccount : has
   Organization ||--o{ LeadNote : has
+  Organization ||--o{ RecruiterProfile : has
 
-  User ||--o{ CreatorLead : "assigned recruiter"
+  User ||--o{ RecruiterProfile : "recruiter profile"
+  User ||--o{ RecruiterProfile : "managed recruiters"
   User ||--o{ CreatorLead : "converted creator"
   User ||--o{ LeadNote : author
   User ||--o{ LeadAssignment : recruiter
@@ -104,6 +108,26 @@ erDiagram
     datetime changedAt
     string reason
   }
+
+  RecruiterProfile {
+    string id PK
+    string organizationId FK
+    string userId FK
+    string displayName "nullable"
+    string nickname "nullable"
+    string territory "nullable"
+    string languages
+    datetime hireDate "nullable"
+    enum commissionPlan
+    int monthlyLeadGoal "nullable"
+    int monthlyCreatorGoal "nullable"
+    json availability
+    string managerUserId FK "nullable"
+    enum status
+    json metadata
+    datetime createdAt
+    datetime updatedAt
+  }
 ```
 
 ---
@@ -135,6 +159,12 @@ erDiagram
 `TIKTOK`, `INSTAGRAM`, `YOUTUBE`, `FACEBOOK`, `TWITCH`, `OTHER`
 
 _Note:_ Distinct from legacy `User.platforms` flags and legacy `Platform` enum — describes external social accounts on a lead.
+
+### `RecruiterStatus`
+
+`ACTIVE` (default), `INACTIVE`, `SUSPENDED`
+
+Operational status for recruiter business profile rows. Distinct from `MembershipStatus` on `OrganizationMembership`.
 
 ---
 
@@ -238,6 +268,44 @@ Append-only pipeline status changes.
 | `reason`         | string?   | Optional transition reason |
 
 `CreatorLead.nextFollowUpAt` supports follow-up list views without a separate follow-up table in v1 schema.
+
+---
+
+### RecruiterProfile
+
+Recruiter-specific business profile, separate from `OrganizationMembership`.
+
+| Field                     | Type              | Notes                                       |
+| ------------------------- | ----------------- | ------------------------------------------- |
+| `id`                      | cuid              | Primary key                                 |
+| `organizationId`          | FK → Organization | Tenant scope                                |
+| `userId`                  | FK → User         | Linked platform user                        |
+| `displayName`             | string?           | Recruiting display name                     |
+| `nickname`                | string?           | Handle / alias                              |
+| `territory`               | string?           | Region or territory label                   |
+| `languages`               | string[]          | BCP-47 codes                                |
+| `hireDate`                | datetime?         | Recruiter start date                        |
+| `commissionPlan`          | enum              | Reuses `CommissionPlan`; default `STANDARD` |
+| `monthlyLeadGoal`         | int?              | Target leads per month                      |
+| `monthlyCreatorGoal`      | int?              | Target signed creators per month            |
+| `availability`            | json              | Schedule hints (timezone, hours, weekdays)  |
+| `managerUserId`           | FK → User?        | Reporting manager                           |
+| `status`                  | enum              | `RecruiterStatus`; default `ACTIVE`         |
+| `metadata`                | json              | Extension fields                            |
+| `createdAt` / `updatedAt` | datetime          | Audit                                       |
+
+**Constraints:**
+
+- Unique `(organizationId, userId)` — one profile per user per org
+
+**Indexes:**
+
+- `(organizationId)`
+- `(userId)`
+- `(managerUserId)`
+- `(organizationId, status)`
+
+**Security note:** Permissions and CRM API access are resolved from `OrganizationMembership.role` and `@kolab/auth` permission matrix. `RecruiterProfile` is data-only and must not be used as an authorization source.
 
 ---
 
