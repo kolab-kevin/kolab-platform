@@ -9,6 +9,11 @@ export const PermissionSchema = z.enum([
   'members:remove',
   'audit:read',
   'sessions:revoke',
+  'crm:read',
+  'crm:create',
+  'crm:update',
+  'crm:delete',
+  'crm:assign',
 ]);
 
 export type Permission = z.infer<typeof PermissionSchema>;

@@ -8,16 +8,33 @@
 
 ## Overview
 
-REST API for Creator Recruitment CRM lead management. All routes require an active organization membership in the JWT. Permissions use existing member permissions until dedicated CRM permissions ship.
+REST API for Creator Recruitment CRM lead management. All routes require an active organization membership in the JWT. Authorization uses dedicated CRM permissions from the organization role matrix in `@kolab/auth`.
 
 ---
 
 ## Permissions
 
-| Permission            | Used for                        |
-| --------------------- | ------------------------------- |
-| `members:read`        | List and get leads              |
-| `members:update_role` | Create, update, and soft delete |
+| Permission   | Used for                          |
+| ------------ | --------------------------------- |
+| `crm:read`   | List and get leads                |
+| `crm:create` | Create leads                      |
+| `crm:update` | Update lead profile fields        |
+| `crm:delete` | Soft delete leads                 |
+| `crm:assign` | Reserved for future assign routes |
+
+Role matrix (Release 0.3):
+
+| Role             | CRM permissions                                      |
+| ---------------- | ---------------------------------------------------- |
+| `ORG_OWNER`      | all (`read`, `create`, `update`, `delete`, `assign`) |
+| `ORG_ADMIN`      | all                                                  |
+| `AGENCY_MANAGER` | all                                                  |
+| `RECRUITER`      | `read`, `create`, `update`, `assign`                 |
+| `MODERATOR`      | `read` only                                          |
+| `SUPPORT`        | `read` only                                          |
+| `CREATOR`        | none                                                 |
+| `FINANCE`        | none                                                 |
+| `VIEWER`         | none                                                 |
 
 `SYSTEM_ADMIN` (`isSystemAdmin: true`) bypasses authorization guards on protected routes.
 
@@ -25,13 +42,13 @@ REST API for Creator Recruitment CRM lead management. All routes require an acti
 
 ## Endpoints
 
-| Method | Path                         | Permission            | Description                             |
-| ------ | ---------------------------- | --------------------- | --------------------------------------- |
-| GET    | `/api/recruitment/leads`     | `members:read`        | List leads (filter, search, pagination) |
-| GET    | `/api/recruitment/leads/:id` | `members:read`        | Get lead detail with related records    |
-| POST   | `/api/recruitment/leads`     | `members:update_role` | Create lead                             |
-| PATCH  | `/api/recruitment/leads/:id` | `members:update_role` | Update lead profile fields only         |
-| DELETE | `/api/recruitment/leads/:id` | `members:update_role` | Soft delete lead                        |
+| Method | Path                         | Permission   | Description                             |
+| ------ | ---------------------------- | ------------ | --------------------------------------- |
+| GET    | `/api/recruitment/leads`     | `crm:read`   | List leads (filter, search, pagination) |
+| GET    | `/api/recruitment/leads/:id` | `crm:read`   | Get lead detail with related records    |
+| POST   | `/api/recruitment/leads`     | `crm:create` | Create lead                             |
+| PATCH  | `/api/recruitment/leads/:id` | `crm:update` | Update lead profile fields only         |
+| DELETE | `/api/recruitment/leads/:id` | `crm:delete` | Soft delete lead                        |
 
 Status transitions, assignment, conversion, and payments are **not** implemented in this release.
 

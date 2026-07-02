@@ -54,4 +54,38 @@ describe('permissions', () => {
     expect(userHasPermission(user, 'members:remove')).toBe(true);
     expect(userHasAllPermissions(user, ['org:update', 'audit:read'])).toBe(true);
   });
+
+  it('grants full CRM permissions to org owners, org admins, and agency managers', () => {
+    for (const role of ['ORG_OWNER', 'ORG_ADMIN', 'AGENCY_MANAGER'] as const) {
+      expect(organizationRoleHasPermission(role, 'crm:read')).toBe(true);
+      expect(organizationRoleHasPermission(role, 'crm:create')).toBe(true);
+      expect(organizationRoleHasPermission(role, 'crm:update')).toBe(true);
+      expect(organizationRoleHasPermission(role, 'crm:delete')).toBe(true);
+      expect(organizationRoleHasPermission(role, 'crm:assign')).toBe(true);
+    }
+  });
+
+  it('grants recruiters CRM read/create/update/assign but not delete', () => {
+    expect(organizationRoleHasPermission('RECRUITER', 'crm:read')).toBe(true);
+    expect(organizationRoleHasPermission('RECRUITER', 'crm:create')).toBe(true);
+    expect(organizationRoleHasPermission('RECRUITER', 'crm:update')).toBe(true);
+    expect(organizationRoleHasPermission('RECRUITER', 'crm:assign')).toBe(true);
+    expect(organizationRoleHasPermission('RECRUITER', 'crm:delete')).toBe(false);
+  });
+
+  it('grants support and moderators CRM read only', () => {
+    for (const role of ['SUPPORT', 'MODERATOR'] as const) {
+      expect(organizationRoleHasPermission(role, 'crm:read')).toBe(true);
+      expect(organizationRoleHasPermission(role, 'crm:create')).toBe(false);
+      expect(organizationRoleHasPermission(role, 'crm:delete')).toBe(false);
+    }
+  });
+
+  it('denies CRM permissions to viewers, creators, and finance', () => {
+    for (const role of ['VIEWER', 'CREATOR', 'FINANCE'] as const) {
+      expect(organizationRoleHasPermission(role, 'crm:read')).toBe(false);
+      expect(organizationRoleHasPermission(role, 'crm:create')).toBe(false);
+      expect(organizationRoleHasPermission(role, 'crm:delete')).toBe(false);
+    }
+  });
 });
