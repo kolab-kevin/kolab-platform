@@ -38,6 +38,8 @@ Enterprise monorepo powering multiple business verticals from a single foundatio
 
 **Release 0.2 (planned):** Organization-scoped identity — see [Identity architecture](./identity.md) and [Release 0.2 planning](../product/release-0.2.md).
 
+**Release 0.3 (planning):** Creator Recruitment CRM — see [Recruitment CRM architecture](./recruitment-crm.md) and [Product plan](../product/recruitment-crm.md).
+
 ## Infrastructure
 
 - PostgreSQL 16 — primary datastore (Prisma ORM)

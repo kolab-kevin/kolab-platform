@@ -56,3 +56,7 @@ Implemented Release 0.2 modules:
 - [Profile](./profile.md)
 - [System administration](./admin.md)
 - [Agency management](./agency.md) (Release 0.3)
+
+**Release 0.3 (planning):**
+
+- [Recruitment CRM API](./recruitment-crm.md)
