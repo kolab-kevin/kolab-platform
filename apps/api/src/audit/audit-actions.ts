@@ -10,6 +10,9 @@ export const AUDIT_ACTION = {
   LEAD_CREATED: 'lead.created',
   LEAD_UPDATED: 'lead.updated',
   LEAD_DELETED: 'lead.deleted',
+  LEAD_CLAIMED: 'lead.claimed',
+  LEAD_REASSIGNED: 'lead.reassigned',
+  LEAD_UNASSIGNED: 'lead.unassigned',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {

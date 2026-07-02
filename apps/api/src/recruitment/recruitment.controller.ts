@@ -1,6 +1,6 @@
 import type { AccessTokenPayload } from '@kolab/auth';
-import type { CreateLeadInput, UpdateLeadInput } from '@kolab/types';
-import { CreateLeadSchema, UpdateLeadSchema } from '@kolab/types';
+import type { CreateLeadInput, ReassignLeadInput, UpdateLeadInput } from '@kolab/types';
+import { CreateLeadSchema, ReassignLeadSchema, UpdateLeadSchema } from '@kolab/types';
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
@@ -10,6 +10,8 @@ import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import {
   type RecruitmentLeadListQuery,
   RecruitmentLeadListQuerySchema,
+  type UnassignLeadInput,
+  UnassignLeadSchema,
 } from './recruitment.queries';
 import { RecruitmentService } from './recruitment.service';
 
@@ -72,5 +74,43 @@ export class RecruitmentController {
   @ApiResponse({ status: 404, description: 'Lead not found' })
   deleteLead(@CurrentUser() user: AccessTokenPayload, @Param('id') leadId: string) {
     return this.recruitmentService.deleteLead(user, leadId);
+  }
+
+  @Post(':id/claim')
+  @HttpCode(200)
+  @RequirePermissions('crm:assign')
+  @ApiOperation({ summary: 'Claim an unassigned lead' })
+  @ApiResponse({ status: 200, description: 'Lead claimed by the current recruiter' })
+  @ApiResponse({ status: 409, description: 'Lead is already claimed' })
+  claimLead(@CurrentUser() user: AccessTokenPayload, @Param('id') leadId: string) {
+    return this.recruitmentService.claimLead(user, leadId);
+  }
+
+  @Post(':id/reassign')
+  @HttpCode(200)
+  @RequirePermissions('crm:assign')
+  @ApiOperation({ summary: 'Reassign a lead to another recruiter' })
+  @ApiResponse({ status: 200, description: 'Lead reassigned' })
+  @ApiResponse({ status: 403, description: 'Manager role required' })
+  reassignLead(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') leadId: string,
+    @Body(new ZodValidationPipe(ReassignLeadSchema)) body: ReassignLeadInput,
+  ) {
+    return this.recruitmentService.reassignLead(user, leadId, body);
+  }
+
+  @Post(':id/unassign')
+  @HttpCode(200)
+  @RequirePermissions('crm:assign')
+  @ApiOperation({ summary: 'Unassign a lead and return it to the pool' })
+  @ApiResponse({ status: 200, description: 'Lead unassigned' })
+  @ApiResponse({ status: 403, description: 'Manager role required' })
+  unassignLead(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') leadId: string,
+    @Body(new ZodValidationPipe(UnassignLeadSchema)) body: UnassignLeadInput,
+  ) {
+    return this.recruitmentService.unassignLead(user, leadId, body);
   }
 }

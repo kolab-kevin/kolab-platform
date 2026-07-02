@@ -14,13 +14,13 @@ REST API for Creator Recruitment CRM lead management. All routes require an acti
 
 ## Permissions
 
-| Permission   | Used for                          |
-| ------------ | --------------------------------- |
-| `crm:read`   | List and get leads                |
-| `crm:create` | Create leads                      |
-| `crm:update` | Update lead profile fields        |
-| `crm:delete` | Soft delete leads                 |
-| `crm:assign` | Reserved for future assign routes |
+| Permission   | Used for                                                 |
+| ------------ | -------------------------------------------------------- |
+| `crm:read`   | List and get leads                                       |
+| `crm:create` | Create leads                                             |
+| `crm:update` | Update lead profile fields                               |
+| `crm:delete` | Soft delete leads                                        |
+| `crm:assign` | Claim, reassign, unassign leads; list own assigned leads |
 
 Role matrix (Release 0.3):
 
@@ -42,15 +42,95 @@ Role matrix (Release 0.3):
 
 ## Endpoints
 
-| Method | Path                         | Permission   | Description                             |
-| ------ | ---------------------------- | ------------ | --------------------------------------- |
-| GET    | `/api/recruitment/leads`     | `crm:read`   | List leads (filter, search, pagination) |
-| GET    | `/api/recruitment/leads/:id` | `crm:read`   | Get lead detail with related records    |
-| POST   | `/api/recruitment/leads`     | `crm:create` | Create lead                             |
-| PATCH  | `/api/recruitment/leads/:id` | `crm:update` | Update lead profile fields only         |
-| DELETE | `/api/recruitment/leads/:id` | `crm:delete` | Soft delete lead                        |
+| Method | Path                                  | Permission   | Description                              |
+| ------ | ------------------------------------- | ------------ | ---------------------------------------- |
+| GET    | `/api/recruitment/leads`              | `crm:read`   | List leads (filter, search, pagination)  |
+| GET    | `/api/recruitment/leads/:id`          | `crm:read`   | Get lead detail with related records     |
+| POST   | `/api/recruitment/leads`              | `crm:create` | Create lead                              |
+| PATCH  | `/api/recruitment/leads/:id`          | `crm:update` | Update lead profile fields only          |
+| DELETE | `/api/recruitment/leads/:id`          | `crm:delete` | Soft delete lead                         |
+| POST   | `/api/recruitment/leads/:id/claim`    | `crm:assign` | Claim an unassigned lead                 |
+| POST   | `/api/recruitment/leads/:id/reassign` | `crm:assign` | Manager reassign to another recruiter    |
+| POST   | `/api/recruitment/leads/:id/unassign` | `crm:assign` | Manager return lead to unassigned pool   |
+| GET    | `/api/recruitment/my-leads`           | `crm:assign` | List leads assigned to current recruiter |
 
-Status transitions, assignment, conversion, and payments are **not** implemented in this release.
+Status transitions, conversion, follow-up reminders, and payments are **not** implemented in this release.
+
+---
+
+## Assignment workflow
+
+### Rules
+
+1. New leads start **unassigned** (`assignedRecruiterId: null`).
+2. The first recruiter to successfully **claim** a lead becomes its owner.
+3. Once claimed, no other recruiter may claim it (`409 Conflict`).
+4. Only `ORG_OWNER`, `ORG_ADMIN`, and `AGENCY_MANAGER` may **reassign** or **unassign**.
+5. Recruiters may claim leads and view their own assigned leads via **My Leads**.
+6. Every assignment change writes a `LeadAssignment` history row inside a database transaction.
+
+Concurrent claims are prevented by updating the lead only when `assignedRecruiterId` is still `null`.
+
+### POST `/api/recruitment/leads/:id/claim`
+
+Claims an unassigned lead for the authenticated recruiter.
+
+**Response (200):**
+
+```json
+{
+  "lead": { "...": "CreatorLead fields" },
+  "assignment": { "...": "LeadAssignment fields" }
+}
+```
+
+**Errors:** `404` deleted/missing lead; `409` already claimed.
+
+### POST `/api/recruitment/leads/:id/reassign`
+
+Manager-only. Assigns the lead to another active organization member.
+
+**Request:**
+
+```json
+{
+  "recruiterUserId": "clx...",
+  "reason": "Territory change"
+}
+```
+
+Validation rejects inactive members, suspended members, `CREATOR`, and `VIEWER` assignees.
+
+**Errors:** `403` non-manager; `400` invalid assignee; `404` missing lead.
+
+### POST `/api/recruitment/leads/:id/unassign`
+
+Manager-only. Closes the current assignment and clears lead ownership.
+
+**Request (optional body):**
+
+```json
+{
+  "reason": "Returned to pool"
+}
+```
+
+**Errors:** `403` non-manager; `409` lead already unassigned.
+
+### GET `/api/recruitment/my-leads`
+
+Returns leads assigned to the authenticated recruiter.
+
+Query parameters:
+
+| Param            | Type   | Description                              |
+| ---------------- | ------ | ---------------------------------------- |
+| `cursor`         | string | Pagination cursor                        |
+| `limit`          | number | Max 100, default 20                      |
+| `status`         | enum   | Filter by lead status                    |
+| `search`         | string | Match name, nickname, email, or username |
+| `platform`       | enum   | Filter by platform account               |
+| `followUpBefore` | ISO    | Leads with follow-up on or before date   |
 
 ---
 
@@ -217,11 +297,14 @@ Soft-deleted leads are hidden from list and detail endpoints.
 
 ## Audit events
 
-| Action         | When                |
-| -------------- | ------------------- |
-| `lead.created` | Lead created        |
-| `lead.updated` | Lead fields updated |
-| `lead.deleted` | Lead soft deleted   |
+| Action            | When                |
+| ----------------- | ------------------- |
+| `lead.created`    | Lead created        |
+| `lead.updated`    | Lead fields updated |
+| `lead.deleted`    | Lead soft deleted   |
+| `lead.claimed`    | Lead claimed        |
+| `lead.reassigned` | Lead reassigned     |
+| `lead.unassigned` | Lead unassigned     |
 
 Target type: `lead`.
 

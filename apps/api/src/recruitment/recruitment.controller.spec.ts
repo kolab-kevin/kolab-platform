@@ -25,6 +25,9 @@ describe('RecruitmentController authorization', () => {
             createLead: jest.fn(),
             updateLead: jest.fn(),
             deleteLead: jest.fn(),
+            claimLead: jest.fn(),
+            reassignLead: jest.fn(),
+            unassignLead: jest.fn(),
           },
         },
       ],
@@ -151,5 +154,19 @@ describe('RecruitmentController authorization', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:delete']);
 
     expect(permissionsGuard.canActivate(createContext('deleteLead', systemAdminUser))).toBe(true);
+  });
+
+  it('allows recruiters to claim leads with crm:assign', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:assign']);
+
+    expect(permissionsGuard.canActivate(createContext('claimLead', recruiterUser))).toBe(true);
+  });
+
+  it('denies support from claiming leads', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:assign']);
+
+    expect(() => permissionsGuard.canActivate(createContext('claimLead', supportUser))).toThrow(
+      ForbiddenException,
+    );
   });
 });
