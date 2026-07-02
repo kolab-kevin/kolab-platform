@@ -3,6 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 
 import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { CreatorsService } from '../creators/creators.service';
 import { RecruitmentController } from './recruitment.controller';
 import { RecruitmentService } from './recruitment.service';
 import { RecruitmentFollowUpsService } from './recruitment-followups.service';
@@ -47,6 +48,12 @@ describe('RecruitmentController authorization', () => {
           provide: RecruitmentFollowUpsService,
           useValue: {
             updateLeadFollowUp: jest.fn(),
+          },
+        },
+        {
+          provide: CreatorsService,
+          useValue: {
+            convertLeadFromRecruitment: jest.fn(),
           },
         },
       ],
@@ -210,6 +217,20 @@ describe('RecruitmentController authorization', () => {
 
     expect(permissionsGuard.canActivate(createContext('updateLeadStatus', systemAdminUser))).toBe(
       true,
+    );
+  });
+
+  it('allows users with crm:update to convert leads', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(permissionsGuard.canActivate(createContext('convertLead', recruiterUser))).toBe(true);
+  });
+
+  it('denies viewers from converting leads', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() => permissionsGuard.canActivate(createContext('convertLead', viewerUser))).toThrow(
+      ForbiddenException,
     );
   });
 });

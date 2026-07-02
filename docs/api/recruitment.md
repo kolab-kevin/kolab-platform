@@ -14,13 +14,13 @@ REST API for Creator Recruitment CRM lead management. All routes require an acti
 
 ## Permissions
 
-| Permission   | Used for                                                 |
-| ------------ | -------------------------------------------------------- |
-| `crm:read`   | List and get leads                                       |
-| `crm:create` | Create leads                                             |
-| `crm:update` | Update lead profile fields                               |
-| `crm:delete` | Soft delete leads                                        |
-| `crm:assign` | Claim, reassign, unassign leads; list own assigned leads |
+| Permission   | Used for                                                         |
+| ------------ | ---------------------------------------------------------------- |
+| `crm:read`   | List and get leads                                               |
+| `crm:create` | Create leads                                                     |
+| `crm:update` | Update lead profile fields, status, follow-up, and convert leads |
+| `crm:delete` | Soft delete leads                                                |
+| `crm:assign` | Claim, reassign, unassign leads; list own assigned leads         |
 
 Role matrix (Release 0.3):
 
@@ -49,6 +49,7 @@ Role matrix (Release 0.3):
 | POST   | `/api/recruitment/leads`                   | `crm:create` | Create lead                              |
 | PATCH  | `/api/recruitment/leads/:id`               | `crm:update` | Update lead profile fields only          |
 | POST   | `/api/recruitment/leads/:id/status`        | `crm:update` | Transition lead pipeline status          |
+| POST   | `/api/recruitment/leads/:id/convert`       | `crm:update` | Convert signed lead to creator roster    |
 | DELETE | `/api/recruitment/leads/:id`               | `crm:delete` | Soft delete lead                         |
 | POST   | `/api/recruitment/leads/:id/claim`         | `crm:assign` | Claim an unassigned lead                 |
 | POST   | `/api/recruitment/leads/:id/reassign`      | `crm:assign` | Manager reassign to another recruiter    |
@@ -62,7 +63,7 @@ Role matrix (Release 0.3):
 | PATCH  | `/api/recruitment/leads/:id/notes/:noteId` | `crm:update` | Edit note (author or manager)            |
 | DELETE | `/api/recruitment/leads/:id/notes/:noteId` | `crm:update` | Soft delete note                         |
 
-Creator conversion and payments are **not** implemented in this release. Pipeline status transitions are available via `POST /api/recruitment/leads/:id/status` (without creator onboarding side effects). Follow-up scheduling and due/overdue workflows are available via `/api/recruitment/follow-ups` and `PATCH /api/recruitment/leads/:id/follow-up`.
+Payments are **not** implemented in this release. Pipeline status transitions are available via `POST /api/recruitment/leads/:id/status` (without creator onboarding side effects). Lead-to-creator conversion is available via `POST /api/recruitment/leads/:id/convert` (see [Creators API](./creators.md)). Follow-up scheduling and due/overdue workflows are available via `/api/recruitment/follow-ups` and `PATCH /api/recruitment/leads/:id/follow-up`.
 
 ---
 
@@ -404,6 +405,67 @@ Each successful transition appends a `LeadStatusHistory` row inside a database t
 
 ---
 
+## Creator conversion
+
+Converts a recruitment lead into an organization creator roster record. This is the bridge between Recruitment CRM and Creator Management. Requires `crm:update`.
+
+Use `POST /api/recruitment/leads/:id/convert` — **not** the status endpoint — to perform conversion side effects.
+
+### Preconditions
+
+| Rule               | Behavior                                                         |
+| ------------------ | ---------------------------------------------------------------- |
+| Organization scope | Lead must belong to the JWT organization                         |
+| Soft delete        | Deleted leads return `404`                                       |
+| Already converted  | Idempotent — returns existing creator (`alreadyConverted: true`) |
+| Status             | Lead must be `SIGNED` or `ACTIVE_CREATOR` (not yet converted)    |
+
+### Conversion effects
+
+1. Create or link a `User` (uses `convertedUserId` when set, otherwise finds/creates by lead email)
+2. Upsert `OrganizationMembership` with role `CREATOR`
+3. Copy all `LeadPlatformAccount` rows into creator platform accounts (stored on lead metadata)
+4. Store creator roster profile on lead metadata (`creatorProfile`)
+5. Update lead: `convertedUserId`, `convertedAt`, `status: ACTIVE_CREATOR`
+6. Append `LeadStatusHistory` when status changes to `ACTIVE_CREATOR`
+7. Record audit events `creator.created` and `lead.converted`
+8. Append timeline event `creator.converted`
+
+The lead row is **not** deleted — CRM history remains intact.
+
+### POST `/api/recruitment/leads/:id/convert`
+
+No request body.
+
+**Response (200):**
+
+```json
+{
+  "lead": {
+    "id": "clx...",
+    "organizationId": "clx...",
+    "status": "ACTIVE_CREATOR",
+    "convertedUserId": "clx...",
+    "convertedAt": "2026-06-28T12:00:00.000Z"
+  },
+  "creator": {
+    "id": "creator_...",
+    "organizationId": "clx...",
+    "userId": "clx...",
+    "sourceLeadId": "clx...",
+    "displayName": "Jane Creator",
+    "platformAccounts": []
+  },
+  "alreadyConverted": false
+}
+```
+
+**Errors:** `400` invalid status or missing email; `403` missing `crm:update`; `404` missing or soft-deleted lead.
+
+See [Creators API](./creators.md) for the creator roster shape.
+
+---
+
 ## Notes and timeline
 
 Recruiter communication history is stored as append-only `LeadNote` rows. Soft-deleted notes and edit history are tracked in `CreatorLead.metadata.noteRecords` (no note-table schema change).
@@ -445,6 +507,7 @@ Returns a unified chronological stream (**newest first**) combining:
 | `status.changed`     | `LeadStatusHistory` rows      |
 | `note.added`         | Active `LeadNote` rows        |
 | `followup.updated`   | `metadata.followUpHistory`    |
+| `creator.converted`  | `metadata.conversionHistory`  |
 
 The `type` field is extensible for future CRM timeline events.
 
@@ -485,19 +548,21 @@ Soft-deleted leads are hidden from list and detail endpoints.
 
 ## Audit events
 
-| Action                  | When                   |
-| ----------------------- | ---------------------- |
-| `lead.created`          | Lead created           |
-| `lead.updated`          | Lead fields updated    |
-| `lead.deleted`          | Lead soft deleted      |
-| `lead.claimed`          | Lead claimed           |
-| `lead.reassigned`       | Lead reassigned        |
-| `lead.unassigned`       | Lead unassigned        |
-| `lead.status_changed`   | Lead status changed    |
-| `lead.note_added`       | Lead note added        |
-| `lead.note_updated`     | Lead note updated      |
-| `lead.note_deleted`     | Lead note deleted      |
-| `lead.followup_updated` | Lead follow-up changed |
+| Action                  | When                      |
+| ----------------------- | ------------------------- |
+| `lead.created`          | Lead created              |
+| `lead.updated`          | Lead fields updated       |
+| `lead.deleted`          | Lead soft deleted         |
+| `lead.claimed`          | Lead claimed              |
+| `lead.reassigned`       | Lead reassigned           |
+| `lead.unassigned`       | Lead unassigned           |
+| `lead.status_changed`   | Lead status changed       |
+| `lead.note_added`       | Lead note added           |
+| `lead.note_updated`     | Lead note updated         |
+| `lead.note_deleted`     | Lead note deleted         |
+| `lead.followup_updated` | Lead follow-up changed    |
+| `lead.converted`        | Lead converted to creator |
+| `creator.created`       | Creator roster created    |
 
 Target type: `lead`.
 

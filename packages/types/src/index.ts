@@ -2,6 +2,7 @@ export * from './admin';
 export * from './agency';
 export * from './audit';
 export * from './auth';
+export * from './creator';
 export * from './invitation';
 export * from './organization';
 export * from './permissions';

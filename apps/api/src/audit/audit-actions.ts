@@ -18,6 +18,8 @@ export const AUDIT_ACTION = {
   LEAD_NOTE_UPDATED: 'lead.note_updated',
   LEAD_NOTE_DELETED: 'lead.note_deleted',
   LEAD_FOLLOWUP_UPDATED: 'lead.followup_updated',
+  LEAD_CONVERTED: 'lead.converted',
+  CREATOR_CREATED: 'creator.created',
   RECRUITER_CREATED: 'recruiter.created',
   RECRUITER_UPDATED: 'recruiter.updated',
 } as const;
@@ -29,5 +31,6 @@ export const AUDIT_TARGET_TYPE = {
   PROFILE: 'profile',
   USER: 'user',
   LEAD: 'lead',
+  CREATOR: 'creator',
   RECRUITER: 'recruiter',
 } as const;
