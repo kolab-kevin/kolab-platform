@@ -1,7 +1,7 @@
 # Recruitment CRM Data Model (Release 0.3)
 
-**Status:** Planning — not yet implemented in Prisma  
-**Planned schema location:** `packages/database/prisma/schema.prisma`
+**Status:** Implemented in `feature/recruitment-crm-schema` (M1 — Schema)  
+Prisma schema: `packages/database/prisma/schema.prisma`
 
 ---
 
@@ -11,26 +11,30 @@ The Recruitment CRM extends the organization-scoped identity model with lead pip
 
 Legacy `User.platforms` is **not** used for lead platform tracking. Leads use dedicated **platform account** rows.
 
+**Prisma model names:** `CreatorLead`, `LeadPlatformAccount`, `LeadAssignment`, `LeadNote`, `LeadStatusHistory`.
+
 ---
 
 ## Entity relationship diagram
 
 ```mermaid
 erDiagram
-  Organization ||--o{ RecruitmentLead : has
-  Organization ||--o{ RecruitmentLeadPlatformAccount : has
-  Organization ||--o{ RecruitmentLeadActivity : has
+  Organization ||--o{ CreatorLead : has
+  Organization ||--o{ LeadPlatformAccount : has
+  Organization ||--o{ LeadNote : has
 
-  User ||--o{ RecruitmentLead : "assigned recruiter"
-  User ||--o{ RecruitmentLead : "converted creator"
-  User ||--o{ RecruitmentLeadActivity : author
+  User ||--o{ CreatorLead : "assigned recruiter"
+  User ||--o{ CreatorLead : "converted creator"
+  User ||--o{ LeadNote : author
+  User ||--o{ LeadAssignment : recruiter
+  User ||--o{ LeadStatusHistory : changer
 
-  RecruitmentLead ||--o{ RecruitmentLeadPlatformAccount : has
-  RecruitmentLead ||--o{ RecruitmentLeadActivity : has
-  RecruitmentLead ||--o{ RecruitmentLeadAssignmentLog : has
-  RecruitmentLead ||--o{ RecruitmentLeadFollowUp : has
+  CreatorLead ||--o{ LeadPlatformAccount : has
+  CreatorLead ||--o{ LeadAssignment : has
+  CreatorLead ||--o{ LeadNote : has
+  CreatorLead ||--o{ LeadStatusHistory : has
 
-  RecruitmentLead {
+  CreatorLead {
     string id PK
     string organizationId FK
     string name
@@ -48,12 +52,12 @@ erDiagram
     enum commissionPlan
     string convertedUserId FK "nullable"
     datetime convertedAt "nullable"
-    string notesSummary
+    json metadata
     datetime createdAt
     datetime updatedAt
   }
 
-  RecruitmentLeadPlatformAccount {
+  LeadPlatformAccount {
     string id PK
     string organizationId FK
     string leadId FK
@@ -68,78 +72,75 @@ erDiagram
     datetime updatedAt
   }
 
-  RecruitmentLeadActivity {
+  LeadAssignment {
     string id PK
     string organizationId FK
     string leadId FK
-    enum type
-    string summary
-    datetime occurredAt
-    string createdByUserId FK
-    json metadata
-    datetime createdAt
-  }
-
-  RecruitmentLeadAssignmentLog {
-    string id PK
-    string organizationId FK
-    string leadId FK
-    string previousRecruiterId FK "nullable"
-    string newRecruiterId FK "nullable"
-    string assignedByUserId FK
+    string recruiterId FK
+    string assignedById FK
+    datetime assignedAt
+    datetime unassignedAt "nullable"
     string reason
     datetime createdAt
   }
 
-  RecruitmentLeadFollowUp {
+  LeadNote {
     string id PK
     string organizationId FK
     string leadId FK
-    datetime scheduledFor
-    datetime completedAt "nullable"
-    string assignedToUserId FK
-    string notes
+    string authorId FK
+    enum contactType
+    string note
     datetime createdAt
+  }
+
+  LeadStatusHistory {
+    string id PK
+    string organizationId FK
+    string leadId FK
+    enum previousStatus "nullable"
+    enum newStatus
+    string changedById FK
+    datetime changedAt
+    string reason
   }
 ```
 
 ---
 
-## Enums (planned)
+## Enums (implemented)
 
-### `RecruitmentLeadStatus`
+### `LeadStatus`
 
 `NEW`, `CONTACTED`, `INTERESTED`, `APPLICATION`, `CONTRACT_SENT`, `SIGNED`, `ACTIVE_CREATOR`, `INACTIVE`, `REJECTED`
 
-### `RecruitmentLeadSource` (suggested)
+### `LeadSource`
 
 `MANUAL`, `REFERRAL`, `SOCIAL`, `EVENT`, `IMPORT`, `OTHER`
 
-### `RecruitmentCommissionPlan`
+### `CommissionPlan`
 
 `STANDARD` (default), `PREMIUM`, `CUSTOM`
 
-### `RecruitmentPlatformAccountStatus`
+### `LeadPlatformAccountStatus`
 
 `ACTIVE`, `UNVERIFIED`, `SUSPENDED`, `REMOVED`
 
-### `RecruitmentLeadActivityType`
+### `ContactType`
 
 `CALL`, `WHATSAPP`, `TIKTOK`, `FACEBOOK`, `EMAIL`, `MEETING`, `OTHER`
 
-### `RecruitmentPlatform` (lead platform account)
-
-Reuse or align with existing `Platform` enum where possible:
+### `PlatformType`
 
 `TIKTOK`, `INSTAGRAM`, `YOUTUBE`, `FACEBOOK`, `TWITCH`, `OTHER`
 
-_Note:_ Distinct from legacy `User.platforms` flags — this enum describes **external social accounts** on a lead.
+_Note:_ Distinct from legacy `User.platforms` flags and legacy `Platform` enum — describes external social accounts on a lead.
 
 ---
 
 ## Entity definitions
 
-### RecruitmentLead
+### CreatorLead
 
 Primary CRM record.
 
@@ -162,7 +163,8 @@ Primary CRM record.
 | `commissionPlan`          | enum              | Default `STANDARD`                                |
 | `convertedUserId`         | FK → User?        | Set when `ACTIVE_CREATOR`                         |
 | `convertedAt`             | datetime?         | Conversion timestamp                              |
-| `notesSummary`            | text?             | Short free-text; detailed notes in activities     |
+| `notesSummary`            | text?             | Short free-text; detailed notes in `LeadNote`     |
+| `metadata`                | json              | Future hooks (campaigns, payments, analytics)     |
 | `createdAt` / `updatedAt` | datetime          | Audit                                             |
 
 **Indexes (recommended):**
@@ -174,7 +176,7 @@ Primary CRM record.
 
 ---
 
-### RecruitmentLeadPlatformAccount
+### LeadPlatformAccount
 
 Tracks a lead's presence on a social/commerce platform.
 
@@ -194,45 +196,48 @@ Tracks a lead's presence on a social/commerce platform.
 
 ---
 
-### RecruitmentLeadActivity
+### LeadNote
 
 Append-only contact history and notes.
 
-| Field             | Type      | Notes                             |
-| ----------------- | --------- | --------------------------------- |
-| `type`            | enum      | CALL, WHATSAPP, TIKTOK, …         |
-| `summary`         | string    | Contact notes                     |
-| `occurredAt`      | datetime  | When contact happened             |
-| `createdByUserId` | FK → User | Author                            |
-| `metadata`        | json      | Duration, message ID placeholders |
+| Field         | Type      | Notes                     |
+| ------------- | --------- | ------------------------- |
+| `contactType` | enum      | CALL, WHATSAPP, TIKTOK, … |
+| `note`        | string    | Contact notes             |
+| `authorId`    | FK → User | Author                    |
+| `createdAt`   | datetime  | Append-only timestamp     |
 
 ---
 
-### RecruitmentLeadAssignmentLog
+### LeadAssignment
 
-Ownership change history.
+Ownership change history. Active assignment has `unassignedAt IS NULL`.
 
-| Field                 | Type    | Notes                              |
-| --------------------- | ------- | ---------------------------------- |
-| `previousRecruiterId` | FK?     | Null for first assignment          |
-| `newRecruiterId`      | FK?     | Null if returned to pool           |
-| `assignedByUserId`    | FK      | Actor (recruiter claim or manager) |
-| `reason`              | string? | Reassignment reason                |
+| Field          | Type      | Notes                              |
+| -------------- | --------- | ---------------------------------- |
+| `recruiterId`  | FK → User | Assigned recruiter (owner)         |
+| `assignedById` | FK → User | Actor (recruiter claim or manager) |
+| `assignedAt`   | datetime  | Assignment start                   |
+| `unassignedAt` | datetime? | Null while active; set on reassign |
+| `reason`       | string?   | Reassignment reason                |
+
+Current owner is denormalized on `CreatorLead.assignedRecruiterId` for list queries.
 
 ---
 
-### RecruitmentLeadFollowUp (recommended v1)
+### LeadStatusHistory
 
-Optional but planned for manager reporting.
+Append-only pipeline status changes.
 
-| Field              | Type      | Notes                     |
-| ------------------ | --------- | ------------------------- |
-| `scheduledFor`     | datetime  | Planned follow-up         |
-| `completedAt`      | datetime? | Set when done             |
-| `assignedToUserId` | FK        | Usually current recruiter |
-| `notes`            | string?   | Completion notes          |
+| Field            | Type      | Notes                      |
+| ---------------- | --------- | -------------------------- |
+| `previousStatus` | enum?     | Null for initial status    |
+| `newStatus`      | enum      | Resulting status           |
+| `changedById`    | FK → User | Actor                      |
+| `changedAt`      | datetime  | Change timestamp           |
+| `reason`         | string?   | Optional transition reason |
 
-`RecruitmentLead.nextFollowUpAt` mirrors the next open follow-up for list views.
+`CreatorLead.nextFollowUpAt` supports follow-up list views without a separate follow-up table in v1 schema.
 
 ---
 
