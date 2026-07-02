@@ -32,6 +32,7 @@ import {
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTION, AUDIT_TARGET_TYPE } from '../audit/audit-actions';
 import { DISALLOWED_LEAD_ASSIGNEE_ROLES, LEAD_MANAGER_ROLES } from './recruitment.constants';
+import { isNoteSoftDeleted } from './recruitment.notes.utils';
 import type {
   DeleteLeadResponse,
   ListRecruitmentLeadsResponse,
@@ -130,7 +131,9 @@ export class RecruitmentService {
       platformAccounts: lead.platformAccounts.map((account) => this.toLeadPlatformAccount(account)),
       currentAssignment,
       assignmentHistory,
-      notes: lead.notes.map((note) => this.toLeadNote(note)),
+      notes: lead.notes
+        .filter((note) => !isNoteSoftDeleted(lead.metadata, note.id))
+        .map((note) => this.toLeadNote(note)),
       statusHistory: lead.statusHistory.map((entry) => this.toLeadStatusHistory(entry)),
     };
   }

@@ -42,18 +42,23 @@ Role matrix (Release 0.3):
 
 ## Endpoints
 
-| Method | Path                                  | Permission   | Description                              |
-| ------ | ------------------------------------- | ------------ | ---------------------------------------- |
-| GET    | `/api/recruitment/leads`              | `crm:read`   | List leads (filter, search, pagination)  |
-| GET    | `/api/recruitment/leads/:id`          | `crm:read`   | Get lead detail with related records     |
-| POST   | `/api/recruitment/leads`              | `crm:create` | Create lead                              |
-| PATCH  | `/api/recruitment/leads/:id`          | `crm:update` | Update lead profile fields only          |
-| POST   | `/api/recruitment/leads/:id/status`   | `crm:update` | Transition lead pipeline status          |
-| DELETE | `/api/recruitment/leads/:id`          | `crm:delete` | Soft delete lead                         |
-| POST   | `/api/recruitment/leads/:id/claim`    | `crm:assign` | Claim an unassigned lead                 |
-| POST   | `/api/recruitment/leads/:id/reassign` | `crm:assign` | Manager reassign to another recruiter    |
-| POST   | `/api/recruitment/leads/:id/unassign` | `crm:assign` | Manager return lead to unassigned pool   |
-| GET    | `/api/recruitment/my-leads`           | `crm:assign` | List leads assigned to current recruiter |
+| Method | Path                                       | Permission   | Description                              |
+| ------ | ------------------------------------------ | ------------ | ---------------------------------------- |
+| GET    | `/api/recruitment/leads`                   | `crm:read`   | List leads (filter, search, pagination)  |
+| GET    | `/api/recruitment/leads/:id`               | `crm:read`   | Get lead detail with related records     |
+| POST   | `/api/recruitment/leads`                   | `crm:create` | Create lead                              |
+| PATCH  | `/api/recruitment/leads/:id`               | `crm:update` | Update lead profile fields only          |
+| POST   | `/api/recruitment/leads/:id/status`        | `crm:update` | Transition lead pipeline status          |
+| DELETE | `/api/recruitment/leads/:id`               | `crm:delete` | Soft delete lead                         |
+| POST   | `/api/recruitment/leads/:id/claim`         | `crm:assign` | Claim an unassigned lead                 |
+| POST   | `/api/recruitment/leads/:id/reassign`      | `crm:assign` | Manager reassign to another recruiter    |
+| POST   | `/api/recruitment/leads/:id/unassign`      | `crm:assign` | Manager return lead to unassigned pool   |
+| GET    | `/api/recruitment/my-leads`                | `crm:assign` | List leads assigned to current recruiter |
+| GET    | `/api/recruitment/leads/:id/timeline`      | `crm:read`   | Combined chronological activity timeline |
+| GET    | `/api/recruitment/leads/:id/notes`         | `crm:read`   | List lead notes (newest first)           |
+| POST   | `/api/recruitment/leads/:id/notes`         | `crm:update` | Add lead communication note              |
+| PATCH  | `/api/recruitment/leads/:id/notes/:noteId` | `crm:update` | Edit note (author or manager)            |
+| DELETE | `/api/recruitment/leads/:id/notes/:noteId` | `crm:update` | Soft delete note                         |
 
 Creator conversion, follow-up reminders, and payments are **not** implemented in this release. Pipeline status transitions are available via `POST /api/recruitment/leads/:id/status` (without creator onboarding side effects).
 
@@ -335,6 +340,67 @@ Each successful transition appends a `LeadStatusHistory` row inside a database t
 
 ---
 
+## Notes and timeline
+
+Recruiter communication history is stored as append-only `LeadNote` rows. Soft-deleted notes and edit history are tracked in `CreatorLead.metadata.noteRecords` (no note-table schema change).
+
+### GET `/api/recruitment/leads/:id/notes`
+
+Returns active notes ordered **newest first**. Soft-deleted notes are excluded.
+
+### POST `/api/recruitment/leads/:id/notes`
+
+```json
+{
+  "contactType": "CALL",
+  "note": "Discussed onboarding timeline"
+}
+```
+
+Uses `AddLeadNoteSchema`. Notes cannot be empty.
+
+### PATCH `/api/recruitment/leads/:id/notes/:noteId`
+
+Uses `UpdateLeadNoteSchema`. Only the **author** or an organization **manager** (`ORG_OWNER`, `ORG_ADMIN`, `AGENCY_MANAGER`) may edit.
+
+Edit history is preserved in lead metadata (`editHistory` entries with previous content).
+
+### DELETE `/api/recruitment/leads/:id/notes/:noteId`
+
+Soft deletes the note via lead metadata. Authors may delete their own notes; managers may delete any note.
+
+### GET `/api/recruitment/leads/:id/timeline`
+
+Returns a unified chronological stream (**newest first**) combining:
+
+| Event type           | Source                        |
+| -------------------- | ----------------------------- |
+| `lead.created`       | Lead creation timestamp       |
+| `assignment.started` | `LeadAssignment.assignedAt`   |
+| `assignment.ended`   | `LeadAssignment.unassignedAt` |
+| `status.changed`     | `LeadStatusHistory` rows      |
+| `note.added`         | Active `LeadNote` rows        |
+
+The `type` field is extensible for future CRM timeline events.
+
+Example event:
+
+```json
+{
+  "id": "note-added-clx...",
+  "type": "note.added",
+  "occurredAt": "2026-06-21T10:00:00.000Z",
+  "actorUserId": "clx...",
+  "data": {
+    "noteId": "clx...",
+    "contactType": "CALL",
+    "note": "Discussed onboarding timeline"
+  }
+}
+```
+
+---
+
 ## DELETE `/api/recruitment/leads/:id`
 
 Soft deletes the lead by setting `metadata.deleted = true`. The row is not physically removed.
@@ -363,6 +429,9 @@ Soft-deleted leads are hidden from list and detail endpoints.
 | `lead.reassigned`     | Lead reassigned     |
 | `lead.unassigned`     | Lead unassigned     |
 | `lead.status_changed` | Lead status changed |
+| `lead.note_added`     | Lead note added     |
+| `lead.note_updated`   | Lead note updated   |
+| `lead.note_deleted`   | Lead note deleted   |
 
 Target type: `lead`.
 

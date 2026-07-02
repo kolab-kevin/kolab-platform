@@ -6,8 +6,12 @@ import type {
   UpdateLeadStatusInput,
 } from '@kolab/types';
 import {
+  type AddLeadNoteInput,
+  AddLeadNoteSchema,
   CreateLeadSchema,
   ReassignLeadSchema,
+  type UpdateLeadNoteInput,
+  UpdateLeadNoteSchema,
   UpdateLeadSchema,
   UpdateLeadStatusSchema,
 } from '@kolab/types';
@@ -24,12 +28,16 @@ import {
   UnassignLeadSchema,
 } from './recruitment.queries';
 import { RecruitmentService } from './recruitment.service';
+import { RecruitmentNotesService } from './recruitment-notes.service';
 
 @ApiTags('recruitment')
 @ApiBearerAuth('access-token')
 @Controller('recruitment/leads')
 export class RecruitmentController {
-  constructor(private readonly recruitmentService: RecruitmentService) {}
+  constructor(
+    private readonly recruitmentService: RecruitmentService,
+    private readonly recruitmentNotesService: RecruitmentNotesService,
+  ) {}
 
   @Get()
   @RequirePermissions('crm:read')
@@ -49,6 +57,62 @@ export class RecruitmentController {
   @ApiResponse({ status: 404, description: 'Lead not found' })
   getLead(@CurrentUser() user: AccessTokenPayload, @Param('id') leadId: string) {
     return this.recruitmentService.getLead(user, leadId);
+  }
+
+  @Get(':id/timeline')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Get lead activity timeline' })
+  @ApiResponse({ status: 200, description: 'Chronological lead timeline' })
+  getLeadTimeline(@CurrentUser() user: AccessTokenPayload, @Param('id') leadId: string) {
+    return this.recruitmentNotesService.getLeadTimeline(user, leadId);
+  }
+
+  @Get(':id/notes')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'List lead notes' })
+  @ApiResponse({ status: 200, description: 'Lead notes ordered newest first' })
+  listLeadNotes(@CurrentUser() user: AccessTokenPayload, @Param('id') leadId: string) {
+    return this.recruitmentNotesService.listLeadNotes(user, leadId);
+  }
+
+  @Post(':id/notes')
+  @HttpCode(201)
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Add a lead note' })
+  @ApiResponse({ status: 201, description: 'Lead note created' })
+  addLeadNote(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') leadId: string,
+    @Body(new ZodValidationPipe(AddLeadNoteSchema)) body: AddLeadNoteInput,
+  ) {
+    return this.recruitmentNotesService.addLeadNote(user, leadId, body);
+  }
+
+  @Patch(':id/notes/:noteId')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Update a lead note' })
+  @ApiResponse({ status: 200, description: 'Lead note updated' })
+  @ApiResponse({ status: 403, description: 'Author or manager required' })
+  updateLeadNote(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') leadId: string,
+    @Param('noteId') noteId: string,
+    @Body(new ZodValidationPipe(UpdateLeadNoteSchema)) body: UpdateLeadNoteInput,
+  ) {
+    return this.recruitmentNotesService.updateLeadNote(user, leadId, noteId, body);
+  }
+
+  @Delete(':id/notes/:noteId')
+  @HttpCode(200)
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Soft delete a lead note' })
+  @ApiResponse({ status: 200, description: 'Lead note soft deleted' })
+  deleteLeadNote(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') leadId: string,
+    @Param('noteId') noteId: string,
+  ) {
+    return this.recruitmentNotesService.deleteLeadNote(user, leadId, noteId);
   }
 
   @Post()

@@ -253,6 +253,62 @@ export const AddLeadNoteSchema = z.object({
 
 export type AddLeadNoteInput = z.infer<typeof AddLeadNoteSchema>;
 
+export const UpdateLeadNoteSchema = z
+  .object({
+    contactType: ContactTypeSchema.optional(),
+    note: noteContentSchema.optional(),
+  })
+  .refine((data) => Object.values(data).some((value) => value !== undefined), {
+    message: 'At least one note field must be provided',
+  });
+
+export type UpdateLeadNoteInput = z.infer<typeof UpdateLeadNoteSchema>;
+
+export const LeadNoteResponseSchema = LeadNoteSchema.extend({
+  metadata: z.record(z.unknown()).default({}),
+});
+
+export type LeadNoteResponse = z.infer<typeof LeadNoteResponseSchema>;
+
+export const ListLeadNotesResponseSchema = z.object({
+  items: z.array(LeadNoteResponseSchema),
+});
+
+export type ListLeadNotesResponse = z.infer<typeof ListLeadNotesResponseSchema>;
+
+export const DeleteLeadNoteResponseSchema = z.object({
+  id: z.string(),
+  deleted: z.literal(true),
+});
+
+export type DeleteLeadNoteResponse = z.infer<typeof DeleteLeadNoteResponseSchema>;
+
+export const LeadTimelineEventTypeSchema = z.enum([
+  'lead.created',
+  'assignment.started',
+  'assignment.ended',
+  'status.changed',
+  'note.added',
+]);
+
+export type LeadTimelineEventType = z.infer<typeof LeadTimelineEventTypeSchema>;
+
+export const LeadTimelineEventSchema = z.object({
+  id: z.string(),
+  type: LeadTimelineEventTypeSchema,
+  occurredAt: z.string().datetime(),
+  actorUserId: z.string().nullable(),
+  data: z.record(z.unknown()),
+});
+
+export type LeadTimelineEvent = z.infer<typeof LeadTimelineEventSchema>;
+
+export const ListLeadTimelineResponseSchema = z.object({
+  items: z.array(LeadTimelineEventSchema),
+});
+
+export type ListLeadTimelineResponse = z.infer<typeof ListLeadTimelineResponseSchema>;
+
 export const UpdateLeadStatusSchema = z.object({
   status: LeadStatusSchema,
   reason: z.string().trim().min(1).max(500).optional(),
