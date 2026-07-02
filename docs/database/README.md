@@ -48,3 +48,5 @@ Legacy `User.role` and `User.platforms` remain until Phase D cleanup.
 `KOLAB_AGENCY`, `TIKTOK_CREATOR`, `TIKTOK_SHOP`, `AI_SERVICES`, `LIVE_STREAMING`, `SYMLCAST`
 
 **Release 0.2 (planned):** Organization-scoped identity model — [Identity ERD](./identity-erd.md).
+
+**Release 0.3 (planning):** Creator Recruitment CRM — [Recruitment CRM ERD](./recruitment-crm-erd.md).
