@@ -27,6 +27,10 @@ describe('CreatorsController authorization', () => {
             createCreatorPlatformAccount: jest.fn(),
             updateCreatorPlatformAccount: jest.fn(),
             deleteCreatorPlatformAccount: jest.fn(),
+            getCreatorSkills: jest.fn(),
+            updateCreatorSkills: jest.fn(),
+            getCreatorAvailability: jest.fn(),
+            updateCreatorAvailability: jest.fn(),
             convertLeadFromRecruitment: jest.fn(),
           },
         },
@@ -108,5 +112,29 @@ describe('CreatorsController authorization', () => {
     expect(
       permissionsGuard.canActivate(createContext('deleteCreatorPlatformAccount', recruiterUser)),
     ).toBe(true);
+  });
+
+  it('allows recruiters to read skills with crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(permissionsGuard.canActivate(createContext('getCreatorSkills', recruiterUser))).toBe(
+      true,
+    );
+  });
+
+  it('denies viewers from updating skills', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('updateCreatorSkills', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('denies viewers from updating availability', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('updateCreatorAvailability', viewerUser)),
+    ).toThrow(ForbiddenException);
   });
 });

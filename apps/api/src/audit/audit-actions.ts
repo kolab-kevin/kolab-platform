@@ -24,6 +24,8 @@ export const AUDIT_ACTION = {
   CREATOR_PLATFORM_ACCOUNT_CREATED: 'creator.platform_account.created',
   CREATOR_PLATFORM_ACCOUNT_UPDATED: 'creator.platform_account.updated',
   CREATOR_PLATFORM_ACCOUNT_DELETED: 'creator.platform_account.deleted',
+  CREATOR_SKILLS_UPDATED: 'creator.skills_updated',
+  CREATOR_AVAILABILITY_UPDATED: 'creator.availability_updated',
   RECRUITER_CREATED: 'recruiter.created',
   RECRUITER_UPDATED: 'recruiter.updated',
 } as const;

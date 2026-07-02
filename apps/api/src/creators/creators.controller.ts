@@ -4,12 +4,16 @@ import type {
   CreatorListQuery,
   UpdateCreatorInput,
   UpdateCreatorPlatformAccountInput,
+  UpdateCreatorSkillsInput,
+  UpdateCreatorStructuredAvailabilityInput,
 } from '@kolab/types';
 import {
   CreateCreatorPlatformAccountSchema,
   CreatorListQuerySchema,
   UpdateCreatorPlatformAccountSchema,
   UpdateCreatorSchema,
+  UpdateCreatorSkillsSchema,
+  UpdateCreatorStructuredAvailabilitySchema,
 } from '@kolab/types';
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -90,6 +94,51 @@ export class CreatorsController {
     @Param('accountId') accountId: string,
   ) {
     return this.creatorsService.deleteCreatorPlatformAccount(user, creatorId, accountId);
+  }
+
+  @Get(':id/skills')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Get creator skills and categories' })
+  @ApiResponse({ status: 200, description: 'Creator skills profile' })
+  @ApiResponse({ status: 404, description: 'Creator not found' })
+  getCreatorSkills(@CurrentUser() user: AccessTokenPayload, @Param('id') creatorId: string) {
+    return this.creatorsService.getCreatorSkills(user, creatorId);
+  }
+
+  @Patch(':id/skills')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Update creator skills and categories' })
+  @ApiResponse({ status: 200, description: 'Creator skills updated' })
+  @ApiResponse({ status: 404, description: 'Creator not found' })
+  updateCreatorSkills(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') creatorId: string,
+    @Body(new ZodValidationPipe(UpdateCreatorSkillsSchema)) body: UpdateCreatorSkillsInput,
+  ) {
+    return this.creatorsService.updateCreatorSkills(user, creatorId, body);
+  }
+
+  @Get(':id/availability')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Get creator availability schedule' })
+  @ApiResponse({ status: 200, description: 'Creator availability profile' })
+  @ApiResponse({ status: 404, description: 'Creator not found' })
+  getCreatorAvailability(@CurrentUser() user: AccessTokenPayload, @Param('id') creatorId: string) {
+    return this.creatorsService.getCreatorAvailability(user, creatorId);
+  }
+
+  @Patch(':id/availability')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Update creator availability schedule' })
+  @ApiResponse({ status: 200, description: 'Creator availability updated' })
+  @ApiResponse({ status: 404, description: 'Creator not found' })
+  updateCreatorAvailability(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') creatorId: string,
+    @Body(new ZodValidationPipe(UpdateCreatorStructuredAvailabilitySchema))
+    body: UpdateCreatorStructuredAvailabilityInput,
+  ) {
+    return this.creatorsService.updateCreatorAvailability(user, creatorId, body);
   }
 
   @Get(':id')

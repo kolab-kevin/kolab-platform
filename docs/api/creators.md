@@ -51,6 +51,10 @@ All routes are scoped to the JWT `organizationId`. Users must have an active org
 | POST   | `/api/creators/:id/platform-accounts`            | `crm:update` | Add a creator platform account    |
 | PATCH  | `/api/creators/:id/platform-accounts/:accountId` | `crm:update` | Update a creator platform account |
 | DELETE | `/api/creators/:id/platform-accounts/:accountId` | `crm:update` | Remove a creator platform account |
+| GET    | `/api/creators/:id/skills`                       | `crm:read`   | Get creator skills profile        |
+| PATCH  | `/api/creators/:id/skills`                       | `crm:update` | Update creator skills profile     |
+| GET    | `/api/creators/:id/availability`                 | `crm:read`   | Get creator availability          |
+| PATCH  | `/api/creators/:id/availability`                 | `crm:update` | Update creator availability       |
 | POST   | `/api/recruitment/leads/:id/convert`             | `crm:update` | Convert lead to creator           |
 
 ---
@@ -321,6 +325,88 @@ Removes a creator platform account. Accounts are soft-removed by setting `status
 
 ---
 
+## Skills and availability
+
+Structured creator skills are stored under `CreatorProfile.metadata.skills`. Availability schedules are stored on `CreatorProfile.availability`.
+
+### GET `/api/creators/:id/skills`
+
+Returns structured skills for a creator.
+
+**Permission:** `crm:read`
+
+| Field             | Description                                      |
+| ----------------- | ------------------------------------------------ |
+| `categories`      | Content or industry categories                   |
+| `skills`          | Specific skill tags                              |
+| `contentTypes`    | Preferred content formats                        |
+| `languages`       | Spoken/content languages (falls back to profile) |
+| `experienceLevel` | `BEGINNER`, `INTERMEDIATE`, `ADVANCED`, `EXPERT` |
+| `notes`           | Free-form notes (nullable)                       |
+
+### Skills response (200)
+
+```json
+{
+  "categories": ["beauty", "fashion"],
+  "skills": ["makeup", "styling"],
+  "contentTypes": ["live", "short-form"],
+  "languages": ["en", "es"],
+  "experienceLevel": "ADVANCED",
+  "notes": "Specializes in live commerce"
+}
+```
+
+---
+
+### PATCH `/api/creators/:id/skills`
+
+Updates structured skills. At least one field is required. When `languages` is provided, the profile `languages` column is also updated.
+
+**Permission:** `crm:update`
+
+**Errors:** `404` creator not found.
+
+---
+
+### GET `/api/creators/:id/availability`
+
+Returns structured availability for a creator.
+
+**Permission:** `crm:read`
+
+| Field                | Description                                |
+| -------------------- | ------------------------------------------ |
+| `timezone`           | IANA timezone (optional)                   |
+| `weeklySchedule`     | Weekly windows (`weekday`, `start`, `end`) |
+| `preferredLiveTimes` | Preferred live stream time ranges          |
+| `blackoutDates`      | Unavailable dates (`YYYY-MM-DD`)           |
+| `notes`              | Free-form notes (nullable)                 |
+
+### Availability response (200)
+
+```json
+{
+  "timezone": "America/New_York",
+  "weeklySchedule": [{ "weekday": 1, "start": "09:00", "end": "17:00" }],
+  "preferredLiveTimes": ["18:00-21:00"],
+  "blackoutDates": ["2026-07-04"],
+  "notes": null
+}
+```
+
+---
+
+### PATCH `/api/creators/:id/availability`
+
+Updates availability schedule. At least one field is required.
+
+**Permission:** `crm:update`
+
+**Errors:** `404` creator not found.
+
+---
+
 ## Idempotency (conversion)
 
 Calling conversion again on an already converted lead returns the existing creator with `alreadyConverted: true`. No duplicate user, membership, profile, or platform account rows are created. Audit events are not re-recorded.
@@ -329,14 +415,16 @@ Calling conversion again on an already converted lead returns the existing creat
 
 ## Audit events
 
-| Action                             | When                        | Target type                |
-| ---------------------------------- | --------------------------- | -------------------------- |
-| `creator.created`                  | First successful conversion | `creator`                  |
-| `creator.updated`                  | Creator profile updated     | `creator`                  |
-| `creator.platform_account.created` | Platform account created    | `creator_platform_account` |
-| `creator.platform_account.updated` | Platform account updated    | `creator_platform_account` |
-| `creator.platform_account.deleted` | Platform account removed    | `creator_platform_account` |
-| `lead.converted`                   | First successful conversion | `lead`                     |
+| Action                             | When                         | Target type                |
+| ---------------------------------- | ---------------------------- | -------------------------- |
+| `creator.created`                  | First successful conversion  | `creator`                  |
+| `creator.updated`                  | Creator profile updated      | `creator`                  |
+| `creator.platform_account.created` | Platform account created     | `creator_platform_account` |
+| `creator.platform_account.updated` | Platform account updated     | `creator_platform_account` |
+| `creator.platform_account.deleted` | Platform account removed     | `creator_platform_account` |
+| `creator.skills_updated`           | Creator skills updated       | `creator`                  |
+| `creator.availability_updated`     | Creator availability updated | `creator`                  |
+| `lead.converted`                   | First successful conversion  | `lead`                     |
 
 ---
 
