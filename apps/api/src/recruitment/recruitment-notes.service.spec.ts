@@ -289,6 +289,39 @@ describe('RecruitmentNotesService', () => {
         ]),
       );
     });
+
+    it('includes creator.converted events from conversion history', async () => {
+      (prisma.creatorLead.findFirst as jest.Mock).mockResolvedValue({
+        ...baseLead,
+        metadata: {
+          conversionHistory: [
+            {
+              convertedAt: '2026-06-28T12:00:00.000Z',
+              convertedBy: 'manager-1',
+              creatorId: 'creator-1',
+              userId: 'user-1',
+            },
+          ],
+        },
+      });
+      (prisma.leadAssignment.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.leadStatusHistory.findMany as jest.Mock).mockResolvedValue([]);
+      (prisma.leadNote.findMany as jest.Mock).mockResolvedValue([]);
+
+      const result = await service.getLeadTimeline(managerToken, 'lead-1');
+
+      expect(result.items).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'creator.converted',
+            data: expect.objectContaining({
+              creatorId: 'creator-1',
+              userId: 'user-1',
+            }),
+          }),
+        ]),
+      );
+    });
   });
 
   describe('organization isolation', () => {

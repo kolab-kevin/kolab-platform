@@ -23,6 +23,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { RequirePermissions } from '../common/decorators/auth.decorators';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { CreatorsService } from '../creators/creators.service';
 import {
   type RecruitmentLeadListQuery,
   RecruitmentLeadListQuerySchema,
@@ -41,6 +42,7 @@ export class RecruitmentController {
     private readonly recruitmentService: RecruitmentService,
     private readonly recruitmentNotesService: RecruitmentNotesService,
     private readonly recruitmentFollowUpsService: RecruitmentFollowUpsService,
+    private readonly creatorsService: CreatorsService,
   ) {}
 
   @Get()
@@ -157,6 +159,17 @@ export class RecruitmentController {
     @Body(new ZodValidationPipe(UpdateLeadStatusSchema)) body: UpdateLeadStatusInput,
   ) {
     return this.recruitmentService.updateLeadStatus(user, leadId, body);
+  }
+
+  @Post(':id/convert')
+  @HttpCode(200)
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Convert a signed lead into a creator roster record' })
+  @ApiResponse({ status: 200, description: 'Lead converted to creator' })
+  @ApiResponse({ status: 400, description: 'Invalid lead status or missing email' })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  convertLead(@CurrentUser() user: AccessTokenPayload, @Param('id') leadId: string) {
+    return this.creatorsService.convertLeadFromRecruitment(user, leadId);
   }
 
   @Patch(':id/follow-up')

@@ -290,6 +290,7 @@ export const LeadTimelineEventTypeSchema = z.enum([
   'status.changed',
   'note.added',
   'followup.updated',
+  'creator.converted',
 ]);
 
 export type LeadTimelineEventType = z.infer<typeof LeadTimelineEventTypeSchema>;

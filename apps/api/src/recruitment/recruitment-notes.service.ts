@@ -19,6 +19,7 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTION, AUDIT_TARGET_TYPE } from '../audit/audit-actions';
+import { getConversionHistory } from '../creators/creators.utils';
 import { LEAD_MANAGER_ROLES } from './recruitment.constants';
 import { getFollowUpHistory } from './recruitment.followups.utils';
 import {
@@ -285,6 +286,19 @@ export class RecruitmentNotesService {
           previousFollowUpAt: entry.previousFollowUpAt,
           nextFollowUpAt: entry.nextFollowUpAt,
           ...(entry.note ? { note: entry.note } : {}),
+        },
+      });
+    }
+
+    for (const [index, entry] of getConversionHistory(lead.metadata).entries()) {
+      events.push({
+        id: `creator-converted-${lead.id}-${index}-${entry.convertedAt}`,
+        type: 'creator.converted',
+        occurredAt: entry.convertedAt,
+        actorUserId: entry.convertedBy,
+        data: {
+          creatorId: entry.creatorId,
+          userId: entry.userId,
         },
       });
     }
