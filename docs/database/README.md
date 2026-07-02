@@ -39,6 +39,8 @@ Organization-scoped identity model — see [Identity ERD](./identity-erd.md):
 ### Release 0.3 (recruitment CRM)
 
 - **CreatorLead**, **LeadPlatformAccount**, **LeadAssignment**, **LeadNote**, **LeadStatusHistory**
+- **RecruiterProfile** — recruiter business profile per org user
+- **CreatorProfile**, **CreatorPlatformAccount** — creator roster schema (API migration pending)
 - **RefreshToken.sessionId** — optional link to Session (Phase A migration)
 
 Legacy `User.role` and `User.platforms` remain until Phase D cleanup.

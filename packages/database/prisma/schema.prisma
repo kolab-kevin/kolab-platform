@@ -116,6 +116,13 @@ enum RecruiterStatus {
   SUSPENDED
 }
 
+enum CreatorStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
 model User {
   id             String     @id @default(cuid())
   email          String     @unique
@@ -141,6 +148,8 @@ model User {
   leadStatusChanges       LeadStatusHistory[]      @relation("LeadStatusChanger")
   recruiterProfiles       RecruiterProfile[]       @relation("RecruiterProfileUser")
   managedRecruiterProfiles RecruiterProfile[]      @relation("RecruiterProfileManager")
+  creatorProfiles         CreatorProfile[]         @relation("CreatorProfileUser")
+  assignedCreatorProfiles CreatorProfile[]         @relation("CreatorProfileRecruiter")
 
   @@map("users")
 }
@@ -180,6 +189,8 @@ model Organization {
   leadNotes            LeadNote[]
   leadStatusHistory    LeadStatusHistory[]
   recruiterProfiles    RecruiterProfile[]
+  creatorProfiles      CreatorProfile[]
+  creatorPlatformAccounts CreatorPlatformAccount[]
 
   @@index([status])
   @@map("organizations")
@@ -330,6 +341,7 @@ model CreatorLead {
   assignments      LeadAssignment[]
   notes            LeadNote[]
   statusHistory    LeadStatusHistory[]
+  creatorProfile   CreatorProfile?
 
   @@unique([organizationId, email])
   @@index([organizationId, status, nextFollowUpAt])
@@ -445,4 +457,56 @@ model RecruiterProfile {
   @@index([managerUserId])
   @@index([organizationId, status])
   @@map("recruiter_profiles")
+}
+
+model CreatorProfile {
+  id               String        @id @default(cuid())
+  organizationId   String        @map("organization_id")
+  organization     Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId           String        @map("user_id")
+  user             User          @relation("CreatorProfileUser", fields: [userId], references: [id], onDelete: Cascade)
+  sourceLeadId     String?       @unique @map("source_lead_id")
+  sourceLead       CreatorLead?  @relation(fields: [sourceLeadId], references: [id], onDelete: SetNull)
+  displayName      String        @map("display_name")
+  bio              String?
+  country          String?
+  languages        String[]      @default([])
+  availability     Json          @default("{}")
+  status           CreatorStatus @default(ACTIVE)
+  metadata         Json          @default("{}")
+  recruiterUserId  String?       @map("recruiter_user_id")
+  recruiter        User?         @relation("CreatorProfileRecruiter", fields: [recruiterUserId], references: [id], onDelete: SetNull)
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  platformAccounts CreatorPlatformAccount[]
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+  @@index([recruiterUserId])
+  @@index([organizationId, status])
+  @@map("creator_profiles")
+}
+
+model CreatorPlatformAccount {
+  id               String                    @id @default(cuid())
+  organizationId   String                    @map("organization_id")
+  organization     Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creatorProfileId String                    @map("creator_profile_id")
+  creatorProfile   CreatorProfile            @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  platform         PlatformType
+  username         String
+  profileUrl       String?                   @map("profile_url")
+  followers        Int?
+  verified         Boolean                   @default(false)
+  status           LeadPlatformAccountStatus @default(ACTIVE)
+  metadata         Json                      @default("{}")
+  createdAt        DateTime                  @default(now()) @map("created_at")
+  updatedAt        DateTime                  @updatedAt @map("updated_at")
+
+  @@unique([organizationId, platform, username])
+  @@index([creatorProfileId])
+  @@index([organizationId, platform])
+  @@map("creator_platform_accounts")
 }
