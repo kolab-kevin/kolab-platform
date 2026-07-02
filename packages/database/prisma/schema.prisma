@@ -57,6 +57,59 @@ enum MembershipStatus {
   REMOVED
 }
 
+enum LeadStatus {
+  NEW
+  CONTACTED
+  INTERESTED
+  APPLICATION
+  CONTRACT_SENT
+  SIGNED
+  ACTIVE_CREATOR
+  INACTIVE
+  REJECTED
+}
+
+enum LeadSource {
+  MANUAL
+  REFERRAL
+  SOCIAL
+  EVENT
+  IMPORT
+  OTHER
+}
+
+enum PlatformType {
+  TIKTOK
+  INSTAGRAM
+  YOUTUBE
+  FACEBOOK
+  TWITCH
+  OTHER
+}
+
+enum ContactType {
+  CALL
+  WHATSAPP
+  TIKTOK
+  FACEBOOK
+  EMAIL
+  MEETING
+  OTHER
+}
+
+enum CommissionPlan {
+  STANDARD
+  PREMIUM
+  CUSTOM
+}
+
+enum LeadPlatformAccountStatus {
+  ACTIVE
+  UNVERIFIED
+  SUSPENDED
+  REMOVED
+}
+
 model User {
   id             String     @id @default(cuid())
   email          String     @unique
@@ -74,6 +127,12 @@ model User {
   invitedMemberships      OrganizationMembership[] @relation("MembershipInviter")
   sentInvitations         Invitation[]             @relation("InvitationInviter")
   auditLogs               AuditLog[]               @relation("AuditActor")
+  assignedCreatorLeads    CreatorLead[]            @relation("LeadAssignedRecruiter")
+  convertedCreatorLeads   CreatorLead[]            @relation("LeadConvertedCreator")
+  leadAssignments         LeadAssignment[]         @relation("LeadAssignmentRecruiter")
+  leadAssignmentsCreated  LeadAssignment[]         @relation("LeadAssignmentAssigner")
+  leadNotes               LeadNote[]               @relation("LeadNoteAuthor")
+  leadStatusChanges       LeadStatusHistory[]      @relation("LeadStatusChanger")
 
   @@map("users")
 }
@@ -107,6 +166,11 @@ model Organization {
   auditLogs   AuditLog[]
   agencyProfile  AgencyProfile?
   agencySettings AgencySettings?
+  creatorLeads   CreatorLead[]
+  leadPlatformAccounts LeadPlatformAccount[]
+  leadAssignments      LeadAssignment[]
+  leadNotes            LeadNote[]
+  leadStatusHistory    LeadStatusHistory[]
 
   @@index([status])
   @@map("organizations")
@@ -225,4 +289,121 @@ model AuditLog {
   @@index([actorUserId, createdAt(sort: Desc)])
   @@index([targetType, targetId])
   @@map("audit_logs")
+}
+
+model CreatorLead {
+  id                   String         @id @default(cuid())
+  organizationId       String         @map("organization_id")
+  organization         Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name                 String
+  nickname             String?
+  email                String?
+  phone                String?
+  country              String?
+  languages            String[]       @default([])
+  source               LeadSource     @default(MANUAL)
+  status               LeadStatus     @default(NEW)
+  score                Int            @default(0)
+  assignedRecruiterId  String?        @map("assigned_recruiter_id")
+  assignedRecruiter    User?          @relation("LeadAssignedRecruiter", fields: [assignedRecruiterId], references: [id], onDelete: SetNull)
+  assignedAt           DateTime?      @map("assigned_at")
+  nextFollowUpAt       DateTime?      @map("next_follow_up_at")
+  commissionPlan       CommissionPlan @default(STANDARD) @map("commission_plan")
+  convertedUserId      String?        @map("converted_user_id")
+  convertedUser        User?          @relation("LeadConvertedCreator", fields: [convertedUserId], references: [id], onDelete: SetNull)
+  convertedAt          DateTime?      @map("converted_at")
+  notesSummary         String?        @map("notes_summary")
+  metadata             Json           @default("{}")
+  createdAt            DateTime       @default(now()) @map("created_at")
+  updatedAt            DateTime       @updatedAt @map("updated_at")
+
+  platformAccounts LeadPlatformAccount[]
+  assignments      LeadAssignment[]
+  notes            LeadNote[]
+  statusHistory    LeadStatusHistory[]
+
+  @@unique([organizationId, email])
+  @@index([organizationId, status, nextFollowUpAt])
+  @@index([organizationId, assignedRecruiterId, status])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@map("creator_leads")
+}
+
+model LeadPlatformAccount {
+  id             String                    @id @default(cuid())
+  organizationId String                    @map("organization_id")
+  organization   Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  leadId         String                    @map("lead_id")
+  lead           CreatorLead               @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  platform       PlatformType
+  username       String
+  profileUrl     String?                   @map("profile_url")
+  followers      Int?
+  verified       Boolean                   @default(false)
+  status         LeadPlatformAccountStatus @default(ACTIVE)
+  metadata       Json                      @default("{}")
+  createdAt      DateTime                  @default(now()) @map("created_at")
+  updatedAt      DateTime                  @updatedAt @map("updated_at")
+
+  @@unique([organizationId, platform, username])
+  @@index([leadId])
+  @@index([organizationId, platform])
+  @@map("lead_platform_accounts")
+}
+
+model LeadAssignment {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  leadId         String       @map("lead_id")
+  lead           CreatorLead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  recruiterId    String       @map("recruiter_id")
+  recruiter      User         @relation("LeadAssignmentRecruiter", fields: [recruiterId], references: [id], onDelete: Restrict)
+  assignedById   String       @map("assigned_by_id")
+  assignedBy     User         @relation("LeadAssignmentAssigner", fields: [assignedById], references: [id], onDelete: Restrict)
+  assignedAt     DateTime     @default(now()) @map("assigned_at")
+  unassignedAt   DateTime?    @map("unassigned_at")
+  reason         String?
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([organizationId, leadId, assignedAt(sort: Desc)])
+  @@index([leadId, unassignedAt])
+  @@index([recruiterId, unassignedAt])
+  @@map("lead_assignments")
+}
+
+model LeadNote {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  leadId         String       @map("lead_id")
+  lead           CreatorLead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  authorId       String       @map("author_id")
+  author         User         @relation("LeadNoteAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  contactType    ContactType  @map("contact_type")
+  note           String
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@index([leadId, createdAt(sort: Desc)])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([authorId, createdAt(sort: Desc)])
+  @@map("lead_notes")
+}
+
+model LeadStatusHistory {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  leadId         String       @map("lead_id")
+  lead           CreatorLead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  previousStatus LeadStatus?  @map("previous_status")
+  newStatus      LeadStatus   @map("new_status")
+  changedById    String       @map("changed_by_id")
+  changedBy      User         @relation("LeadStatusChanger", fields: [changedById], references: [id], onDelete: Restrict)
+  changedAt      DateTime     @default(now()) @map("changed_at")
+  reason         String?
+
+  @@index([leadId, changedAt(sort: Desc)])
+  @@index([organizationId, changedAt(sort: Desc)])
+  @@map("lead_status_history")
 }
