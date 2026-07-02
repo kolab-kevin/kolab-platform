@@ -4,6 +4,7 @@ import type { AccessTokenPayload } from '@kolab/auth';
 import { hashPassword } from '@kolab/auth';
 import {
   type CreatorLead as PrismaCreatorLead,
+  type CreatorProfile as PrismaCreatorProfile,
   type LeadPlatformAccount as PrismaLeadPlatformAccount,
   MembershipStatus,
   OrganizationRole,
@@ -13,11 +14,8 @@ import {
 } from '@kolab/database';
 import type {
   ConvertLeadResponse,
-  Creator,
   CreatorDetailResponse,
   CreatorListQuery,
-  CreatorPlatformAccount,
-  CreatorSummary,
   ListCreatorsResponse,
   UpdateCreatorInput,
 } from '@kolab/types';
@@ -32,17 +30,24 @@ import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTION, AUDIT_TARGET_TYPE } from '../audit/audit-actions';
 import { activeLeadMetadataFilter } from '../recruitment/recruitment.utils';
 import {
-  buildConversionMetadata,
-  createCreatorId,
-  createCreatorPlatformAccountId,
-  getCreatorPlatformAccounts,
-  getCreatorProfile,
-  type StoredCreatorPlatformAccount,
-  type StoredCreatorProfile,
-  updateStoredCreatorProfile,
-} from './creators.utils';
+  type CreatorProfileWithAccounts,
+  toCreatorFromProfile,
+  toCreatorPlatformAccount,
+  toCreatorSummary,
+} from './creators.mapper';
+import { buildConversionMetadata, updateStoredCreatorProfile } from './creators.utils';
+import {
+  backfillCreatorProfileFromLead,
+  backfillCreatorProfilesForOrganization,
+  createProfileFromLead,
+} from './creators-backfill';
 
 const CONVERTIBLE_LEAD_STATUSES = new Set(['SIGNED', 'ACTIVE_CREATOR']);
+
+const creatorProfileInclude = {
+  platformAccounts: true,
+  sourceLead: true,
+} as const;
 
 @Injectable()
 export class CreatorsService {
@@ -55,10 +60,19 @@ export class CreatorsService {
     const organizationId = await this.requireActiveOrganization(user);
     const lead = await this.findLeadForConversion(organizationId, leadId);
 
-    if (lead.convertedUserId && lead.convertedAt) {
+    let existingProfile = await this.findExistingProfileForLead(organizationId, lead);
+
+    if (!existingProfile && lead.convertedUserId && lead.convertedAt) {
+      await backfillCreatorProfileFromLead(lead);
+      existingProfile = await this.findExistingProfileForLead(organizationId, lead);
+    }
+
+    if (existingProfile) {
+      const profile = await this.loadCreatorProfile(organizationId, existingProfile.id);
+
       return {
-        lead: this.toConvertedLeadSummary(lead),
-        creator: this.toCreatorResponse(lead),
+        lead: this.toConvertedLeadSummary(await this.ensureLeadConverted(lead, profile)),
+        creator: toCreatorFromProfile(profile),
         alreadyConverted: true,
       };
     }
@@ -71,33 +85,6 @@ export class CreatorsService {
 
     const creatorUser = await this.resolveCreatorUser(lead);
     const now = new Date();
-    const creatorId = createCreatorId();
-    const platformAccounts = this.buildCreatorPlatformAccounts(lead, creatorId, now);
-
-    const creatorProfile: StoredCreatorProfile = {
-      id: creatorId,
-      userId: creatorUser.id,
-      sourceLeadId: lead.id,
-      displayName: lead.name,
-      email: lead.email,
-      phone: lead.phone,
-      country: lead.country,
-      languages: lead.languages,
-      assignedRecruiterId: lead.assignedRecruiterId,
-      commissionPlan: lead.commissionPlan,
-      bio: null,
-      availability: {},
-      metadata: {},
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-    };
-
-    const conversionHistoryEntry = {
-      convertedAt: now.toISOString(),
-      convertedBy: user.sub,
-      creatorId,
-      userId: creatorUser.id,
-    };
 
     const result = await prisma.$transaction(async (tx) => {
       await tx.userProfile.upsert({
@@ -135,6 +122,75 @@ export class CreatorsService {
         },
       });
 
+      const profile = await createProfileFromLead(tx, {
+        ...lead,
+        convertedUserId: creatorUser.id,
+      });
+
+      if (!profile) {
+        throw new BadRequestException('Unable to create creator profile');
+      }
+
+      const profileWithAccounts = await tx.creatorProfile.findUniqueOrThrow({
+        where: { id: profile.id },
+        include: creatorProfileInclude,
+      });
+
+      const conversionHistoryEntry = {
+        convertedAt: now.toISOString(),
+        convertedBy: user.sub,
+        creatorId: profile.id,
+        userId: creatorUser.id,
+      };
+
+      const metadataProfile = {
+        id: profile.id,
+        userId: creatorUser.id,
+        sourceLeadId: lead.id,
+        displayName: profile.displayName,
+        email: lead.email,
+        phone: lead.phone,
+        country: profile.country,
+        languages: profile.languages,
+        assignedRecruiterId: profile.recruiterUserId,
+        commissionPlan: lead.commissionPlan,
+        bio: profile.bio,
+        availability:
+          profile.availability !== null &&
+          typeof profile.availability === 'object' &&
+          !Array.isArray(profile.availability)
+            ? (profile.availability as Record<string, unknown>)
+            : undefined,
+        metadata:
+          profile.metadata !== null &&
+          typeof profile.metadata === 'object' &&
+          !Array.isArray(profile.metadata)
+            ? (profile.metadata as Record<string, unknown>)
+            : undefined,
+        createdAt: profile.createdAt.toISOString(),
+        updatedAt: profile.updatedAt.toISOString(),
+      };
+
+      const metadataAccounts = profileWithAccounts.platformAccounts.map((account) => ({
+        id: account.id,
+        organizationId: account.organizationId,
+        creatorId: account.creatorProfileId,
+        platform: account.platform,
+        username: account.username,
+        profileUrl: account.profileUrl,
+        followers: account.followers,
+        verified: account.verified,
+        status: account.status,
+        sourceLeadPlatformAccountId:
+          typeof account.metadata === 'object' &&
+          account.metadata !== null &&
+          'sourceLeadPlatformAccountId' in account.metadata
+            ? String((account.metadata as Record<string, unknown>).sourceLeadPlatformAccountId)
+            : null,
+        createdAt: account.createdAt.toISOString(),
+        updatedAt: account.updatedAt.toISOString(),
+      }));
+
       const updatedLead = await tx.creatorLead.update({
         where: { id: lead.id },
         data: {
@@ -143,8 +199,8 @@ export class CreatorsService {
           convertedAt: now,
           metadata: buildConversionMetadata(
             lead.metadata,
-            creatorProfile,
-            platformAccounts,
+            metadataProfile,
+            metadataAccounts,
             conversionHistoryEntry,
           ) as Prisma.InputJsonValue,
         },
@@ -163,7 +219,7 @@ export class CreatorsService {
         });
       }
 
-      return updatedLead;
+      return { updatedLead, profile: profileWithAccounts };
     });
 
     await this.auditService.record({
@@ -171,7 +227,7 @@ export class CreatorsService {
       actorUserId: user.sub,
       action: AUDIT_ACTION.CREATOR_CREATED,
       targetType: AUDIT_TARGET_TYPE.CREATOR,
-      targetId: creatorId,
+      targetId: result.profile.id,
       metadata: {
         userId: creatorUser.id,
         sourceLeadId: lead.id,
@@ -185,7 +241,7 @@ export class CreatorsService {
       targetType: AUDIT_TARGET_TYPE.LEAD,
       targetId: lead.id,
       metadata: {
-        creatorId,
+        creatorId: result.profile.id,
         convertedUserId: creatorUser.id,
         previousStatus: lead.status,
         newStatus: 'ACTIVE_CREATOR',
@@ -193,36 +249,9 @@ export class CreatorsService {
     });
 
     return {
-      lead: this.toConvertedLeadSummary(result),
-      creator: this.toCreatorResponse(result),
+      lead: this.toConvertedLeadSummary(result.updatedLead),
+      creator: toCreatorFromProfile(result.profile),
       alreadyConverted: false,
-    };
-  }
-
-  toCreatorResponse(lead: PrismaCreatorLead): Creator {
-    const profile = getCreatorProfile(lead.metadata);
-
-    if (!profile || !lead.convertedUserId) {
-      throw new NotFoundException('Creator record not found for lead');
-    }
-
-    return {
-      id: profile.id,
-      organizationId: lead.organizationId,
-      userId: profile.userId,
-      sourceLeadId: profile.sourceLeadId,
-      displayName: profile.displayName,
-      email: profile.email,
-      phone: profile.phone,
-      country: profile.country,
-      languages: profile.languages,
-      assignedRecruiterId: profile.assignedRecruiterId,
-      commissionPlan: profile.commissionPlan as Creator['commissionPlan'],
-      platformAccounts: getCreatorPlatformAccounts(lead.metadata).map((account) =>
-        this.toCreatorPlatformAccount(account),
-      ),
-      createdAt: profile.createdAt,
-      updatedAt: profile.updatedAt,
     };
   }
 
@@ -231,7 +260,10 @@ export class CreatorsService {
     query: CreatorListQuery,
   ): Promise<ListCreatorsResponse> {
     const organizationId = await this.requireActiveOrganization(user);
-    let convertedUserIds: string[] | undefined;
+
+    await backfillCreatorProfilesForOrganization(organizationId);
+
+    let userIdsFilter: string[] | undefined;
 
     if (query.status) {
       const memberships = await prisma.organizationMembership.findMany({
@@ -247,44 +279,48 @@ export class CreatorsService {
         return { items: [], nextCursor: null };
       }
 
-      convertedUserIds = memberships.map((membership) => membership.userId);
+      userIdsFilter = memberships.map((membership) => membership.userId);
     }
 
-    const where = await this.buildCreatorListWhere(organizationId, query, convertedUserIds);
+    const where = await this.buildCreatorProfileListWhere(organizationId, query, userIdsFilter);
     const take = query.limit + 1;
 
-    const leads = await prisma.creatorLead.findMany({
+    const profiles = await prisma.creatorProfile.findMany({
       where,
-      orderBy: [{ convertedAt: 'desc' }, { id: 'desc' }],
+      include: creatorProfileInclude,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take,
+      ...(query.cursor
+        ? {
+            cursor: { id: query.cursor },
+            skip: 1,
+          }
+        : {}),
     });
 
-    const hasMore = leads.length > query.limit;
-    const page = hasMore ? leads.slice(0, query.limit) : leads;
+    const hasMore = profiles.length > query.limit;
+    const page = hasMore ? profiles.slice(0, query.limit) : profiles;
     const membershipByUserId = await this.loadMembershipStatusMap(
       organizationId,
-      page
-        .map((lead) => lead.convertedUserId)
-        .filter((userId): userId is string => Boolean(userId)),
+      page.map((profile) => profile.userId),
     );
 
     return {
-      items: page
-        .map((lead) => this.toCreatorSummary(lead, membershipByUserId))
-        .filter((summary): summary is CreatorSummary => summary !== null),
-      nextCursor: hasMore
-        ? page.at(-1)
-          ? (getCreatorProfile(page.at(-1)!.metadata)?.id ?? null)
-          : null
-        : null,
+      items: page.map((profile) =>
+        toCreatorSummary(
+          profile,
+          membershipByUserId.get(profile.userId) ?? MembershipStatus.ACTIVE,
+        ),
+      ),
+      nextCursor: hasMore ? (page.at(-1)?.id ?? null) : null,
     };
   }
 
   async getCreator(user: AccessTokenPayload, creatorId: string): Promise<CreatorDetailResponse> {
     const organizationId = await this.requireActiveOrganization(user);
-    const lead = await this.findLeadByCreatorId(organizationId, creatorId);
+    const profile = await this.findCreatorProfileOrBackfill(organizationId, creatorId);
 
-    return this.buildCreatorDetail(organizationId, lead);
+    return this.buildCreatorDetail(organizationId, profile);
   }
 
   async updateCreator(
@@ -293,30 +329,22 @@ export class CreatorsService {
     input: UpdateCreatorInput,
   ): Promise<CreatorDetailResponse> {
     const organizationId = await this.requireActiveOrganization(user);
-    const lead = await this.findLeadByCreatorId(organizationId, creatorId);
-    const profile = getCreatorProfile(lead.metadata);
-
-    if (!profile || !lead.convertedUserId) {
-      throw new NotFoundException('Creator not found');
-    }
-
-    const profileUpdates = {
-      ...(input.displayName !== undefined ? { displayName: input.displayName } : {}),
-      ...(input.bio !== undefined ? { bio: input.bio } : {}),
-      ...(input.country !== undefined ? { country: input.country } : {}),
-      ...(input.languages !== undefined ? { languages: input.languages } : {}),
-      ...(input.availability !== undefined ? { availability: input.availability } : {}),
-      ...(input.metadata !== undefined ? { metadata: input.metadata } : {}),
-    };
+    const existing = await this.findCreatorProfileOrBackfill(organizationId, creatorId);
 
     await prisma.$transaction(async (tx) => {
-      await tx.creatorLead.update({
-        where: { id: lead.id },
+      await tx.creatorProfile.update({
+        where: { id: existing.id },
         data: {
-          metadata: updateStoredCreatorProfile(
-            lead.metadata,
-            profileUpdates,
-          ) as Prisma.InputJsonValue,
+          ...(input.displayName !== undefined ? { displayName: input.displayName } : {}),
+          ...(input.bio !== undefined ? { bio: input.bio } : {}),
+          ...(input.country !== undefined ? { country: input.country } : {}),
+          ...(input.languages !== undefined ? { languages: input.languages } : {}),
+          ...(input.availability !== undefined
+            ? { availability: input.availability as Prisma.InputJsonValue }
+            : {}),
+          ...(input.metadata !== undefined
+            ? { metadata: input.metadata as Prisma.InputJsonValue }
+            : {}),
         },
       });
 
@@ -327,13 +355,13 @@ export class CreatorsService {
         input.languages !== undefined
       ) {
         await tx.userProfile.upsert({
-          where: { userId: lead.convertedUserId! },
+          where: { userId: existing.userId },
           create: {
-            userId: lead.convertedUserId!,
-            displayName: input.displayName ?? profile.displayName,
-            bio: input.bio ?? profile.bio ?? undefined,
-            country: input.country ?? profile.country ?? undefined,
-            language: input.languages?.[0] ?? profile.languages[0] ?? 'en',
+            userId: existing.userId,
+            displayName: input.displayName ?? existing.displayName,
+            bio: input.bio ?? existing.bio ?? undefined,
+            country: input.country ?? existing.country ?? undefined,
+            language: input.languages?.[0] ?? existing.languages[0] ?? 'en',
           },
           update: {
             ...(input.displayName !== undefined ? { displayName: input.displayName } : {}),
@@ -342,6 +370,26 @@ export class CreatorsService {
             ...(input.languages !== undefined ? { language: input.languages[0] ?? 'en' } : {}),
           },
         });
+      }
+
+      if (existing.sourceLeadId) {
+        const lead = await tx.creatorLead.findUnique({ where: { id: existing.sourceLeadId } });
+
+        if (lead) {
+          await tx.creatorLead.update({
+            where: { id: lead.id },
+            data: {
+              metadata: updateStoredCreatorProfile(lead.metadata, {
+                ...(input.displayName !== undefined ? { displayName: input.displayName } : {}),
+                ...(input.bio !== undefined ? { bio: input.bio } : {}),
+                ...(input.country !== undefined ? { country: input.country } : {}),
+                ...(input.languages !== undefined ? { languages: input.languages } : {}),
+                ...(input.availability !== undefined ? { availability: input.availability } : {}),
+                ...(input.metadata !== undefined ? { metadata: input.metadata } : {}),
+              }) as Prisma.InputJsonValue,
+            },
+          });
+        }
       }
     });
 
@@ -353,45 +401,120 @@ export class CreatorsService {
       targetId: creatorId,
       metadata: {
         updatedFields: Object.keys(input),
-        sourceLeadId: lead.id,
+        sourceLeadId: existing.sourceLeadId,
       },
     });
 
-    const updatedLead = await this.findLeadByCreatorId(organizationId, creatorId);
+    const updatedProfile = await this.loadCreatorProfile(organizationId, creatorId);
 
-    return this.buildCreatorDetail(organizationId, updatedLead);
+    return this.buildCreatorDetail(organizationId, updatedProfile);
   }
 
-  private async buildCreatorListWhere(
+  private async findCreatorProfileOrBackfill(
+    organizationId: string,
+    creatorId: string,
+  ): Promise<CreatorProfileWithAccounts> {
+    const profile = await prisma.creatorProfile.findFirst({
+      where: { id: creatorId, organizationId },
+      include: creatorProfileInclude,
+    });
+
+    if (profile) {
+      return profile;
+    }
+
+    const lead = await prisma.creatorLead.findFirst({
+      where: {
+        organizationId,
+        convertedUserId: { not: null },
+        metadata: {
+          path: ['creatorProfile', 'id'],
+          equals: creatorId,
+        },
+        ...activeLeadMetadataFilter(),
+      },
+      include: { platformAccounts: true },
+    });
+
+    if (!lead) {
+      throw new NotFoundException('Creator not found');
+    }
+
+    await backfillCreatorProfileFromLead(lead);
+
+    return this.loadCreatorProfile(organizationId, creatorId);
+  }
+
+  private async loadCreatorProfile(
+    organizationId: string,
+    creatorId: string,
+  ): Promise<CreatorProfileWithAccounts> {
+    const profile = await prisma.creatorProfile.findFirst({
+      where: { id: creatorId, organizationId },
+      include: creatorProfileInclude,
+    });
+
+    if (!profile) {
+      throw new NotFoundException('Creator not found');
+    }
+
+    return profile;
+  }
+
+  private async findExistingProfileForLead(
+    organizationId: string,
+    lead: PrismaCreatorLead,
+  ): Promise<PrismaCreatorProfile | null> {
+    const bySourceLead = await prisma.creatorProfile.findUnique({
+      where: { sourceLeadId: lead.id },
+    });
+
+    if (bySourceLead) {
+      return bySourceLead;
+    }
+
+    if (lead.convertedUserId) {
+      return prisma.creatorProfile.findUnique({
+        where: {
+          organizationId_userId: {
+            organizationId,
+            userId: lead.convertedUserId,
+          },
+        },
+      });
+    }
+
+    return null;
+  }
+
+  private async ensureLeadConverted(
+    lead: PrismaCreatorLead,
+    profile: CreatorProfileWithAccounts,
+  ): Promise<PrismaCreatorLead> {
+    if (lead.convertedUserId && lead.convertedAt) {
+      return lead;
+    }
+
+    return prisma.creatorLead.update({
+      where: { id: lead.id },
+      data: {
+        status: 'ACTIVE_CREATOR',
+        convertedUserId: profile.userId,
+        convertedAt: profile.createdAt,
+      },
+    });
+  }
+
+  private async buildCreatorProfileListWhere(
     organizationId: string,
     query: CreatorListQuery,
-    convertedUserIds?: string[],
-  ): Promise<Prisma.CreatorLeadWhereInput> {
-    const metadataFilters: Prisma.CreatorLeadWhereInput[] = [];
-
-    if (query.recruiterId) {
-      metadataFilters.push({
-        metadata: {
-          path: ['creatorProfile', 'assignedRecruiterId'],
-          equals: query.recruiterId,
-        },
-      });
-    }
-
-    if (query.country) {
-      metadataFilters.push({
-        metadata: {
-          path: ['creatorProfile', 'country'],
-          equals: query.country,
-        },
-      });
-    }
-
-    const where: Prisma.CreatorLeadWhereInput = {
+    userIds?: string[],
+  ): Promise<Prisma.CreatorProfileWhereInput> {
+    const where: Prisma.CreatorProfileWhereInput = {
       organizationId,
-      convertedUserId: convertedUserIds ? { in: convertedUserIds } : { not: null },
-      convertedAt: { not: null },
-      ...activeLeadMetadataFilter(),
+      ...(userIds ? { userId: { in: userIds } } : {}),
+      ...(query.recruiterId ? { recruiterUserId: query.recruiterId } : {}),
+      ...(query.country ? { country: query.country } : {}),
       ...(query.language ? { languages: { has: query.language } } : {}),
       ...(query.platform
         ? {
@@ -404,15 +527,19 @@ export class CreatorsService {
         : {}),
     };
 
-    if (metadataFilters.length > 0) {
-      where.AND = [...(Array.isArray(where.AND) ? where.AND : []), ...metadataFilters];
-    }
-
     if (query.search) {
       where.OR = [
-        { name: { contains: query.search, mode: 'insensitive' } },
-        { email: { contains: query.search, mode: 'insensitive' } },
-        { nickname: { contains: query.search, mode: 'insensitive' } },
+        { displayName: { contains: query.search, mode: 'insensitive' } },
+        {
+          sourceLead: {
+            email: { contains: query.search, mode: 'insensitive' },
+          },
+        },
+        {
+          sourceLead: {
+            nickname: { contains: query.search, mode: 'insensitive' },
+          },
+        },
         {
           platformAccounts: {
             some: {
@@ -423,75 +550,22 @@ export class CreatorsService {
       ];
     }
 
-    if (query.cursor) {
-      const cursorLead = await prisma.creatorLead.findFirst({
-        where: {
-          organizationId,
-          metadata: {
-            path: ['creatorProfile', 'id'],
-            equals: query.cursor,
-          },
-        },
-      });
-
-      if (cursorLead?.convertedAt) {
-        const cursorFilter = {
-          OR: [
-            { convertedAt: { lt: cursorLead.convertedAt } },
-            {
-              convertedAt: cursorLead.convertedAt,
-              id: { lt: cursorLead.id },
-            },
-          ],
-        };
-        where.AND = [...(Array.isArray(where.AND) ? where.AND : []), cursorFilter];
-      }
-    }
-
     return where;
-  }
-
-  private async findLeadByCreatorId(
-    organizationId: string,
-    creatorId: string,
-  ): Promise<PrismaCreatorLead> {
-    const lead = await prisma.creatorLead.findFirst({
-      where: {
-        organizationId,
-        convertedUserId: { not: null },
-        metadata: {
-          path: ['creatorProfile', 'id'],
-          equals: creatorId,
-        },
-        ...activeLeadMetadataFilter(),
-      },
-    });
-
-    if (!lead || !getCreatorProfile(lead.metadata)) {
-      throw new NotFoundException('Creator not found');
-    }
-
-    return lead;
   }
 
   private async buildCreatorDetail(
     organizationId: string,
-    lead: PrismaCreatorLead,
+    profile: CreatorProfileWithAccounts,
   ): Promise<CreatorDetailResponse> {
-    const profile = getCreatorProfile(lead.metadata)!;
-    const platformAccounts = getCreatorPlatformAccounts(lead.metadata).map((account) =>
-      this.toCreatorPlatformAccount(account),
-    );
-
     const [user, userProfile, organization, recruiterProfile, membership] = await Promise.all([
       prisma.user.findUnique({ where: { id: profile.userId } }),
       prisma.userProfile.findUnique({ where: { userId: profile.userId } }),
       prisma.organization.findUnique({ where: { id: organizationId } }),
-      profile.assignedRecruiterId
+      profile.recruiterUserId
         ? prisma.recruiterProfile.findFirst({
             where: {
               organizationId,
-              userId: profile.assignedRecruiterId,
+              userId: profile.recruiterUserId,
             },
           })
         : Promise.resolve(null),
@@ -509,13 +583,15 @@ export class CreatorsService {
       throw new NotFoundException('Creator not found');
     }
 
+    const creator = toCreatorFromProfile(profile);
+
     return {
       creator: {
-        ...this.toCreatorResponse(lead),
+        ...creator,
         bio: profile.bio ?? userProfile?.bio ?? null,
         availability: (profile.availability ??
           {}) as CreatorDetailResponse['creator']['availability'],
-        metadata: profile.metadata ?? {},
+        metadata: (profile.metadata ?? {}) as Record<string, unknown>,
         status: membership?.status ?? MembershipStatus.ACTIVE,
       },
       user: {
@@ -541,7 +617,7 @@ export class CreatorsService {
         type: organization.type,
         status: organization.status,
       },
-      platformAccounts,
+      platformAccounts: profile.platformAccounts.map(toCreatorPlatformAccount),
     };
   }
 
@@ -558,55 +634,6 @@ export class CreatorsService {
     });
 
     return new Map(memberships.map((membership) => [membership.userId, membership.status]));
-  }
-
-  private toCreatorSummary(
-    lead: PrismaCreatorLead,
-    membershipByUserId: Map<string, MembershipStatus>,
-  ): CreatorSummary | null {
-    const profile = getCreatorProfile(lead.metadata);
-
-    if (!profile || !lead.convertedUserId) {
-      return null;
-    }
-
-    return {
-      id: profile.id,
-      organizationId: lead.organizationId,
-      userId: profile.userId,
-      displayName: profile.displayName,
-      email: profile.email,
-      country: profile.country,
-      languages: profile.languages,
-      assignedRecruiterId: profile.assignedRecruiterId,
-      status: membershipByUserId.get(profile.userId) ?? MembershipStatus.ACTIVE,
-      platformCount: getCreatorPlatformAccounts(lead.metadata).length,
-      createdAt: profile.createdAt,
-      updatedAt: profile.updatedAt,
-    };
-  }
-
-  private buildCreatorPlatformAccounts(
-    lead: PrismaCreatorLead & { platformAccounts: PrismaLeadPlatformAccount[] },
-    creatorId: string,
-    now: Date,
-  ): StoredCreatorPlatformAccount[] {
-    const timestamp = now.toISOString();
-
-    return lead.platformAccounts.map((account) => ({
-      id: createCreatorPlatformAccountId(),
-      organizationId: lead.organizationId,
-      creatorId,
-      platform: account.platform,
-      username: account.username,
-      profileUrl: account.profileUrl,
-      followers: account.followers,
-      verified: account.verified,
-      status: account.status,
-      sourceLeadPlatformAccountId: account.id,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-    }));
   }
 
   private async resolveCreatorUser(lead: PrismaCreatorLead) {
@@ -702,23 +729,6 @@ export class CreatorsService {
       status: lead.status,
       convertedUserId: lead.convertedUserId,
       convertedAt: lead.convertedAt?.toISOString() ?? null,
-    };
-  }
-
-  private toCreatorPlatformAccount(account: StoredCreatorPlatformAccount): CreatorPlatformAccount {
-    return {
-      id: account.id,
-      organizationId: account.organizationId,
-      creatorId: account.creatorId,
-      platform: account.platform as CreatorPlatformAccount['platform'],
-      username: account.username,
-      profileUrl: account.profileUrl,
-      followers: account.followers,
-      verified: account.verified,
-      status: account.status as CreatorPlatformAccount['status'],
-      sourceLeadPlatformAccountId: account.sourceLeadPlatformAccountId,
-      createdAt: account.createdAt,
-      updatedAt: account.updatedAt,
     };
   }
 }

@@ -10,7 +10,7 @@
 
 Creator Management provides roster read/update APIs for creators produced by the Recruitment CRM conversion workflow (`POST /api/recruitment/leads/:id/convert`).
 
-Creator roster records are currently stored on converted leads (`CreatorLead.metadata.creatorProfile`) and linked to organization memberships with role `CREATOR`. First-class database tables (`CreatorProfile`, `CreatorPlatformAccount`) are now available in Prisma — see [Storage transition](#storage-transition).
+Creator roster data is stored in first-class tables (`CreatorProfile`, `CreatorPlatformAccount`) scoped to the active organization. Conversion still writes lead metadata for CRM history and timeline compatibility. Legacy converted leads that only have metadata are lazily backfilled into the tables on read.
 
 Release 0.3 does **not** include creator dashboards, campaigns, payments, or analytics.
 
@@ -68,7 +68,7 @@ Query parameters:
 | `language`    | string | Filter by language code in creator languages                           |
 | `status`      | enum   | Filter by creator membership status (`ACTIVE`, `SUSPENDED`, `REMOVED`) |
 
-Results are ordered by conversion date descending (newest first).
+Results are ordered by creator profile creation date descending (newest first).
 
 ### List response (200)
 
@@ -196,7 +196,7 @@ Commission plan and recruiter assignment remain sourced from the original lead c
 }
 ```
 
-Updates are stored on the source lead metadata and synchronized to the linked `UserProfile` where applicable (`displayName`, `bio`, `country`, primary language).
+Updates are stored on `CreatorProfile` and synchronized to the linked `UserProfile` where applicable (`displayName`, `bio`, `country`, primary language). Lead metadata is also updated when a source lead is linked for backwards-compatible CRM history.
 
 **Errors:** `404` missing creator; `403` missing permission.
 
@@ -216,30 +216,25 @@ See [Recruitment CRM API](./recruitment.md#creator-conversion) for conversion wo
 
 After conversion, roster data lives in:
 
-- `CreatorLead.metadata.creatorProfile` — creator roster profile (**current API read/write**)
-- `CreatorLead.metadata.creatorPlatformAccounts` — copied platform accounts (**current API**)
+- `CreatorProfile` — creator roster profile (**primary API read/write**)
+- `CreatorPlatformAccount` — platform accounts copied from lead accounts (**primary API**)
+- `CreatorLead.metadata.creatorProfile` / `creatorPlatformAccounts` — legacy mirror for CRM timeline and history
 - `CreatorLead.convertedUserId` / `convertedAt` — conversion linkage
 - `OrganizationMembership` — role `CREATOR`
 
 The lead row is retained for CRM history.
 
-### Storage transition
+### Lazy backfill
 
-| Layer                          | Status          | Notes                                                                    |
-| ------------------------------ | --------------- | ------------------------------------------------------------------------ |
-| Lead metadata                  | **Active**      | Conversion + `/api/creators` read/write today                            |
-| `CreatorProfile` table         | **Schema only** | One profile per `(organizationId, userId)`; optional `sourceLeadId` link |
-| `CreatorPlatformAccount` table | **Schema only** | Reuses `PlatformType` + `LeadPlatformAccountStatus`                      |
+Converted leads that predate table-backed storage may only have metadata. On list/get/update, the API backfills missing `CreatorProfile` and `CreatorPlatformAccount` rows from lead metadata and platform accounts. Backfill is idempotent and preserves metadata creator ids when present.
 
-A follow-up API milestone will dual-write or migrate reads to the new tables without breaking existing converted leads. Commission plan and recruiter assignment remain on the source lead until that migration.
-
-See [Recruitment CRM ERD](../database/recruitment-crm-erd.md#creator-profile-transition) for the data model transition plan.
+Commission plan and recruiter assignment remain sourced from the original lead conversion record (`CreatorLead.commissionPlan`, assigned recruiter on the lead/profile).
 
 ---
 
 ## Platform accounts
 
-All `LeadPlatformAccount` rows on the source lead are copied into creator platform accounts at conversion time. Each copied account references the source lead platform account id in `sourceLeadPlatformAccountId`.
+All `LeadPlatformAccount` rows on the source lead are copied into `CreatorPlatformAccount` at conversion time. Each copied account references the source lead platform account id in account metadata (`sourceLeadPlatformAccountId`).
 
 Lead platform accounts remain on the lead for CRM history.
 
@@ -247,7 +242,7 @@ Lead platform accounts remain on the lead for CRM history.
 
 ## Idempotency (conversion)
 
-Calling conversion again on an already converted lead returns the existing creator with `alreadyConverted: true`. No duplicate user, membership, or creator records are created. Audit events are not re-recorded.
+Calling conversion again on an already converted lead returns the existing creator with `alreadyConverted: true`. No duplicate user, membership, profile, or platform account rows are created. Audit events are not re-recorded.
 
 ---
 
