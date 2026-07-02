@@ -9,6 +9,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { OrganizationRolesGuard } from './common/guards/organization-roles.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { CreatorsModule } from './creators/creators.module';
 import { HealthModule } from './health/health.module';
 import { InvitationModule } from './invitation/invitation.module';
 import { ObservabilityModule } from './observability/observability.module';
@@ -32,6 +33,7 @@ import { SessionModule } from './session/session.module';
     ProfileModule,
     AdminModule,
     AgencyModule,
+    CreatorsModule,
     RecruitmentModule,
     RecruitersModule,
   ],
