@@ -11,7 +11,16 @@ import {
   prisma,
   Role as PrismaRole,
 } from '@kolab/database';
-import type { ConvertLeadResponse, Creator, CreatorPlatformAccount } from '@kolab/types';
+import type {
+  ConvertLeadResponse,
+  Creator,
+  CreatorDetailResponse,
+  CreatorListQuery,
+  CreatorPlatformAccount,
+  CreatorSummary,
+  ListCreatorsResponse,
+  UpdateCreatorInput,
+} from '@kolab/types';
 import {
   BadRequestException,
   ForbiddenException,
@@ -30,6 +39,7 @@ import {
   getCreatorProfile,
   type StoredCreatorPlatformAccount,
   type StoredCreatorProfile,
+  updateStoredCreatorProfile,
 } from './creators.utils';
 
 const CONVERTIBLE_LEAD_STATUSES = new Set(['SIGNED', 'ACTIVE_CREATOR']);
@@ -75,6 +85,9 @@ export class CreatorsService {
       languages: lead.languages,
       assignedRecruiterId: lead.assignedRecruiterId,
       commissionPlan: lead.commissionPlan,
+      bio: null,
+      availability: {},
+      metadata: {},
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
     };
@@ -208,6 +221,366 @@ export class CreatorsService {
       platformAccounts: getCreatorPlatformAccounts(lead.metadata).map((account) =>
         this.toCreatorPlatformAccount(account),
       ),
+      createdAt: profile.createdAt,
+      updatedAt: profile.updatedAt,
+    };
+  }
+
+  async listCreators(
+    user: AccessTokenPayload,
+    query: CreatorListQuery,
+  ): Promise<ListCreatorsResponse> {
+    const organizationId = await this.requireActiveOrganization(user);
+    let convertedUserIds: string[] | undefined;
+
+    if (query.status) {
+      const memberships = await prisma.organizationMembership.findMany({
+        where: {
+          organizationId,
+          role: OrganizationRole.CREATOR,
+          status: query.status,
+        },
+        select: { userId: true },
+      });
+
+      if (memberships.length === 0) {
+        return { items: [], nextCursor: null };
+      }
+
+      convertedUserIds = memberships.map((membership) => membership.userId);
+    }
+
+    const where = await this.buildCreatorListWhere(organizationId, query, convertedUserIds);
+    const take = query.limit + 1;
+
+    const leads = await prisma.creatorLead.findMany({
+      where,
+      orderBy: [{ convertedAt: 'desc' }, { id: 'desc' }],
+      take,
+    });
+
+    const hasMore = leads.length > query.limit;
+    const page = hasMore ? leads.slice(0, query.limit) : leads;
+    const membershipByUserId = await this.loadMembershipStatusMap(
+      organizationId,
+      page
+        .map((lead) => lead.convertedUserId)
+        .filter((userId): userId is string => Boolean(userId)),
+    );
+
+    return {
+      items: page
+        .map((lead) => this.toCreatorSummary(lead, membershipByUserId))
+        .filter((summary): summary is CreatorSummary => summary !== null),
+      nextCursor: hasMore
+        ? page.at(-1)
+          ? (getCreatorProfile(page.at(-1)!.metadata)?.id ?? null)
+          : null
+        : null,
+    };
+  }
+
+  async getCreator(user: AccessTokenPayload, creatorId: string): Promise<CreatorDetailResponse> {
+    const organizationId = await this.requireActiveOrganization(user);
+    const lead = await this.findLeadByCreatorId(organizationId, creatorId);
+
+    return this.buildCreatorDetail(organizationId, lead);
+  }
+
+  async updateCreator(
+    user: AccessTokenPayload,
+    creatorId: string,
+    input: UpdateCreatorInput,
+  ): Promise<CreatorDetailResponse> {
+    const organizationId = await this.requireActiveOrganization(user);
+    const lead = await this.findLeadByCreatorId(organizationId, creatorId);
+    const profile = getCreatorProfile(lead.metadata);
+
+    if (!profile || !lead.convertedUserId) {
+      throw new NotFoundException('Creator not found');
+    }
+
+    const profileUpdates = {
+      ...(input.displayName !== undefined ? { displayName: input.displayName } : {}),
+      ...(input.bio !== undefined ? { bio: input.bio } : {}),
+      ...(input.country !== undefined ? { country: input.country } : {}),
+      ...(input.languages !== undefined ? { languages: input.languages } : {}),
+      ...(input.availability !== undefined ? { availability: input.availability } : {}),
+      ...(input.metadata !== undefined ? { metadata: input.metadata } : {}),
+    };
+
+    await prisma.$transaction(async (tx) => {
+      await tx.creatorLead.update({
+        where: { id: lead.id },
+        data: {
+          metadata: updateStoredCreatorProfile(
+            lead.metadata,
+            profileUpdates,
+          ) as Prisma.InputJsonValue,
+        },
+      });
+
+      if (
+        input.displayName !== undefined ||
+        input.bio !== undefined ||
+        input.country !== undefined ||
+        input.languages !== undefined
+      ) {
+        await tx.userProfile.upsert({
+          where: { userId: lead.convertedUserId! },
+          create: {
+            userId: lead.convertedUserId!,
+            displayName: input.displayName ?? profile.displayName,
+            bio: input.bio ?? profile.bio ?? undefined,
+            country: input.country ?? profile.country ?? undefined,
+            language: input.languages?.[0] ?? profile.languages[0] ?? 'en',
+          },
+          update: {
+            ...(input.displayName !== undefined ? { displayName: input.displayName } : {}),
+            ...(input.bio !== undefined ? { bio: input.bio } : {}),
+            ...(input.country !== undefined ? { country: input.country } : {}),
+            ...(input.languages !== undefined ? { language: input.languages[0] ?? 'en' } : {}),
+          },
+        });
+      }
+    });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.CREATOR_UPDATED,
+      targetType: AUDIT_TARGET_TYPE.CREATOR,
+      targetId: creatorId,
+      metadata: {
+        updatedFields: Object.keys(input),
+        sourceLeadId: lead.id,
+      },
+    });
+
+    const updatedLead = await this.findLeadByCreatorId(organizationId, creatorId);
+
+    return this.buildCreatorDetail(organizationId, updatedLead);
+  }
+
+  private async buildCreatorListWhere(
+    organizationId: string,
+    query: CreatorListQuery,
+    convertedUserIds?: string[],
+  ): Promise<Prisma.CreatorLeadWhereInput> {
+    const metadataFilters: Prisma.CreatorLeadWhereInput[] = [];
+
+    if (query.recruiterId) {
+      metadataFilters.push({
+        metadata: {
+          path: ['creatorProfile', 'assignedRecruiterId'],
+          equals: query.recruiterId,
+        },
+      });
+    }
+
+    if (query.country) {
+      metadataFilters.push({
+        metadata: {
+          path: ['creatorProfile', 'country'],
+          equals: query.country,
+        },
+      });
+    }
+
+    const where: Prisma.CreatorLeadWhereInput = {
+      organizationId,
+      convertedUserId: convertedUserIds ? { in: convertedUserIds } : { not: null },
+      convertedAt: { not: null },
+      ...activeLeadMetadataFilter(),
+      ...(query.language ? { languages: { has: query.language } } : {}),
+      ...(query.platform
+        ? {
+            platformAccounts: {
+              some: {
+                platform: query.platform,
+              },
+            },
+          }
+        : {}),
+    };
+
+    if (metadataFilters.length > 0) {
+      where.AND = [...(Array.isArray(where.AND) ? where.AND : []), ...metadataFilters];
+    }
+
+    if (query.search) {
+      where.OR = [
+        { name: { contains: query.search, mode: 'insensitive' } },
+        { email: { contains: query.search, mode: 'insensitive' } },
+        { nickname: { contains: query.search, mode: 'insensitive' } },
+        {
+          platformAccounts: {
+            some: {
+              username: { contains: query.search, mode: 'insensitive' },
+            },
+          },
+        },
+      ];
+    }
+
+    if (query.cursor) {
+      const cursorLead = await prisma.creatorLead.findFirst({
+        where: {
+          organizationId,
+          metadata: {
+            path: ['creatorProfile', 'id'],
+            equals: query.cursor,
+          },
+        },
+      });
+
+      if (cursorLead?.convertedAt) {
+        const cursorFilter = {
+          OR: [
+            { convertedAt: { lt: cursorLead.convertedAt } },
+            {
+              convertedAt: cursorLead.convertedAt,
+              id: { lt: cursorLead.id },
+            },
+          ],
+        };
+        where.AND = [...(Array.isArray(where.AND) ? where.AND : []), cursorFilter];
+      }
+    }
+
+    return where;
+  }
+
+  private async findLeadByCreatorId(
+    organizationId: string,
+    creatorId: string,
+  ): Promise<PrismaCreatorLead> {
+    const lead = await prisma.creatorLead.findFirst({
+      where: {
+        organizationId,
+        convertedUserId: { not: null },
+        metadata: {
+          path: ['creatorProfile', 'id'],
+          equals: creatorId,
+        },
+        ...activeLeadMetadataFilter(),
+      },
+    });
+
+    if (!lead || !getCreatorProfile(lead.metadata)) {
+      throw new NotFoundException('Creator not found');
+    }
+
+    return lead;
+  }
+
+  private async buildCreatorDetail(
+    organizationId: string,
+    lead: PrismaCreatorLead,
+  ): Promise<CreatorDetailResponse> {
+    const profile = getCreatorProfile(lead.metadata)!;
+    const platformAccounts = getCreatorPlatformAccounts(lead.metadata).map((account) =>
+      this.toCreatorPlatformAccount(account),
+    );
+
+    const [user, userProfile, organization, recruiterProfile, membership] = await Promise.all([
+      prisma.user.findUnique({ where: { id: profile.userId } }),
+      prisma.userProfile.findUnique({ where: { userId: profile.userId } }),
+      prisma.organization.findUnique({ where: { id: organizationId } }),
+      profile.assignedRecruiterId
+        ? prisma.recruiterProfile.findFirst({
+            where: {
+              organizationId,
+              userId: profile.assignedRecruiterId,
+            },
+          })
+        : Promise.resolve(null),
+      prisma.organizationMembership.findUnique({
+        where: {
+          organizationId_userId: {
+            organizationId,
+            userId: profile.userId,
+          },
+        },
+      }),
+    ]);
+
+    if (!user || !organization) {
+      throw new NotFoundException('Creator not found');
+    }
+
+    return {
+      creator: {
+        ...this.toCreatorResponse(lead),
+        bio: profile.bio ?? userProfile?.bio ?? null,
+        availability: (profile.availability ??
+          {}) as CreatorDetailResponse['creator']['availability'],
+        metadata: profile.metadata ?? {},
+        status: membership?.status ?? MembershipStatus.ACTIVE,
+      },
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: userProfile?.displayName ?? profile.displayName,
+        avatarUrl: userProfile?.avatarUrl ?? null,
+      },
+      recruiter: recruiterProfile
+        ? {
+            id: recruiterProfile.id,
+            userId: recruiterProfile.userId,
+            displayName: recruiterProfile.displayName,
+            nickname: recruiterProfile.nickname,
+            territory: recruiterProfile.territory,
+            status: recruiterProfile.status,
+          }
+        : null,
+      organization: {
+        id: organization.id,
+        name: organization.name,
+        slug: organization.slug,
+        type: organization.type,
+        status: organization.status,
+      },
+      platformAccounts,
+    };
+  }
+
+  private async loadMembershipStatusMap(organizationId: string, userIds: string[]) {
+    if (userIds.length === 0) {
+      return new Map<string, MembershipStatus>();
+    }
+
+    const memberships = await prisma.organizationMembership.findMany({
+      where: {
+        organizationId,
+        userId: { in: userIds },
+      },
+    });
+
+    return new Map(memberships.map((membership) => [membership.userId, membership.status]));
+  }
+
+  private toCreatorSummary(
+    lead: PrismaCreatorLead,
+    membershipByUserId: Map<string, MembershipStatus>,
+  ): CreatorSummary | null {
+    const profile = getCreatorProfile(lead.metadata);
+
+    if (!profile || !lead.convertedUserId) {
+      return null;
+    }
+
+    return {
+      id: profile.id,
+      organizationId: lead.organizationId,
+      userId: profile.userId,
+      displayName: profile.displayName,
+      email: profile.email,
+      country: profile.country,
+      languages: profile.languages,
+      assignedRecruiterId: profile.assignedRecruiterId,
+      status: membershipByUserId.get(profile.userId) ?? MembershipStatus.ACTIVE,
+      platformCount: getCreatorPlatformAccounts(lead.metadata).length,
       createdAt: profile.createdAt,
       updatedAt: profile.updatedAt,
     };

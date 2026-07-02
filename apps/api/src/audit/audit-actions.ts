@@ -20,6 +20,7 @@ export const AUDIT_ACTION = {
   LEAD_FOLLOWUP_UPDATED: 'lead.followup_updated',
   LEAD_CONVERTED: 'lead.converted',
   CREATOR_CREATED: 'creator.created',
+  CREATOR_UPDATED: 'creator.updated',
   RECRUITER_CREATED: 'recruiter.created',
   RECRUITER_UPDATED: 'recruiter.updated',
 } as const;

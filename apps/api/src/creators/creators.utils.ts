@@ -17,6 +17,9 @@ export type StoredCreatorProfile = {
   languages: string[];
   assignedRecruiterId: string | null;
   commissionPlan: string;
+  bio?: string | null;
+  availability?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 };
@@ -101,4 +104,30 @@ export function createCreatorId(): string {
 
 export function createCreatorPlatformAccountId(): string {
   return `creator_platform_${randomBytes(12).toString('hex')}`;
+}
+
+export function updateStoredCreatorProfile(
+  leadMetadata: unknown,
+  updates: Partial<
+    Pick<
+      StoredCreatorProfile,
+      'displayName' | 'bio' | 'country' | 'languages' | 'availability' | 'metadata'
+    >
+  >,
+): Record<string, unknown> {
+  const metadata = toRecord(leadMetadata);
+  const profile = getCreatorProfile(leadMetadata);
+
+  if (!profile) {
+    throw new Error('Creator profile not found in lead metadata');
+  }
+
+  return {
+    ...metadata,
+    [CREATOR_PROFILE_METADATA_KEY]: {
+      ...profile,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    },
+  };
 }
