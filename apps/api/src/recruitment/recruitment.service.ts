@@ -17,16 +17,26 @@ import type {
   LeadPlatformAccount,
   LeadStatusHistory,
   LeadSummary,
+  ReassignLeadInput,
   UpdateLeadInput,
 } from '@kolab/types';
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTION, AUDIT_TARGET_TYPE } from '../audit/audit-actions';
+import { DISALLOWED_LEAD_ASSIGNEE_ROLES, LEAD_MANAGER_ROLES } from './recruitment.constants';
 import type {
   DeleteLeadResponse,
   ListRecruitmentLeadsResponse,
+  MyLeadsQuery,
   RecruitmentLeadListQuery,
+  UnassignLeadInput,
 } from './recruitment.queries';
 import { activeLeadMetadataFilter, buildSoftDeleteMetadata, toRecord } from './recruitment.utils';
 
@@ -37,6 +47,16 @@ export type RecruitmentLeadDetailResponse = {
   assignmentHistory: LeadAssignment[];
   notes: LeadNote[];
   statusHistory: LeadStatusHistory[];
+};
+
+export type LeadAssignmentActionResponse = {
+  lead: CreatorLead;
+  assignment: LeadAssignment;
+};
+
+export type LeadUnassignActionResponse = {
+  lead: CreatorLead;
+  assignment: LeadAssignment;
 };
 
 @Injectable()
@@ -264,6 +284,351 @@ export class RecruitmentService {
       id: existing.id,
       deleted: true,
     };
+  }
+
+  async claimLead(user: AccessTokenPayload, leadId: string): Promise<LeadAssignmentActionResponse> {
+    const organizationId = await this.requireActiveOrganization(user);
+
+    const result = await prisma.$transaction(async (tx) => {
+      const lead = await tx.creatorLead.findFirst({
+        where: {
+          id: leadId,
+          organizationId,
+          ...activeLeadMetadataFilter(),
+        },
+      });
+
+      if (!lead) {
+        throw new NotFoundException('Lead not found');
+      }
+
+      if (lead.assignedRecruiterId === user.sub) {
+        const assignment = await tx.leadAssignment.findFirst({
+          where: {
+            organizationId,
+            leadId,
+            recruiterId: user.sub,
+            unassignedAt: null,
+          },
+          orderBy: { assignedAt: 'desc' },
+        });
+
+        if (!assignment) {
+          throw new ConflictException('Lead is already claimed');
+        }
+
+        return { lead, assignment };
+      }
+
+      if (lead.assignedRecruiterId) {
+        throw new ConflictException('Lead is already claimed by another recruiter');
+      }
+
+      const now = new Date();
+      const updated = await tx.creatorLead.updateMany({
+        where: {
+          id: leadId,
+          organizationId,
+          assignedRecruiterId: null,
+          ...activeLeadMetadataFilter(),
+        },
+        data: {
+          assignedRecruiterId: user.sub,
+          assignedAt: now,
+        },
+      });
+
+      if (updated.count === 0) {
+        throw new ConflictException('Lead is already claimed by another recruiter');
+      }
+
+      const assignment = await tx.leadAssignment.create({
+        data: {
+          organizationId,
+          leadId,
+          recruiterId: user.sub,
+          assignedById: user.sub,
+          reason: 'Claimed by recruiter',
+        },
+      });
+
+      const refreshedLead = await tx.creatorLead.findUniqueOrThrow({
+        where: { id: leadId },
+      });
+
+      return { lead: refreshedLead, assignment };
+    });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.LEAD_CLAIMED,
+      targetType: AUDIT_TARGET_TYPE.LEAD,
+      targetId: leadId,
+      metadata: {
+        recruiterId: user.sub,
+      },
+    });
+
+    return {
+      lead: this.toCreatorLead(result.lead),
+      assignment: this.toLeadAssignment(result.assignment),
+    };
+  }
+
+  async reassignLead(
+    user: AccessTokenPayload,
+    leadId: string,
+    input: ReassignLeadInput,
+  ): Promise<LeadAssignmentActionResponse> {
+    const organizationId = await this.requireActiveOrganization(user);
+    this.assertLeadManager(user);
+
+    await this.assertValidAssignee(organizationId, input.recruiterUserId);
+
+    const result = await prisma.$transaction(async (tx) => {
+      const lead = await tx.creatorLead.findFirst({
+        where: {
+          id: leadId,
+          organizationId,
+          ...activeLeadMetadataFilter(),
+        },
+      });
+
+      if (!lead) {
+        throw new NotFoundException('Lead not found');
+      }
+
+      const now = new Date();
+
+      await tx.leadAssignment.updateMany({
+        where: {
+          organizationId,
+          leadId,
+          unassignedAt: null,
+        },
+        data: {
+          unassignedAt: now,
+        },
+      });
+
+      const assignment = await tx.leadAssignment.create({
+        data: {
+          organizationId,
+          leadId,
+          recruiterId: input.recruiterUserId,
+          assignedById: user.sub,
+          reason: input.reason ?? 'Reassigned by manager',
+        },
+      });
+
+      const updatedLead = await tx.creatorLead.update({
+        where: { id: leadId },
+        data: {
+          assignedRecruiterId: input.recruiterUserId,
+          assignedAt: now,
+        },
+      });
+
+      return { lead: updatedLead, assignment };
+    });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.LEAD_REASSIGNED,
+      targetType: AUDIT_TARGET_TYPE.LEAD,
+      targetId: leadId,
+      metadata: {
+        recruiterId: input.recruiterUserId,
+        reason: input.reason ?? null,
+      },
+    });
+
+    return {
+      lead: this.toCreatorLead(result.lead),
+      assignment: this.toLeadAssignment(result.assignment),
+    };
+  }
+
+  async unassignLead(
+    user: AccessTokenPayload,
+    leadId: string,
+    input: UnassignLeadInput = {},
+  ): Promise<LeadUnassignActionResponse> {
+    const organizationId = await this.requireActiveOrganization(user);
+    this.assertLeadManager(user);
+
+    const result = await prisma.$transaction(async (tx) => {
+      const lead = await tx.creatorLead.findFirst({
+        where: {
+          id: leadId,
+          organizationId,
+          ...activeLeadMetadataFilter(),
+        },
+      });
+
+      if (!lead) {
+        throw new NotFoundException('Lead not found');
+      }
+
+      if (!lead.assignedRecruiterId) {
+        throw new ConflictException('Lead is not assigned');
+      }
+
+      const activeAssignment = await tx.leadAssignment.findFirst({
+        where: {
+          organizationId,
+          leadId,
+          unassignedAt: null,
+        },
+        orderBy: { assignedAt: 'desc' },
+      });
+
+      if (!activeAssignment) {
+        throw new ConflictException('Lead is not assigned');
+      }
+
+      const now = new Date();
+      const assignment = await tx.leadAssignment.update({
+        where: { id: activeAssignment.id },
+        data: {
+          unassignedAt: now,
+          ...(input.reason ? { reason: input.reason } : {}),
+        },
+      });
+
+      const updatedLead = await tx.creatorLead.update({
+        where: { id: leadId },
+        data: {
+          assignedRecruiterId: null,
+          assignedAt: null,
+        },
+      });
+
+      return { lead: updatedLead, assignment };
+    });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.LEAD_UNASSIGNED,
+      targetType: AUDIT_TARGET_TYPE.LEAD,
+      targetId: leadId,
+      metadata: {
+        previousRecruiterId: result.assignment.recruiterId,
+        reason: input.reason ?? null,
+      },
+    });
+
+    return {
+      lead: this.toCreatorLead(result.lead),
+      assignment: this.toLeadAssignment(result.assignment),
+    };
+  }
+
+  async listMyLeads(
+    user: AccessTokenPayload,
+    query: MyLeadsQuery,
+  ): Promise<ListRecruitmentLeadsResponse> {
+    const organizationId = await this.requireActiveOrganization(user);
+    const where = this.buildMyLeadsWhere(organizationId, user.sub, query);
+    const take = query.limit + 1;
+
+    const leads = await prisma.creatorLead.findMany({
+      where,
+      orderBy: [{ assignedAt: 'desc' }, { id: 'desc' }],
+      take,
+      ...(query.cursor
+        ? {
+            cursor: { id: query.cursor },
+            skip: 1,
+          }
+        : {}),
+    });
+
+    const hasMore = leads.length > query.limit;
+    const page = hasMore ? leads.slice(0, query.limit) : leads;
+
+    return {
+      items: page.map((lead) => this.toLeadSummary(lead)),
+      nextCursor: hasMore ? (page.at(-1)?.id ?? null) : null,
+    };
+  }
+
+  private buildMyLeadsWhere(
+    organizationId: string,
+    recruiterId: string,
+    query: MyLeadsQuery,
+  ): Prisma.CreatorLeadWhereInput {
+    const where: Prisma.CreatorLeadWhereInput = {
+      organizationId,
+      assignedRecruiterId: recruiterId,
+      ...activeLeadMetadataFilter(),
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.platform
+        ? {
+            platformAccounts: {
+              some: {
+                platform: query.platform,
+              },
+            },
+          }
+        : {}),
+      ...(query.followUpBefore
+        ? {
+            nextFollowUpAt: {
+              lte: new Date(query.followUpBefore),
+            },
+          }
+        : {}),
+    };
+
+    if (query.search) {
+      where.OR = [
+        { name: { contains: query.search, mode: 'insensitive' } },
+        { nickname: { contains: query.search, mode: 'insensitive' } },
+        { email: { contains: query.search, mode: 'insensitive' } },
+        {
+          platformAccounts: {
+            some: {
+              username: { contains: query.search, mode: 'insensitive' },
+            },
+          },
+        },
+      ];
+    }
+
+    return where;
+  }
+
+  private assertLeadManager(user: AccessTokenPayload): void {
+    if (user.isSystemAdmin) {
+      return;
+    }
+
+    if (!user.organizationRole || !LEAD_MANAGER_ROLES.has(user.organizationRole)) {
+      throw new ForbiddenException('Only organization managers can perform this action');
+    }
+  }
+
+  private async assertValidAssignee(organizationId: string, userId: string): Promise<void> {
+    const membership = await prisma.organizationMembership.findUnique({
+      where: {
+        organizationId_userId: {
+          organizationId,
+          userId,
+        },
+      },
+    });
+
+    if (!membership || membership.status !== MembershipStatus.ACTIVE) {
+      throw new BadRequestException('Target user is not an active organization member');
+    }
+
+    if (DISALLOWED_LEAD_ASSIGNEE_ROLES.has(membership.role)) {
+      throw new BadRequestException(`Cannot assign leads to ${membership.role} members`);
+    }
   }
 
   private buildListWhere(

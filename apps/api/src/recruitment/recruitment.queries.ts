@@ -35,3 +35,20 @@ export type ListRecruitmentLeadsResponse = {
   items: LeadSummary[];
   nextCursor: string | null;
 };
+
+export const MyLeadsQuerySchema = z.object({
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  status: LeadStatusSchema.optional(),
+  search: z.string().trim().min(1).max(255).optional(),
+  platform: PlatformTypeSchema.optional(),
+  followUpBefore: z.string().datetime().optional(),
+});
+
+export type MyLeadsQuery = z.infer<typeof MyLeadsQuerySchema>;
+
+export const UnassignLeadSchema = z.object({
+  reason: z.string().trim().min(1).max(500).optional(),
+});
+
+export type UnassignLeadInput = z.infer<typeof UnassignLeadSchema>;
