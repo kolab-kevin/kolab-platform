@@ -19,6 +19,7 @@ import { RecruitersModule } from './recruiters/recruiters.module';
 import { RecruitmentModule } from './recruitment/recruitment.module';
 import { RedisModule } from './redis/redis.module';
 import { SessionModule } from './session/session.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { SessionModule } from './session/session.module';
     CreatorsModule,
     RecruitmentModule,
     RecruitersModule,
+    StorageModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

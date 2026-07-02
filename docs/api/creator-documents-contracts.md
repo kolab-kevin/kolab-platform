@@ -1,6 +1,6 @@
 # Creator Documents & Contracts API
 
-**Status:** Planning — not yet implemented in `@kolab/api`  
+**Status:** Storage helpers implemented (`/api/storage/*`). Full document/contract CRUD remains planned.  
 **Base path:** `/api/creators` (nested resources)  
 **Auth:** Bearer JWT with active organization context  
 **Org type:** `AGENCY` (initially)
@@ -11,7 +11,7 @@
 
 Planned REST API for creator onboarding documents and versioned contracts. Binary files upload directly to object storage via presigned URLs; API endpoints manage metadata, workflow status, and audited download access.
 
-This document is a **roadmap specification**. No routes are implemented until schema and storage milestones land.
+**Available now:** presigned upload/download helpers — see [Storage API](./storage.md). Document/contract metadata routes are not implemented yet.
 
 ---
 
