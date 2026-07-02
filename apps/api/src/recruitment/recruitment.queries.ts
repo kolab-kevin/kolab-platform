@@ -52,3 +52,18 @@ export const UnassignLeadSchema = z.object({
 });
 
 export type UnassignLeadInput = z.infer<typeof UnassignLeadSchema>;
+
+export const FollowUpsQuerySchema = z.object({
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  dueBefore: z.string().datetime().optional(),
+  overdueOnly: z
+    .union([z.boolean(), z.enum(['true', 'false'])])
+    .optional()
+    .transform((value) => value === true || value === 'true')
+    .default(false),
+  status: LeadStatusSchema.optional(),
+  platform: PlatformTypeSchema.optional(),
+});
+
+export type FollowUpsQuery = z.infer<typeof FollowUpsQuerySchema>;

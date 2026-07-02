@@ -5,6 +5,7 @@ import { Test } from '@nestjs/testing';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { RecruitmentController } from './recruitment.controller';
 import { RecruitmentService } from './recruitment.service';
+import { RecruitmentFollowUpsService } from './recruitment-followups.service';
 import { RecruitmentNotesService } from './recruitment-notes.service';
 
 describe('RecruitmentController authorization', () => {
@@ -40,6 +41,12 @@ describe('RecruitmentController authorization', () => {
             updateLeadNote: jest.fn(),
             deleteLeadNote: jest.fn(),
             getLeadTimeline: jest.fn(),
+          },
+        },
+        {
+          provide: RecruitmentFollowUpsService,
+          useValue: {
+            updateLeadFollowUp: jest.fn(),
           },
         },
       ],

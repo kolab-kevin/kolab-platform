@@ -289,6 +289,7 @@ export const LeadTimelineEventTypeSchema = z.enum([
   'assignment.ended',
   'status.changed',
   'note.added',
+  'followup.updated',
 ]);
 
 export type LeadTimelineEventType = z.infer<typeof LeadTimelineEventTypeSchema>;
@@ -315,6 +316,20 @@ export const UpdateLeadStatusSchema = z.object({
 });
 
 export type UpdateLeadStatusInput = z.infer<typeof UpdateLeadStatusSchema>;
+
+export const UpdateLeadFollowUpSchema = z.object({
+  nextFollowUpAt: z.string().datetime().nullable(),
+  note: noteContentSchema.optional(),
+});
+
+export type UpdateLeadFollowUpInput = z.infer<typeof UpdateLeadFollowUpSchema>;
+
+export const UpdateLeadFollowUpResponseSchema = z.object({
+  lead: CreatorLeadSchema,
+  note: LeadNoteResponseSchema.optional(),
+});
+
+export type UpdateLeadFollowUpResponse = z.infer<typeof UpdateLeadFollowUpResponseSchema>;
 
 export const SearchLeadsSchema = z.object({
   search: z.string().trim().min(1).max(255),
