@@ -203,6 +203,46 @@ export const UpdateCreatorSchema = z
 
 export type UpdateCreatorInput = z.infer<typeof UpdateCreatorSchema>;
 
+const platformUsernameSchema = z.string().trim().min(1).max(255);
+
+const followersSchema = z.number().int().min(0);
+
+export const CreateCreatorPlatformAccountSchema = z.object({
+  platform: PlatformTypeSchema,
+  username: platformUsernameSchema,
+  profileUrl: z.string().url().max(2048).nullable().optional(),
+  followers: followersSchema.nullable().optional(),
+  verified: z.boolean().optional(),
+  status: CreatorPlatformAccountStatusSchema.optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
+
+export type CreateCreatorPlatformAccountInput = z.infer<typeof CreateCreatorPlatformAccountSchema>;
+
+export const UpdateCreatorPlatformAccountSchema = z
+  .object({
+    platform: PlatformTypeSchema.optional(),
+    username: platformUsernameSchema.optional(),
+    profileUrl: z.string().url().max(2048).nullable().optional(),
+    followers: followersSchema.nullable().optional(),
+    verified: z.boolean().optional(),
+    status: CreatorPlatformAccountStatusSchema.optional(),
+    metadata: z.record(z.unknown()).optional(),
+  })
+  .refine((data) => Object.values(data).some((value) => value !== undefined), {
+    message: 'At least one platform account field must be provided',
+  });
+
+export type UpdateCreatorPlatformAccountInput = z.infer<typeof UpdateCreatorPlatformAccountSchema>;
+
+export const ListCreatorPlatformAccountsResponseSchema = z.object({
+  items: z.array(CreatorPlatformAccountSchema),
+});
+
+export type ListCreatorPlatformAccountsResponse = z.infer<
+  typeof ListCreatorPlatformAccountsResponseSchema
+>;
+
 export const ConvertLeadResponseSchema = z.object({
   lead: z.object({
     id: z.string(),

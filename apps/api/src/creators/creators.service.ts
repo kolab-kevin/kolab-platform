@@ -14,13 +14,18 @@ import {
 } from '@kolab/database';
 import type {
   ConvertLeadResponse,
+  CreateCreatorPlatformAccountInput,
   CreatorDetailResponse,
   CreatorListQuery,
+  CreatorPlatformAccount,
+  ListCreatorPlatformAccountsResponse,
   ListCreatorsResponse,
   UpdateCreatorInput,
+  UpdateCreatorPlatformAccountInput,
 } from '@kolab/types';
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -410,6 +415,146 @@ export class CreatorsService {
     return this.buildCreatorDetail(organizationId, updatedProfile);
   }
 
+  async listCreatorPlatformAccounts(
+    user: AccessTokenPayload,
+    creatorId: string,
+  ): Promise<ListCreatorPlatformAccountsResponse> {
+    const organizationId = await this.requireActiveOrganization(user);
+    await this.findCreatorProfileOrBackfill(organizationId, creatorId);
+
+    const accounts = await prisma.creatorPlatformAccount.findMany({
+      where: {
+        organizationId,
+        creatorProfileId: creatorId,
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return {
+      items: accounts.map(toCreatorPlatformAccount),
+    };
+  }
+
+  async createCreatorPlatformAccount(
+    user: AccessTokenPayload,
+    creatorId: string,
+    input: CreateCreatorPlatformAccountInput,
+  ): Promise<CreatorPlatformAccount> {
+    const organizationId = await this.requireActiveOrganization(user);
+    await this.findCreatorProfileOrBackfill(organizationId, creatorId);
+
+    try {
+      const account = await prisma.creatorPlatformAccount.create({
+        data: {
+          organizationId,
+          creatorProfileId: creatorId,
+          platform: input.platform,
+          username: input.username,
+          profileUrl: input.profileUrl ?? null,
+          followers: input.followers ?? null,
+          verified: input.verified ?? false,
+          status: input.status ?? 'ACTIVE',
+          metadata: (input.metadata ?? {}) as Prisma.InputJsonValue,
+        },
+      });
+
+      await this.auditService.record({
+        organizationId,
+        actorUserId: user.sub,
+        action: AUDIT_ACTION.CREATOR_PLATFORM_ACCOUNT_CREATED,
+        targetType: AUDIT_TARGET_TYPE.CREATOR_PLATFORM_ACCOUNT,
+        targetId: account.id,
+        metadata: {
+          creatorId,
+          platform: account.platform,
+          username: account.username,
+        },
+      });
+
+      return toCreatorPlatformAccount(account);
+    } catch (error) {
+      this.handlePlatformAccountUniqueError(error);
+      throw error;
+    }
+  }
+
+  async updateCreatorPlatformAccount(
+    user: AccessTokenPayload,
+    creatorId: string,
+    accountId: string,
+    input: UpdateCreatorPlatformAccountInput,
+  ): Promise<CreatorPlatformAccount> {
+    const organizationId = await this.requireActiveOrganization(user);
+    await this.findCreatorPlatformAccount(organizationId, creatorId, accountId);
+
+    try {
+      const account = await prisma.creatorPlatformAccount.update({
+        where: { id: accountId },
+        data: {
+          ...(input.platform !== undefined ? { platform: input.platform } : {}),
+          ...(input.username !== undefined ? { username: input.username } : {}),
+          ...(input.profileUrl !== undefined ? { profileUrl: input.profileUrl } : {}),
+          ...(input.followers !== undefined ? { followers: input.followers } : {}),
+          ...(input.verified !== undefined ? { verified: input.verified } : {}),
+          ...(input.status !== undefined ? { status: input.status } : {}),
+          ...(input.metadata !== undefined
+            ? { metadata: input.metadata as Prisma.InputJsonValue }
+            : {}),
+        },
+      });
+
+      await this.auditService.record({
+        organizationId,
+        actorUserId: user.sub,
+        action: AUDIT_ACTION.CREATOR_PLATFORM_ACCOUNT_UPDATED,
+        targetType: AUDIT_TARGET_TYPE.CREATOR_PLATFORM_ACCOUNT,
+        targetId: account.id,
+        metadata: {
+          creatorId,
+          updatedFields: Object.keys(input),
+        },
+      });
+
+      return toCreatorPlatformAccount(account);
+    } catch (error) {
+      this.handlePlatformAccountUniqueError(error);
+      throw error;
+    }
+  }
+
+  async deleteCreatorPlatformAccount(
+    user: AccessTokenPayload,
+    creatorId: string,
+    accountId: string,
+  ): Promise<CreatorPlatformAccount> {
+    const organizationId = await this.requireActiveOrganization(user);
+    const account = await this.findCreatorPlatformAccount(organizationId, creatorId, accountId);
+
+    const removedAccount =
+      account.status === 'REMOVED'
+        ? account
+        : await prisma.creatorPlatformAccount.update({
+            where: { id: accountId },
+            data: { status: 'REMOVED' },
+          });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.CREATOR_PLATFORM_ACCOUNT_DELETED,
+      targetType: AUDIT_TARGET_TYPE.CREATOR_PLATFORM_ACCOUNT,
+      targetId: accountId,
+      metadata: {
+        creatorId,
+        platform: removedAccount.platform,
+        username: removedAccount.username,
+        softDeleted: removedAccount.status === 'REMOVED',
+      },
+    });
+
+    return toCreatorPlatformAccount(removedAccount);
+  }
+
   private async findCreatorProfileOrBackfill(
     organizationId: string,
     creatorId: string,
@@ -459,6 +604,47 @@ export class CreatorsService {
     }
 
     return profile;
+  }
+
+  private async findCreatorPlatformAccount(
+    organizationId: string,
+    creatorId: string,
+    accountId: string,
+  ) {
+    await this.findCreatorProfileOrBackfill(organizationId, creatorId);
+
+    const account = await prisma.creatorPlatformAccount.findFirst({
+      where: {
+        id: accountId,
+        organizationId,
+        creatorProfileId: creatorId,
+      },
+    });
+
+    if (!account) {
+      throw new NotFoundException('Creator platform account not found');
+    }
+
+    return account;
+  }
+
+  private handlePlatformAccountUniqueError(error: unknown): void {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      throw new ConflictException(
+        'A platform account with this platform and username already exists in the organization',
+      );
+    }
+
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code: string }).code === 'P2002'
+    ) {
+      throw new ConflictException(
+        'A platform account with this platform and username already exists in the organization',
+      );
+    }
   }
 
   private async findExistingProfileForLead(
