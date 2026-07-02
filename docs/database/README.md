@@ -56,3 +56,5 @@ Legacy `User.role` and `User.platforms` remain until Phase D cleanup.
 **Release 0.2 (planned):** Organization-scoped identity model — [Identity ERD](./identity-erd.md).
 
 **Release 0.3 (implemented):** Creator Recruitment CRM — [Recruitment CRM ERD](./recruitment-crm-erd.md).
+
+**Release 0.4+ (planning):** Creator Documents & Contracts — [Documents & Contracts ERD](./creator-documents-contracts-erd.md).

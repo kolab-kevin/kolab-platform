@@ -32,3 +32,4 @@ See root [README.md](../../README.md#development-roadmap) for phased delivery pl
 - [Release 0.2 — Identity & organization foundation](./release-0.2.md)
 - [Release 0.2 execution plan](../releases/release-0.2.md)
 - [Release 0.3 — Creator Recruitment CRM (planning)](./recruitment-crm.md)
+- [Creator Documents & Contracts (planning)](./creator-documents-contracts.md)
