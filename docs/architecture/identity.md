@@ -102,6 +102,18 @@ sequenceDiagram
 | `audit:read`          | ✓         | ✓         | —       | —      |
 | `sessions:revoke`     | ✓         | ✓         | —       | —      |
 
+### CRM permissions (Release 0.3)
+
+| Permission   | ORG_OWNER | ORG_ADMIN | AGENCY_MANAGER | RECRUITER | MODERATOR | SUPPORT | CREATOR | FINANCE | VIEWER |
+| ------------ | --------- | --------- | -------------- | --------- | --------- | ------- | ------- | ------- | ------ |
+| `crm:read`   | ✓         | ✓         | ✓              | ✓         | ✓         | ✓       | —       | —       | —      |
+| `crm:create` | ✓         | ✓         | ✓              | ✓         | —         | —       | —       | —       | —      |
+| `crm:update` | ✓         | ✓         | ✓              | ✓         | —         | —       | —       | —       | —      |
+| `crm:delete` | ✓         | ✓         | ✓              | —         | —         | —       | —       | —       | —      |
+| `crm:assign` | ✓         | ✓         | ✓              | ✓         | —         | —       | —       | —       | —      |
+
+Recruitment CRM routes under `/api/recruitment/*` use `@RequirePermissions()` with these CRM permissions. `isSystemAdmin` bypasses all authorization guards.
+
 ### Guard stack (NestJS — Release 0.2 RBAC implemented)
 
 ```text

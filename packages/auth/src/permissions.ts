@@ -2,6 +2,16 @@ import type { OrganizationRole, Permission, Role } from '@kolab/types';
 
 import type { AccessTokenPayload } from './jwt';
 
+const crmFullAccess: Permission[] = [
+  'crm:read',
+  'crm:create',
+  'crm:update',
+  'crm:delete',
+  'crm:assign',
+];
+
+const crmRecruiterAccess: Permission[] = ['crm:read', 'crm:create', 'crm:update', 'crm:assign'];
+
 const memberManagement: Permission[] = [
   'org:read',
   'org:update',
@@ -11,6 +21,7 @@ const memberManagement: Permission[] = [
   'members:remove',
   'audit:read',
   'sessions:revoke',
+  ...crmFullAccess,
 ];
 
 const readOnly: Permission[] = ['org:read', 'members:read'];
@@ -27,12 +38,13 @@ export const ORGANIZATION_ROLE_PERMISSIONS: Readonly<
     'members:invite',
     'members:update_role',
     'audit:read',
+    ...crmFullAccess,
   ],
-  RECRUITER: ['org:read', 'members:read', 'members:invite'],
+  RECRUITER: ['org:read', 'members:read', 'members:invite', ...crmRecruiterAccess],
   CREATOR: readOnly,
-  MODERATOR: ['org:read', 'members:read', 'audit:read'],
+  MODERATOR: ['org:read', 'members:read', 'audit:read', 'crm:read'],
   FINANCE: ['org:read', 'members:read', 'audit:read'],
-  SUPPORT: ['org:read', 'members:read', 'audit:read'],
+  SUPPORT: ['org:read', 'members:read', 'audit:read', 'crm:read'],
   VIEWER: readOnly,
 };
 

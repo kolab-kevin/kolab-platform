@@ -20,7 +20,7 @@ export class RecruitmentController {
   constructor(private readonly recruitmentService: RecruitmentService) {}
 
   @Get()
-  @RequirePermissions('members:read')
+  @RequirePermissions('crm:read')
   @ApiOperation({ summary: 'List recruitment leads for the active organization' })
   @ApiResponse({ status: 200, description: 'Paginated lead list' })
   listLeads(
@@ -31,7 +31,7 @@ export class RecruitmentController {
   }
 
   @Get(':id')
-  @RequirePermissions('members:read')
+  @RequirePermissions('crm:read')
   @ApiOperation({ summary: 'Get recruitment lead detail' })
   @ApiResponse({ status: 200, description: 'Lead detail with related records' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
@@ -41,7 +41,7 @@ export class RecruitmentController {
 
   @Post()
   @HttpCode(201)
-  @RequirePermissions('members:update_role')
+  @RequirePermissions('crm:create')
   @ApiOperation({ summary: 'Create a recruitment lead' })
   @ApiResponse({ status: 201, description: 'Lead created' })
   createLead(
@@ -52,7 +52,7 @@ export class RecruitmentController {
   }
 
   @Patch(':id')
-  @RequirePermissions('members:update_role')
+  @RequirePermissions('crm:update')
   @ApiOperation({ summary: 'Update recruitment lead fields' })
   @ApiResponse({ status: 200, description: 'Lead updated' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
@@ -66,7 +66,7 @@ export class RecruitmentController {
 
   @Delete(':id')
   @HttpCode(200)
-  @RequirePermissions('members:update_role')
+  @RequirePermissions('crm:delete')
   @ApiOperation({ summary: 'Soft delete a recruitment lead' })
   @ApiResponse({ status: 200, description: 'Lead soft deleted' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
