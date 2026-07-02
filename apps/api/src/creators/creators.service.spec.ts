@@ -13,7 +13,18 @@ jest.mock('@kolab/database', () => ({
   prisma: {
     creatorLead: {
       findFirst: jest.fn(),
+      findMany: jest.fn(),
       update: jest.fn(),
+    },
+    creatorProfile: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      findUniqueOrThrow: jest.fn(),
+      upsert: jest.fn(),
+      update: jest.fn(),
+    },
+    creatorPlatformAccount: {
+      upsert: jest.fn(),
     },
     user: {
       findUnique: jest.fn(),
@@ -101,9 +112,45 @@ const baseLead = {
   platformAccounts: [leadPlatformAccount],
 };
 
+const baseCreatorProfile = {
+  id: 'creator-1',
+  organizationId: 'org-1',
+  userId: 'user-1',
+  sourceLeadId: 'lead-1',
+  displayName: 'Jane Creator',
+  bio: null,
+  country: 'US',
+  languages: ['en'],
+  availability: {},
+  metadata: {},
+  status: 'ACTIVE',
+  recruiterUserId: 'recruiter-1',
+  createdAt: new Date('2026-06-28T12:00:00.000Z'),
+  updatedAt: new Date('2026-06-28T12:00:00.000Z'),
+  platformAccounts: [
+    {
+      id: 'creator-platform-1',
+      organizationId: 'org-1',
+      creatorProfileId: 'creator-1',
+      platform: 'TIKTOK',
+      username: 'janecreates',
+      profileUrl: 'https://www.tiktok.com/@janecreates',
+      followers: 125000,
+      verified: false,
+      status: 'ACTIVE',
+      metadata: { sourceLeadPlatformAccountId: 'platform-1' },
+      createdAt: new Date('2026-06-28T12:00:00.000Z'),
+      updatedAt: new Date('2026-06-28T12:00:00.000Z'),
+    },
+  ],
+  sourceLead: baseLead,
+};
+
 describe('CreatorsService', () => {
   let service: CreatorsService;
   let auditService: jest.Mocked<AuditService>;
+  let creatorProfileUpsert: jest.Mock;
+  let creatorPlatformAccountUpsert: jest.Mock;
 
   beforeEach(async () => {
     auditService = {
@@ -117,10 +164,29 @@ describe('CreatorsService', () => {
     service = module.get(CreatorsService);
     jest.clearAllMocks();
 
+    creatorProfileUpsert = jest.fn().mockResolvedValue({
+      id: 'creator-1',
+      organizationId: 'org-1',
+      userId: 'user-1',
+      sourceLeadId: 'lead-1',
+      displayName: 'Jane Creator',
+      bio: null,
+      country: 'US',
+      languages: ['en'],
+      availability: {},
+      metadata: {},
+      status: 'ACTIVE',
+      recruiterUserId: 'recruiter-1',
+      createdAt: new Date('2026-06-28T12:00:00.000Z'),
+      updatedAt: new Date('2026-06-28T12:00:00.000Z'),
+    });
+    creatorPlatformAccountUpsert = jest.fn().mockResolvedValue({});
+
     (prisma.organizationMembership.findUnique as jest.Mock).mockResolvedValue({
       status: 'ACTIVE',
     });
     (prisma.creatorLead.findFirst as jest.Mock).mockResolvedValue(baseLead);
+    (prisma.creatorProfile.findUnique as jest.Mock).mockResolvedValue(null);
     (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
     (prisma.user.create as jest.Mock).mockResolvedValue({
       id: 'user-1',
@@ -134,6 +200,11 @@ describe('CreatorsService', () => {
         callback({
           userProfile: { upsert: jest.fn().mockResolvedValue({}) },
           organizationMembership: { upsert: jest.fn().mockResolvedValue({}) },
+          creatorProfile: {
+            upsert: creatorProfileUpsert,
+            findUniqueOrThrow: jest.fn().mockResolvedValue(baseCreatorProfile),
+          },
+          creatorPlatformAccount: { upsert: creatorPlatformAccountUpsert },
           creatorLead: {
             update: jest.fn().mockResolvedValue({
               ...baseLead,
@@ -187,7 +258,7 @@ describe('CreatorsService', () => {
       );
     });
 
-    it('converts a signed lead successfully', async () => {
+    it('converts a signed lead successfully and creates CreatorProfile', async () => {
       const result = await service.convertLeadFromRecruitment(managerToken, 'lead-1');
 
       expect(result.alreadyConverted).toBe(false);
@@ -195,6 +266,7 @@ describe('CreatorsService', () => {
       expect(result.lead.convertedUserId).toBe('user-1');
       expect(result.creator.platformAccounts).toHaveLength(1);
       expect(result.creator.platformAccounts[0]?.username).toBe('janecreates');
+      expect(creatorProfileUpsert).toHaveBeenCalled();
     });
 
     it('returns existing creator on idempotent conversion', async () => {
@@ -218,24 +290,15 @@ describe('CreatorsService', () => {
             createdAt: '2026-06-28T12:00:00.000Z',
             updatedAt: '2026-06-28T12:00:00.000Z',
           },
-          creatorPlatformAccounts: [
-            {
-              id: 'creator-platform-1',
-              organizationId: 'org-1',
-              creatorId: 'creator-1',
-              platform: 'TIKTOK',
-              username: 'janecreates',
-              profileUrl: null,
-              followers: 125000,
-              verified: false,
-              status: 'ACTIVE',
-              sourceLeadPlatformAccountId: 'platform-1',
-              createdAt: '2026-06-28T12:00:00.000Z',
-              updatedAt: '2026-06-28T12:00:00.000Z',
-            },
-          ],
         },
       });
+      (prisma.creatorProfile.findUnique as jest.Mock).mockResolvedValue({
+        id: 'creator-1',
+        organizationId: 'org-1',
+        userId: 'user-1',
+        sourceLeadId: 'lead-1',
+      });
+      (prisma.creatorProfile.findFirst as jest.Mock).mockResolvedValue(baseCreatorProfile);
 
       const result = await service.convertLeadFromRecruitment(managerToken, 'lead-1');
 
@@ -289,9 +352,10 @@ describe('CreatorsService', () => {
       );
     });
 
-    it('copies lead platform accounts into creator platform accounts', async () => {
+    it('copies lead platform accounts into CreatorPlatformAccount rows', async () => {
       const result = await service.convertLeadFromRecruitment(managerToken, 'lead-1');
 
+      expect(creatorPlatformAccountUpsert).toHaveBeenCalled();
       expect(result.creator.platformAccounts[0]).toEqual(
         expect.objectContaining({
           platform: 'TIKTOK',
