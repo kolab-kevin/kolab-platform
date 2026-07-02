@@ -62,3 +62,8 @@ Implemented Release 0.2 modules:
 **Release 0.3 (planning):**
 
 - [Recruitment CRM API (full roadmap)](./recruitment-crm.md)
+
+**Release 0.4+ (planning):**
+
+- [Creator Documents & Contracts API](./creator-documents-contracts.md)
+- [Creators API (implemented)](./creators.md)
