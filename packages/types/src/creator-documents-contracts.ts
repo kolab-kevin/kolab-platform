@@ -280,6 +280,24 @@ export const ReviewCreatorDocumentSchema = z
 
 export type ReviewCreatorDocumentInput = z.infer<typeof ReviewCreatorDocumentSchema>;
 
+export const DownloadCreatorDocumentSchema = z
+  .object({
+    versionId: z.string().min(1).optional(),
+  })
+  .strict();
+
+export type DownloadCreatorDocumentInput = z.infer<typeof DownloadCreatorDocumentSchema>;
+
+export const DownloadCreatorDocumentResponseSchema = z.object({
+  documentId: z.string(),
+  versionId: z.string(),
+  storageKey: z.string(),
+  downloadUrl: z.string().url(),
+  expiresAt: isoDateTimeSchema,
+});
+
+export type DownloadCreatorDocumentResponse = z.infer<typeof DownloadCreatorDocumentResponseSchema>;
+
 export const MutableCreatorContractStatusSchema = z.enum([
   'DRAFT',
   'SENT',

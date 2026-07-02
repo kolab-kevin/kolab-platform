@@ -26,6 +26,11 @@ export const AUDIT_ACTION = {
   CREATOR_PLATFORM_ACCOUNT_DELETED: 'creator.platform_account.deleted',
   CREATOR_SKILLS_UPDATED: 'creator.skills_updated',
   CREATOR_AVAILABILITY_UPDATED: 'creator.availability_updated',
+  CREATOR_DOCUMENT_CREATED: 'creator.document.created',
+  CREATOR_DOCUMENT_UPDATED: 'creator.document.updated',
+  CREATOR_DOCUMENT_VERSION_ADDED: 'creator.document.version_added',
+  CREATOR_DOCUMENT_REVIEWED: 'creator.document.reviewed',
+  CREATOR_DOCUMENT_DOWNLOADED: 'creator.document.downloaded',
   RECRUITER_CREATED: 'recruiter.created',
   RECRUITER_UPDATED: 'recruiter.updated',
 } as const;
@@ -39,5 +44,6 @@ export const AUDIT_TARGET_TYPE = {
   LEAD: 'lead',
   CREATOR: 'creator',
   CREATOR_PLATFORM_ACCOUNT: 'creator_platform_account',
+  CREATOR_DOCUMENT: 'creator_document',
   RECRUITER: 'recruiter',
 } as const;
