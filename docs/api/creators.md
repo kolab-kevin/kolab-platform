@@ -42,12 +42,16 @@ All routes are scoped to the JWT `organizationId`. Users must have an active org
 
 ## Endpoints
 
-| Method | Path                                 | Permission   | Description                    |
-| ------ | ------------------------------------ | ------------ | ------------------------------ |
-| GET    | `/api/creators`                      | `crm:read`   | List creators (filter, cursor) |
-| GET    | `/api/creators/:id`                  | `crm:read`   | Get creator detail             |
-| PATCH  | `/api/creators/:id`                  | `crm:update` | Update creator profile fields  |
-| POST   | `/api/recruitment/leads/:id/convert` | `crm:update` | Convert lead to creator        |
+| Method | Path                                             | Permission   | Description                       |
+| ------ | ------------------------------------------------ | ------------ | --------------------------------- |
+| GET    | `/api/creators`                                  | `crm:read`   | List creators (filter, cursor)    |
+| GET    | `/api/creators/:id`                              | `crm:read`   | Get creator detail                |
+| PATCH  | `/api/creators/:id`                              | `crm:update` | Update creator profile fields     |
+| GET    | `/api/creators/:id/platform-accounts`            | `crm:read`   | List creator platform accounts    |
+| POST   | `/api/creators/:id/platform-accounts`            | `crm:update` | Add a creator platform account    |
+| PATCH  | `/api/creators/:id/platform-accounts/:accountId` | `crm:update` | Update a creator platform account |
+| DELETE | `/api/creators/:id/platform-accounts/:accountId` | `crm:update` | Remove a creator platform account |
+| POST   | `/api/recruitment/leads/:id/convert`             | `crm:update` | Convert lead to creator           |
 
 ---
 
@@ -238,6 +242,83 @@ All `LeadPlatformAccount` rows on the source lead are copied into `CreatorPlatfo
 
 Lead platform accounts remain on the lead for CRM history.
 
+Platform accounts can also be managed directly via the creator platform account endpoints below.
+
+### GET `/api/creators/:id/platform-accounts`
+
+Returns platform accounts for a creator in the active organization.
+
+**Permission:** `crm:read`
+
+### Platform account list response (200)
+
+```json
+{
+  "items": [
+    {
+      "id": "creator-platform-1",
+      "organizationId": "clx...",
+      "creatorId": "creator_abc123",
+      "platform": "TIKTOK",
+      "username": "janecreates",
+      "profileUrl": "https://www.tiktok.com/@janecreates",
+      "followers": 125000,
+      "verified": false,
+      "status": "ACTIVE",
+      "sourceLeadPlatformAccountId": "platform-1",
+      "createdAt": "2026-06-28T12:00:00.000Z",
+      "updatedAt": "2026-06-28T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Errors:** `404` if the creator does not exist in the active organization.
+
+---
+
+### POST `/api/creators/:id/platform-accounts`
+
+Creates a platform account on the creator profile.
+
+**Permission:** `crm:update`
+
+| Field        | Required | Description                       |
+| ------------ | -------- | --------------------------------- |
+| `platform`   | Yes      | Platform type                     |
+| `username`   | Yes      | Platform username                 |
+| `profileUrl` | No       | Public profile URL (nullable)     |
+| `followers`  | No       | Follower count (nullable)         |
+| `verified`   | No       | Verified flag (default `false`)   |
+| `status`     | No       | Account status (default `ACTIVE`) |
+| `metadata`   | No       | Extensible metadata object        |
+
+Duplicate `(organizationId, platform, username)` combinations return `409 Conflict`.
+
+**Errors:** `404` creator not found; `409` duplicate platform account.
+
+---
+
+### PATCH `/api/creators/:id/platform-accounts/:accountId`
+
+Updates an existing creator platform account. At least one field is required.
+
+**Permission:** `crm:update`
+
+Allowed fields: `platform`, `username`, `profileUrl`, `followers`, `verified`, `status`, `metadata`.
+
+**Errors:** `404` if the creator or account does not belong to the active organization; `409` duplicate platform account.
+
+---
+
+### DELETE `/api/creators/:id/platform-accounts/:accountId`
+
+Removes a creator platform account. Accounts are soft-removed by setting `status` to `REMOVED` (supported by the account status enum). Already removed accounts are returned without further mutation.
+
+**Permission:** `crm:update`
+
+**Errors:** `404` if the creator or account does not belong to the active organization.
+
 ---
 
 ## Idempotency (conversion)
@@ -248,11 +329,14 @@ Calling conversion again on an already converted lead returns the existing creat
 
 ## Audit events
 
-| Action            | When                        | Target type |
-| ----------------- | --------------------------- | ----------- |
-| `creator.created` | First successful conversion | `creator`   |
-| `creator.updated` | Creator profile updated     | `creator`   |
-| `lead.converted`  | First successful conversion | `lead`      |
+| Action                             | When                        | Target type                |
+| ---------------------------------- | --------------------------- | -------------------------- |
+| `creator.created`                  | First successful conversion | `creator`                  |
+| `creator.updated`                  | Creator profile updated     | `creator`                  |
+| `creator.platform_account.created` | Platform account created    | `creator_platform_account` |
+| `creator.platform_account.updated` | Platform account updated    | `creator_platform_account` |
+| `creator.platform_account.deleted` | Platform account removed    | `creator_platform_account` |
+| `lead.converted`                   | First successful conversion | `lead`                     |
 
 ---
 

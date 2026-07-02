@@ -23,6 +23,10 @@ describe('CreatorsController authorization', () => {
             listCreators: jest.fn(),
             getCreator: jest.fn(),
             updateCreator: jest.fn(),
+            listCreatorPlatformAccounts: jest.fn(),
+            createCreatorPlatformAccount: jest.fn(),
+            updateCreatorPlatformAccount: jest.fn(),
+            deleteCreatorPlatformAccount: jest.fn(),
             convertLeadFromRecruitment: jest.fn(),
           },
         },
@@ -80,5 +84,29 @@ describe('CreatorsController authorization', () => {
     expect(() => permissionsGuard.canActivate(createContext('updateCreator', viewerUser))).toThrow(
       ForbiddenException,
     );
+  });
+
+  it('allows recruiters to list platform accounts with crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(
+      permissionsGuard.canActivate(createContext('listCreatorPlatformAccounts', recruiterUser)),
+    ).toBe(true);
+  });
+
+  it('denies viewers from creating platform accounts', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('createCreatorPlatformAccount', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to delete platform accounts with crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(
+      permissionsGuard.canActivate(createContext('deleteCreatorPlatformAccount', recruiterUser)),
+    ).toBe(true);
   });
 });
