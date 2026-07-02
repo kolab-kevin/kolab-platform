@@ -1,18 +1,33 @@
 # Creator Documents & Contracts Data Model
 
-**Status:** Planning — not yet in Prisma schema  
-**Target schema path:** `packages/database/prisma/schema.prisma`  
-**Branch:** `feature/creator-documents-contracts-planning`
+**Status:** Implemented in `feature/creator-documents-schema` (M1 — Schema)  
+Prisma schema: `packages/database/prisma/schema.prisma`  
+Migration: `20250702143500_creator_documents_contracts_schema`
 
 ---
 
 ## Overview
 
-Planned tables extend the creator roster model with **document metadata**, **document versions**, **contracts**, and **contract versions**. Binary files are stored in object storage; PostgreSQL holds references, workflow status, expiration, and audit-friendly metadata only.
+Tables extend the creator roster model with **document metadata**, **document versions**, **contracts**, and **contract versions**. Binary files are stored in object storage; PostgreSQL holds references, workflow status, expiration, and audit-friendly metadata only.
 
 All tables include `organizationId` and are scoped to agency organizations. Records link to `CreatorProfile` and optionally `CreatorLead` during pre-conversion onboarding.
 
-**Prisma model names (planned):** `CreatorDocument`, `CreatorDocumentVersion`, `CreatorContract`, `CreatorContractVersion`, `CreatorDocumentChecklistItem` (optional agency template).
+**Prisma model names:** `CreatorDocument`, `CreatorDocumentVersion`, `CreatorContract`, `CreatorContractVersion`.
+
+---
+
+## Implementation notes (schema vs original plan)
+
+| Planned                       | Implemented                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------ |
+| `storageBucket` on versions   | Omitted — bucket name can live in object key prefix or version `metadata`      |
+| `contentType` / `contentHash` | Renamed to `mimeType` / `checksum` on version rows                             |
+| `byteSize`                    | Renamed to `sizeBytes`                                                         |
+| `CreatorDocumentUploadStatus` | Omitted — pending uploads use nullable file fields until upload completes      |
+| `SUPERSEDED` document status  | Omitted — resubmissions use new version rows; prior doc may move to `ARCHIVED` |
+| Signed version immutability   | Documented in Prisma model comments; enforced in application layer (v1)        |
+
+At least one of `creatorProfileId` or `sourceLeadId` must be set — enforced in the API layer when implemented.
 
 ---
 
@@ -71,14 +86,13 @@ erDiagram
     string organizationId FK
     string documentId FK
     int versionNumber
-    string storageBucket
-    string storageKey
-    string contentType
-    int byteSize
-    string contentHash
-    enum uploadStatus
+    string storageKey "nullable"
+    string fileName "nullable"
+    string mimeType "nullable"
+    int sizeBytes "nullable"
+    string checksum "nullable"
     string uploadedById FK
-    datetime uploadedAt
+    datetime uploadedAt "nullable"
     json metadata
     datetime createdAt
   }
@@ -95,6 +109,7 @@ erDiagram
     datetime validFrom "nullable"
     datetime validUntil "nullable"
     datetime signedAt "nullable"
+    string signedByUserId FK "nullable"
     string externalEnvelopeId "nullable"
     json metadata
     datetime deletedAt "nullable"
@@ -107,11 +122,11 @@ erDiagram
     string organizationId FK
     string contractId FK
     int versionNumber
-    string storageBucket "nullable"
     string storageKey "nullable"
-    string contentType "nullable"
-    int byteSize "nullable"
-    string contentHash "nullable"
+    string fileName "nullable"
+    string mimeType "nullable"
+    int sizeBytes "nullable"
+    string checksum "nullable"
     datetime signedAt "nullable"
     string signedByUserId FK "nullable"
     string externalEnvelopeId "nullable"
@@ -122,7 +137,7 @@ erDiagram
 
 ---
 
-## Enums (planned)
+## Enums
 
 ### `CreatorDocumentType`
 
@@ -130,11 +145,7 @@ erDiagram
 
 ### `CreatorDocumentStatus`
 
-`REQUESTED`, `UPLOADED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `EXPIRED`, `SUPERSEDED`, `ARCHIVED`
-
-### `CreatorDocumentUploadStatus`
-
-`PENDING`, `COMPLETED`, `FAILED`, `QUARANTINED`
+`REQUESTED`, `UPLOADED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `EXPIRED`, `ARCHIVED`
 
 ### `CreatorContractType`
 
@@ -178,19 +189,18 @@ Logical document record (one per type instance or checklist line).
 
 Immutable file reference per upload attempt.
 
-| Column          | Type    | Notes                                      |
-| --------------- | ------- | ------------------------------------------ |
-| `versionNumber` | int     | Unique per `documentId`                    |
-| `storageBucket` | string  |                                            |
-| `storageKey`    | string  | Opaque object path                         |
-| `contentType`   | string  | MIME                                       |
-| `byteSize`      | int     |                                            |
-| `contentHash`   | string  | SHA-256 hex                                |
-| `uploadStatus`  | enum    | `PENDING` until client confirms upload     |
-| `uploadedById`  | FK User |                                            |
-| `metadata`      | json    | Scan result, original filename (sanitized) |
+| Column          | Type    | Notes                                         |
+| --------------- | ------- | --------------------------------------------- |
+| `versionNumber` | int     | Unique per `documentId`                       |
+| `storageKey`    | string? | Opaque object path; set when upload completes |
+| `fileName`      | string? | Sanitized original filename                   |
+| `mimeType`      | string? | MIME type                                     |
+| `sizeBytes`     | int?    | File size in bytes                            |
+| `checksum`      | string? | SHA-256 hex                                   |
+| `uploadedById`  | FK User | Required                                      |
+| `metadata`      | json    | Scan result, storage hints                    |
 
-**Constraint:** No updates to `storageKey` / `contentHash` after `uploadStatus = COMPLETED` (except quarantine flag in metadata).
+**Constraint:** Application layer treats `storageKey` / `checksum` as write-once after upload completes.
 
 ### CreatorContract
 
@@ -205,19 +215,24 @@ Logical agreement tracking status and validity window.
 | `validFrom`          | datetime? |                                         |
 | `validUntil`         | datetime? | Expiration if unsigned                  |
 | `signedAt`           | datetime? | Denormalized from latest signed version |
+| `signedByUserId`     | FK User?  | Denormalized signer on contract row     |
 | `externalEnvelopeId` | string?   | E-sign provider id (future)             |
 
 ### CreatorContractVersion
 
 Draft and executed PDF references.
 
-| Column               | Type      | Notes                                          |
-| -------------------- | --------- | ---------------------------------------------- |
-| `versionNumber`      | int       |                                                |
-| `storageKey`         | string?   | Null while draft-only (template from metadata) |
-| `signedAt`           | datetime? | When set, row is **immutable**                 |
-| `signedByUserId`     | FK User?  | Manual sign; null for e-sign external          |
-| `externalEnvelopeId` | string?   | Per-version envelope                           |
+| Column               | Type      | Notes                                       |
+| -------------------- | --------- | ------------------------------------------- |
+| `versionNumber`      | int       | Unique per `contractId`                     |
+| `storageKey`         | string?   | Null while draft-only                       |
+| `fileName`           | string?   | Executed PDF filename                       |
+| `mimeType`           | string?   | Typically `application/pdf`                 |
+| `sizeBytes`          | int?      |                                             |
+| `checksum`           | string?   | SHA-256 hex                                 |
+| `signedAt`           | datetime? | When set, row is **immutable** (app policy) |
+| `signedByUserId`     | FK User?  | Manual sign; null for e-sign external       |
+| `externalEnvelopeId` | string?   | Per-version envelope                        |
 
 **Rule:** Rows with non-null `signedAt` cannot be updated or deleted (application-enforced; optional DB trigger).
 
@@ -271,11 +286,25 @@ Scheduled job additionally transitions stale `APPROVED` → `EXPIRED` and emits 
 
 ---
 
+## Cascade and delete rules
+
+| Parent deleted    | Child behavior                                               |
+| ----------------- | ------------------------------------------------------------ |
+| `Organization`    | Cascade delete all documents, versions, contracts            |
+| `CreatorProfile`  | Cascade delete linked documents and contracts                |
+| `CreatorLead`     | `SetNull` on `sourceLeadId` (preserve document history)      |
+| `CreatorDocument` | Cascade delete versions                                      |
+| `CreatorContract` | Cascade delete versions; use soft `deletedAt` in API instead |
+| `User` (reviewer) | `SetNull` on `reviewedById` / `signedByUserId`               |
+| `User` (uploader) | `Restrict` on `uploadedById` (preserve audit trail)          |
+
+---
+
 ## Migration milestone order
 
-1. Enums + `CreatorDocument` / `CreatorDocumentVersion`
-2. `CreatorContract` / `CreatorContractVersion`
-3. Indexes + foreign keys to `CreatorProfile`, `CreatorLead`
+1. ✅ Enums + `CreatorDocument` / `CreatorDocumentVersion` — `20250702143500_creator_documents_contracts_schema`
+2. ✅ `CreatorContract` / `CreatorContractVersion` — same migration
+3. API + storage adapter — future milestones
 4. Optional `CreatorDocumentChecklistTemplate` (agency settings) — later
 
 ---

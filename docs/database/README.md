@@ -40,7 +40,8 @@ Organization-scoped identity model — see [Identity ERD](./identity-erd.md):
 
 - **CreatorLead**, **LeadPlatformAccount**, **LeadAssignment**, **LeadNote**, **LeadStatusHistory**
 - **RecruiterProfile** — recruiter business profile per org user
-- **CreatorProfile**, **CreatorPlatformAccount** — creator roster schema (API migration pending)
+- **CreatorProfile**, **CreatorPlatformAccount** — creator roster schema
+- **CreatorDocument**, **CreatorDocumentVersion**, **CreatorContract**, **CreatorContractVersion** — documents/contracts schema (API pending)
 - **RefreshToken.sessionId** — optional link to Session (Phase A migration)
 
 Legacy `User.role` and `User.platforms` remain until Phase D cleanup.
@@ -57,4 +58,4 @@ Legacy `User.role` and `User.platforms` remain until Phase D cleanup.
 
 **Release 0.3 (implemented):** Creator Recruitment CRM — [Recruitment CRM ERD](./recruitment-crm-erd.md).
 
-**Release 0.4+ (planning):** Creator Documents & Contracts — [Documents & Contracts ERD](./creator-documents-contracts-erd.md).
+**Release 0.4+ (planning):** Creator Documents & Contracts — [Documents & Contracts ERD](./creator-documents-contracts-erd.md) (schema implemented; API pending).

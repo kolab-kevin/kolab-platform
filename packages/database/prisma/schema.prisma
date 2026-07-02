@@ -123,6 +123,44 @@ enum CreatorStatus {
   ARCHIVED
 }
 
+enum CreatorDocumentType {
+  GOVERNMENT_ID
+  PASSPORT
+  TAX_FORM
+  BANK_INFO
+  PROFILE_PHOTO
+  CONTRACT_ATTACHMENT
+  OTHER
+}
+
+enum CreatorDocumentStatus {
+  REQUESTED
+  UPLOADED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+  ARCHIVED
+}
+
+enum CreatorContractType {
+  CREATOR_AGREEMENT
+  AGENCY_AGREEMENT
+  CAMPAIGN_CONTRACT
+  NDA
+  OTHER
+}
+
+enum CreatorContractStatus {
+  DRAFT
+  SENT
+  VIEWED
+  SIGNED
+  EXPIRED
+  CANCELLED
+  TERMINATED
+}
+
 model User {
   id             String     @id @default(cuid())
   email          String     @unique
@@ -150,6 +188,10 @@ model User {
   managedRecruiterProfiles RecruiterProfile[]      @relation("RecruiterProfileManager")
   creatorProfiles         CreatorProfile[]         @relation("CreatorProfileUser")
   assignedCreatorProfiles CreatorProfile[]         @relation("CreatorProfileRecruiter")
+  reviewedCreatorDocuments CreatorDocument[]       @relation("CreatorDocumentReviewer")
+  uploadedCreatorDocumentVersions CreatorDocumentVersion[] @relation("CreatorDocumentVersionUploader")
+  signedCreatorContracts  CreatorContract[]        @relation("CreatorContractSigner")
+  signedCreatorContractVersions CreatorContractVersion[] @relation("CreatorContractVersionSigner")
 
   @@map("users")
 }
@@ -191,6 +233,10 @@ model Organization {
   recruiterProfiles    RecruiterProfile[]
   creatorProfiles      CreatorProfile[]
   creatorPlatformAccounts CreatorPlatformAccount[]
+  creatorDocuments     CreatorDocument[]
+  creatorDocumentVersions CreatorDocumentVersion[]
+  creatorContracts     CreatorContract[]
+  creatorContractVersions CreatorContractVersion[]
 
   @@index([status])
   @@map("organizations")
@@ -342,6 +388,8 @@ model CreatorLead {
   notes            LeadNote[]
   statusHistory    LeadStatusHistory[]
   creatorProfile   CreatorProfile?
+  creatorDocuments CreatorDocument[]
+  creatorContracts CreatorContract[]
 
   @@unique([organizationId, email])
   @@index([organizationId, status, nextFollowUpAt])
@@ -480,6 +528,8 @@ model CreatorProfile {
   updatedAt        DateTime      @updatedAt @map("updated_at")
 
   platformAccounts CreatorPlatformAccount[]
+  documents        CreatorDocument[]
+  contracts        CreatorContract[]
 
   @@unique([organizationId, userId])
   @@index([organizationId])
@@ -509,4 +559,135 @@ model CreatorPlatformAccount {
   @@index([creatorProfileId])
   @@index([organizationId, platform])
   @@map("creator_platform_accounts")
+}
+
+/// Onboarding/compliance document metadata. Binary files live in object storage only.
+/// At least one of creatorProfileId or sourceLeadId should be set (enforced in application layer).
+model CreatorDocument {
+  id               String                @id @default(cuid())
+  organizationId   String                @map("organization_id")
+  organization     Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creatorProfileId String?               @map("creator_profile_id")
+  creatorProfile   CreatorProfile?       @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  sourceLeadId     String?               @map("source_lead_id")
+  sourceLead       CreatorLead?          @relation(fields: [sourceLeadId], references: [id], onDelete: SetNull)
+  documentType     CreatorDocumentType   @map("document_type")
+  status           CreatorDocumentStatus @default(REQUESTED)
+  title            String?
+  expiresAt        DateTime?             @map("expires_at")
+  reviewedById     String?               @map("reviewed_by_id")
+  reviewedBy       User?                 @relation("CreatorDocumentReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt       DateTime?             @map("reviewed_at")
+  rejectionReason  String?               @map("rejection_reason")
+  metadata         Json                  @default("{}")
+  deletedAt        DateTime?             @map("deleted_at")
+  createdAt        DateTime              @default(now()) @map("created_at")
+  updatedAt        DateTime              @updatedAt @map("updated_at")
+
+  versions CreatorDocumentVersion[]
+
+  @@index([organizationId])
+  @@index([organizationId, creatorProfileId])
+  @@index([organizationId, sourceLeadId])
+  @@index([organizationId, documentType])
+  @@index([organizationId, status])
+  @@index([organizationId, creatorProfileId, documentType, status])
+  @@index([organizationId, expiresAt])
+  @@index([creatorProfileId])
+  @@index([sourceLeadId])
+  @@map("creator_documents")
+}
+
+/// Immutable file reference per document upload. storageKey and checksum are write-once after upload completes.
+model CreatorDocumentVersion {
+  id             String          @id @default(cuid())
+  organizationId String          @map("organization_id")
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  documentId     String          @map("document_id")
+  document       CreatorDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  versionNumber  Int             @map("version_number")
+  storageKey     String?         @map("storage_key")
+  fileName       String?         @map("file_name")
+  mimeType       String?         @map("mime_type")
+  sizeBytes      Int?            @map("size_bytes")
+  checksum       String?
+  uploadedById   String          @map("uploaded_by_id")
+  uploadedBy     User            @relation("CreatorDocumentVersionUploader", fields: [uploadedById], references: [id], onDelete: Restrict)
+  uploadedAt     DateTime?       @map("uploaded_at")
+  metadata       Json            @default("{}")
+  createdAt      DateTime        @default(now()) @map("created_at")
+
+  @@unique([documentId, versionNumber])
+  @@index([organizationId])
+  @@index([documentId])
+  @@index([uploadedById])
+  @@map("creator_document_versions")
+}
+
+/// Versioned legal agreement metadata. Signed contract versions are immutable (enforced in application layer).
+model CreatorContract {
+  id                 String                @id @default(cuid())
+  organizationId     String                @map("organization_id")
+  organization       Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creatorProfileId   String?               @map("creator_profile_id")
+  creatorProfile     CreatorProfile?       @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  sourceLeadId       String?               @map("source_lead_id")
+  sourceLead         CreatorLead?          @relation(fields: [sourceLeadId], references: [id], onDelete: SetNull)
+  contractType       CreatorContractType   @map("contract_type")
+  status             CreatorContractStatus @default(DRAFT)
+  title              String
+  parentContractId   String?               @map("parent_contract_id")
+  parentContract     CreatorContract?      @relation("ContractAmendments", fields: [parentContractId], references: [id], onDelete: SetNull)
+  childContracts     CreatorContract[]     @relation("ContractAmendments")
+  validFrom          DateTime?             @map("valid_from")
+  validUntil         DateTime?             @map("valid_until")
+  signedAt           DateTime?             @map("signed_at")
+  signedByUserId     String?               @map("signed_by_user_id")
+  signedBy           User?                 @relation("CreatorContractSigner", fields: [signedByUserId], references: [id], onDelete: SetNull)
+  externalEnvelopeId String?               @map("external_envelope_id")
+  metadata           Json                  @default("{}")
+  deletedAt          DateTime?             @map("deleted_at")
+  createdAt          DateTime              @default(now()) @map("created_at")
+  updatedAt          DateTime              @updatedAt @map("updated_at")
+
+  versions CreatorContractVersion[]
+
+  @@index([organizationId])
+  @@index([organizationId, creatorProfileId])
+  @@index([organizationId, sourceLeadId])
+  @@index([organizationId, contractType])
+  @@index([organizationId, status])
+  @@index([organizationId, creatorProfileId, contractType, status])
+  @@index([organizationId, validUntil])
+  @@index([creatorProfileId])
+  @@index([sourceLeadId])
+  @@index([parentContractId])
+  @@map("creator_contracts")
+}
+
+/// Contract revision or executed PDF reference. Rows with non-null signedAt must not be updated or deleted (application policy).
+model CreatorContractVersion {
+  id                 String          @id @default(cuid())
+  organizationId     String          @map("organization_id")
+  organization       Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contractId         String          @map("contract_id")
+  contract           CreatorContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  versionNumber      Int             @map("version_number")
+  storageKey         String?         @map("storage_key")
+  fileName           String?         @map("file_name")
+  mimeType           String?         @map("mime_type")
+  sizeBytes          Int?            @map("size_bytes")
+  checksum           String?
+  signedAt           DateTime?       @map("signed_at")
+  signedByUserId     String?         @map("signed_by_user_id")
+  signedBy           User?           @relation("CreatorContractVersionSigner", fields: [signedByUserId], references: [id], onDelete: SetNull)
+  externalEnvelopeId String?         @map("external_envelope_id")
+  metadata           Json            @default("{}")
+  createdAt          DateTime        @default(now()) @map("created_at")
+
+  @@unique([contractId, versionNumber])
+  @@index([organizationId])
+  @@index([contractId])
+  @@index([signedByUserId])
+  @@map("creator_contract_versions")
 }
