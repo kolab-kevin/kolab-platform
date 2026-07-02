@@ -2,7 +2,7 @@
 
 Architecture for creator onboarding documents, versioned contracts, and future e-signature workflows on KŌLAB Platform.
 
-**Status:** Planning (no implementation in this document)
+**Status:** Storage foundation implemented (`@kolab/storage`, `/api/storage/*` helpers). Document/contract CRUD remains planned.
 
 ---
 
@@ -27,7 +27,7 @@ Agencies must collect government IDs, tax forms, and signed agreements during cr
 │ creator-portal   │     │  Creators module (extended)             │     │ CreatorDocument *   │
 │ (future)         │     │  ├─ DocumentsController                 │     │ CreatorContract *   │
 └──────────────────┘     │  ├─ ContractsController                 │     │ (metadata only)     │
-                         │  └─ StoragePresignService               │     └─────────────────────┘
+                         │  StorageModule (presign helpers)          │     └─────────────────────┘
                          └──────────────┬──────────────────────────┘
                                         │
                          ┌──────────────▼──────────────┐
@@ -74,17 +74,29 @@ The Documents & Contracts capability extends the existing **Creators module** in
 {env}/orgs/{organizationId}/creators/{creatorProfileId}/contracts/{contractId}/v{version}/{uuid}.pdf
 ```
 
+**Implemented key layout (`@kolab/storage`):**
+
+```text
+organizations/{organizationId}/creators/{creatorId}/documents/{documentId}/versions/{versionId}/{safeFileName}
+organizations/{organizationId}/creators/{creatorId}/contracts/{contractId}/versions/{versionId}/{safeFileName}
+```
+
 Lead-stage uploads (pre-conversion) may use `leads/{leadId}/` prefix until linked to `creatorProfileId`.
 
 ### Storage package
 
-`@kolab/storage` (currently a Phase 3 placeholder) will expose:
+`@kolab/storage` (Release 0.4 storage foundation) exposes:
 
-- `getPresignedUploadUrl(key, contentType, expiresIn)`
-- `getPresignedDownloadUrl(key, expiresIn)`
-- `deleteObject(key)` (soft-delete / legal hold aware)
+- `createStorageKey(...)`
+- `validateStorageKey(...)`
+- `validateUploadMetadata(...)`
+- `getPresignedUploadUrl(...)`
+- `getPresignedDownloadUrl(...)`
+- `loadStorageConfig()` via `@kolab/config` env parsing
 
 Local development may use MinIO or LocalStack; production uses S3-compatible storage with **SSE-KMS** or provider default encryption.
+
+API helpers: [Storage API](./storage.md).
 
 ### Upload flow
 

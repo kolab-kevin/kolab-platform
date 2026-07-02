@@ -65,5 +65,6 @@ Implemented Release 0.2 modules:
 
 **Release 0.4+ (planning):**
 
+- [Storage API (presign helpers)](./storage.md)
 - [Creator Documents & Contracts API](./creator-documents-contracts.md)
 - [Creators API (implemented)](./creators.md)
