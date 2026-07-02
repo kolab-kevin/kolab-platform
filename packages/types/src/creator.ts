@@ -17,6 +17,77 @@ export type CreatorAvailability = z.infer<typeof CreatorAvailabilitySchema>;
 
 const languageCodeSchema = z.string().min(2).max(10);
 
+const skillTagSchema = z.string().trim().min(1).max(64);
+
+export const CreatorExperienceLevelSchema = z.enum([
+  'BEGINNER',
+  'INTERMEDIATE',
+  'ADVANCED',
+  'EXPERT',
+]);
+
+export type CreatorExperienceLevel = z.infer<typeof CreatorExperienceLevelSchema>;
+
+export const CreatorWeeklyScheduleEntrySchema = z.object({
+  weekday: z.number().int().min(0).max(6),
+  start: z.string().trim().min(1).max(8),
+  end: z.string().trim().min(1).max(8),
+});
+
+export type CreatorWeeklyScheduleEntry = z.infer<typeof CreatorWeeklyScheduleEntrySchema>;
+
+export const CreatorSkillsSchema = z.object({
+  categories: z.array(skillTagSchema).default([]),
+  skills: z.array(skillTagSchema).default([]),
+  contentTypes: z.array(skillTagSchema).default([]),
+  languages: z.array(languageCodeSchema).default([]),
+  experienceLevel: CreatorExperienceLevelSchema.nullable().default(null),
+  notes: z.string().max(2000).nullable().default(null),
+});
+
+export type CreatorSkills = z.infer<typeof CreatorSkillsSchema>;
+
+export const UpdateCreatorSkillsSchema = z
+  .object({
+    categories: z.array(skillTagSchema).optional(),
+    skills: z.array(skillTagSchema).optional(),
+    contentTypes: z.array(skillTagSchema).optional(),
+    languages: z.array(languageCodeSchema).optional(),
+    experienceLevel: CreatorExperienceLevelSchema.nullable().optional(),
+    notes: z.string().max(2000).nullable().optional(),
+  })
+  .refine((data) => Object.values(data).some((value) => value !== undefined), {
+    message: 'At least one skills field must be provided',
+  });
+
+export type UpdateCreatorSkillsInput = z.infer<typeof UpdateCreatorSkillsSchema>;
+
+export const CreatorStructuredAvailabilitySchema = z.object({
+  timezone: z.string().min(1).max(64).optional(),
+  weeklySchedule: z.array(CreatorWeeklyScheduleEntrySchema).default([]),
+  preferredLiveTimes: z.array(z.string().trim().min(1).max(64)).default([]),
+  blackoutDates: z.array(z.string().trim().min(1).max(32)).default([]),
+  notes: z.string().max(2000).nullable().default(null),
+});
+
+export type CreatorStructuredAvailability = z.infer<typeof CreatorStructuredAvailabilitySchema>;
+
+export const UpdateCreatorStructuredAvailabilitySchema = z
+  .object({
+    timezone: z.string().min(1).max(64).optional(),
+    weeklySchedule: z.array(CreatorWeeklyScheduleEntrySchema).optional(),
+    preferredLiveTimes: z.array(z.string().trim().min(1).max(64)).optional(),
+    blackoutDates: z.array(z.string().trim().min(1).max(32)).optional(),
+    notes: z.string().max(2000).nullable().optional(),
+  })
+  .refine((data) => Object.values(data).some((value) => value !== undefined), {
+    message: 'At least one availability field must be provided',
+  });
+
+export type UpdateCreatorStructuredAvailabilityInput = z.infer<
+  typeof UpdateCreatorStructuredAvailabilitySchema
+>;
+
 export const CreatorStatusSchema = z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'ARCHIVED']);
 
 export type CreatorStatus = z.infer<typeof CreatorStatusSchema>;

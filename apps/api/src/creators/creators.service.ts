@@ -18,11 +18,16 @@ import type {
   CreatorDetailResponse,
   CreatorListQuery,
   CreatorPlatformAccount,
+  CreatorSkills,
+  CreatorStructuredAvailability,
   ListCreatorPlatformAccountsResponse,
   ListCreatorsResponse,
   UpdateCreatorInput,
   UpdateCreatorPlatformAccountInput,
+  UpdateCreatorSkillsInput,
+  UpdateCreatorStructuredAvailabilityInput,
 } from '@kolab/types';
+import { CreatorSkillsSchema, CreatorStructuredAvailabilitySchema } from '@kolab/types';
 import {
   BadRequestException,
   ConflictException,
@@ -40,7 +45,14 @@ import {
   toCreatorPlatformAccount,
   toCreatorSummary,
 } from './creators.mapper';
-import { buildConversionMetadata, updateStoredCreatorProfile } from './creators.utils';
+import {
+  buildConversionMetadata,
+  getCreatorSkillsFromMetadata,
+  getCreatorStructuredAvailability,
+  mergeCreatorSkillsMetadata,
+  mergeCreatorStructuredAvailability,
+  updateStoredCreatorProfile,
+} from './creators.utils';
 import {
   backfillCreatorProfileFromLead,
   backfillCreatorProfilesForOrganization,
@@ -553,6 +565,127 @@ export class CreatorsService {
     });
 
     return toCreatorPlatformAccount(removedAccount);
+  }
+
+  async getCreatorSkills(user: AccessTokenPayload, creatorId: string): Promise<CreatorSkills> {
+    const organizationId = await this.requireActiveOrganization(user);
+    const profile = await this.findCreatorProfileOrBackfill(organizationId, creatorId);
+
+    return CreatorSkillsSchema.parse(
+      getCreatorSkillsFromMetadata(profile.metadata, profile.languages),
+    );
+  }
+
+  async updateCreatorSkills(
+    user: AccessTokenPayload,
+    creatorId: string,
+    input: UpdateCreatorSkillsInput,
+  ): Promise<CreatorSkills> {
+    const organizationId = await this.requireActiveOrganization(user);
+    const existing = await this.findCreatorProfileOrBackfill(organizationId, creatorId);
+    const updatedMetadata = mergeCreatorSkillsMetadata(existing.metadata, input);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.creatorProfile.update({
+        where: { id: existing.id },
+        data: {
+          metadata: updatedMetadata as Prisma.InputJsonValue,
+          ...(input.languages !== undefined ? { languages: input.languages } : {}),
+        },
+      });
+
+      if (existing.sourceLeadId) {
+        const lead = await tx.creatorLead.findUnique({ where: { id: existing.sourceLeadId } });
+
+        if (lead) {
+          await tx.creatorLead.update({
+            where: { id: lead.id },
+            data: {
+              metadata: updateStoredCreatorProfile(lead.metadata, {
+                ...(input.languages !== undefined ? { languages: input.languages } : {}),
+                metadata: updatedMetadata,
+              }) as Prisma.InputJsonValue,
+            },
+          });
+        }
+      }
+    });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.CREATOR_SKILLS_UPDATED,
+      targetType: AUDIT_TARGET_TYPE.CREATOR,
+      targetId: creatorId,
+      metadata: {
+        updatedFields: Object.keys(input),
+      },
+    });
+
+    return CreatorSkillsSchema.parse(
+      getCreatorSkillsFromMetadata(updatedMetadata, input.languages ?? existing.languages),
+    );
+  }
+
+  async getCreatorAvailability(
+    user: AccessTokenPayload,
+    creatorId: string,
+  ): Promise<CreatorStructuredAvailability> {
+    const organizationId = await this.requireActiveOrganization(user);
+    const profile = await this.findCreatorProfileOrBackfill(organizationId, creatorId);
+
+    return CreatorStructuredAvailabilitySchema.parse(
+      getCreatorStructuredAvailability(profile.availability),
+    );
+  }
+
+  async updateCreatorAvailability(
+    user: AccessTokenPayload,
+    creatorId: string,
+    input: UpdateCreatorStructuredAvailabilityInput,
+  ): Promise<CreatorStructuredAvailability> {
+    const organizationId = await this.requireActiveOrganization(user);
+    const existing = await this.findCreatorProfileOrBackfill(organizationId, creatorId);
+    const updatedAvailability = mergeCreatorStructuredAvailability(existing.availability, input);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.creatorProfile.update({
+        where: { id: existing.id },
+        data: {
+          availability: updatedAvailability as Prisma.InputJsonValue,
+        },
+      });
+
+      if (existing.sourceLeadId) {
+        const lead = await tx.creatorLead.findUnique({ where: { id: existing.sourceLeadId } });
+
+        if (lead) {
+          await tx.creatorLead.update({
+            where: { id: lead.id },
+            data: {
+              metadata: updateStoredCreatorProfile(lead.metadata, {
+                availability: updatedAvailability,
+              }) as Prisma.InputJsonValue,
+            },
+          });
+        }
+      }
+    });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.CREATOR_AVAILABILITY_UPDATED,
+      targetType: AUDIT_TARGET_TYPE.CREATOR,
+      targetId: creatorId,
+      metadata: {
+        updatedFields: Object.keys(input),
+      },
+    });
+
+    return CreatorStructuredAvailabilitySchema.parse(
+      getCreatorStructuredAvailability(updatedAvailability),
+    );
   }
 
   private async findCreatorProfileOrBackfill(
