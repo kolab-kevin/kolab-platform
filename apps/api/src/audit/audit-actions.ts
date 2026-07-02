@@ -13,6 +13,8 @@ export const AUDIT_ACTION = {
   LEAD_CLAIMED: 'lead.claimed',
   LEAD_REASSIGNED: 'lead.reassigned',
   LEAD_UNASSIGNED: 'lead.unassigned',
+  RECRUITER_CREATED: 'recruiter.created',
+  RECRUITER_UPDATED: 'recruiter.updated',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {
@@ -22,4 +24,5 @@ export const AUDIT_TARGET_TYPE = {
   PROFILE: 'profile',
   USER: 'user',
   LEAD: 'lead',
+  RECRUITER: 'recruiter',
 } as const;

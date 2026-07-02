@@ -14,6 +14,7 @@ import { InvitationModule } from './invitation/invitation.module';
 import { ObservabilityModule } from './observability/observability.module';
 import { OrganizationModule } from './organization/organization.module';
 import { ProfileModule } from './profile/profile.module';
+import { RecruitersModule } from './recruiters/recruiters.module';
 import { RecruitmentModule } from './recruitment/recruitment.module';
 import { RedisModule } from './redis/redis.module';
 import { SessionModule } from './session/session.module';
@@ -32,6 +33,7 @@ import { SessionModule } from './session/session.module';
     AdminModule,
     AgencyModule,
     RecruitmentModule,
+    RecruitersModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
