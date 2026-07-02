@@ -110,6 +110,12 @@ enum LeadPlatformAccountStatus {
   REMOVED
 }
 
+enum RecruiterStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
 model User {
   id             String     @id @default(cuid())
   email          String     @unique
@@ -133,6 +139,8 @@ model User {
   leadAssignmentsCreated  LeadAssignment[]         @relation("LeadAssignmentAssigner")
   leadNotes               LeadNote[]               @relation("LeadNoteAuthor")
   leadStatusChanges       LeadStatusHistory[]      @relation("LeadStatusChanger")
+  recruiterProfiles       RecruiterProfile[]       @relation("RecruiterProfileUser")
+  managedRecruiterProfiles RecruiterProfile[]      @relation("RecruiterProfileManager")
 
   @@map("users")
 }
@@ -171,6 +179,7 @@ model Organization {
   leadAssignments      LeadAssignment[]
   leadNotes            LeadNote[]
   leadStatusHistory    LeadStatusHistory[]
+  recruiterProfiles    RecruiterProfile[]
 
   @@index([status])
   @@map("organizations")
@@ -406,4 +415,34 @@ model LeadStatusHistory {
   @@index([leadId, changedAt(sort: Desc)])
   @@index([organizationId, changedAt(sort: Desc)])
   @@map("lead_status_history")
+}
+
+model RecruiterProfile {
+  id                 String           @id @default(cuid())
+  organizationId     String           @map("organization_id")
+  organization       Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId             String           @map("user_id")
+  user               User             @relation("RecruiterProfileUser", fields: [userId], references: [id], onDelete: Cascade)
+  displayName        String?          @map("display_name")
+  nickname           String?
+  territory          String?
+  languages          String[]         @default([])
+  hireDate           DateTime?        @map("hire_date")
+  commissionPlan     CommissionPlan   @default(STANDARD) @map("commission_plan")
+  monthlyLeadGoal    Int?             @map("monthly_lead_goal")
+  monthlyCreatorGoal Int?             @map("monthly_creator_goal")
+  availability       Json             @default("{}")
+  managerUserId      String?          @map("manager_user_id")
+  manager            User?            @relation("RecruiterProfileManager", fields: [managerUserId], references: [id], onDelete: SetNull)
+  status             RecruiterStatus  @default(ACTIVE)
+  metadata           Json             @default("{}")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+  @@index([managerUserId])
+  @@index([organizationId, status])
+  @@map("recruiter_profiles")
 }

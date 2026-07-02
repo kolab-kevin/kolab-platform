@@ -26,6 +26,7 @@ The CRM is **organization-scoped** and intended for `Organization.type = AGENCY`
 | Platform tracking   | Track **platform accounts** (username, profile URL, followers), not platform names alone       |
 | Commission          | Start with **`STANDARD`** plan only; **`PREMIUM`** and **`CUSTOM`** are placeholders for later |
 | Performance metrics | **Do not over-engineer** recruiter KPIs in v1                                                  |
+| Recruiter profile   | Business recruiting data in `RecruiterProfile`; **permissions stay on membership**             |
 | Payments            | **Out of scope** for v1                                                                        |
 
 ---
@@ -194,17 +195,18 @@ Commission **rates and payouts are not implemented** in v1. The field exists to 
 
 Implement in small reviewable PRs after planning approval:
 
-| Branch                                   | Deliverable                           | Depends on          |
-| ---------------------------------------- | ------------------------------------- | ------------------- |
-| `feature/recruitment-crm-schema`         | Prisma models + migration             | agency foundation   |
-| `feature/recruitment-crm-types`          | `@kolab/types` Zod DTOs + enums       | schema              |
-| `feature/recruitment-crm-permissions`    | Permission matrix in `@kolab/auth`    | types               |
-| `feature/recruitment-crm-api-leads`      | Lead CRUD, claim, assign, list/filter | permissions         |
-| `feature/recruitment-crm-api-platforms`  | Platform account sub-resource         | leads API           |
-| `feature/recruitment-crm-api-activities` | Notes + contact history + follow-ups  | leads API           |
-| `feature/recruitment-crm-api-conversion` | Signed → active creator conversion    | leads API, identity |
-| `feature/recruitment-crm-audit`          | Audit events for CRM mutations        | audit module        |
-| `feature/recruitment-crm-docs`           | Final API docs (implemented status)   | all API branches    |
+| Branch                                   | Deliverable                             | Depends on          |
+| ---------------------------------------- | --------------------------------------- | ------------------- |
+| `feature/recruitment-crm-schema`         | Prisma models + migration               | agency foundation   |
+| `feature/recruiter-profile-schema`       | `RecruiterProfile` model + shared types | recruitment schema  |
+| `feature/recruitment-crm-types`          | `@kolab/types` Zod DTOs + enums         | schema              |
+| `feature/recruitment-crm-permissions`    | Permission matrix in `@kolab/auth`      | types               |
+| `feature/recruitment-crm-api-leads`      | Lead CRUD, claim, assign, list/filter   | permissions         |
+| `feature/recruitment-crm-api-platforms`  | Platform account sub-resource           | leads API           |
+| `feature/recruitment-crm-api-activities` | Notes + contact history + follow-ups    | leads API           |
+| `feature/recruitment-crm-api-conversion` | Signed → active creator conversion      | leads API, identity |
+| `feature/recruitment-crm-audit`          | Audit events for CRM mutations          | audit module        |
+| `feature/recruitment-crm-docs`           | Final API docs (implemented status)     | all API branches    |
 
 ---
 
