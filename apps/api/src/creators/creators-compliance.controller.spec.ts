@@ -9,7 +9,7 @@ import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
 import { CreatorsOnboardingService } from './creators-onboarding.service';
 
-describe('CreatorsController onboarding authorization', () => {
+describe('CreatorsController compliance authorization', () => {
   let permissionsGuard: PermissionsGuard;
   let reflector: Reflector;
 
@@ -79,19 +79,19 @@ describe('CreatorsController onboarding authorization', () => {
   const recruiterUser = createUser('RECRUITER');
   const viewerUser = createUser('VIEWER');
 
-  it('allows recruiters to read onboarding with documents:read', () => {
+  it('allows recruiters to read compliance with documents:read', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:read']);
 
-    expect(permissionsGuard.canActivate(createContext('getCreatorOnboarding', recruiterUser))).toBe(
+    expect(permissionsGuard.canActivate(createContext('getCreatorCompliance', recruiterUser))).toBe(
       true,
     );
   });
 
-  it('denies viewers from reading onboarding', () => {
+  it('denies viewers from reading compliance', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:read']);
 
     expect(() =>
-      permissionsGuard.canActivate(createContext('getCreatorOnboarding', viewerUser)),
+      permissionsGuard.canActivate(createContext('getCreatorCompliance', viewerUser)),
     ).toThrow(ForbiddenException);
   });
 });

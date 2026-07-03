@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { AuditModule } from '../audit/audit.module';
 import { CreatorsController } from './creators.controller';
 import { CreatorsService } from './creators.service';
+import { CreatorsComplianceService } from './creators-compliance.service';
 import { CreatorsContractsController } from './creators-contracts.controller';
 import { CreatorsContractsService } from './creators-contracts.service';
 import { CreatorsDocumentsController } from './creators-documents.controller';
@@ -27,6 +28,7 @@ import { CreatorsReportingService } from './creators-reporting.service';
     CreatorsReportingService,
     CreatorsNotificationsService,
     CreatorsOnboardingService,
+    CreatorsComplianceService,
   ],
   exports: [
     CreatorsService,
@@ -35,6 +37,7 @@ import { CreatorsReportingService } from './creators-reporting.service';
     CreatorsReportingService,
     CreatorsNotificationsService,
     CreatorsOnboardingService,
+    CreatorsComplianceService,
   ],
 })
 export class CreatorsModule {}
