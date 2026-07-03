@@ -69,6 +69,9 @@ All routes are scoped to the JWT `organizationId`. Users must have an active org
 | POST   | `/api/creators/:id/contracts/:contractId/versions` | `crm:update` | Register uploaded contract version |
 | POST   | `/api/creators/:id/contracts/:contractId/status`   | `crm:update` | Update creator contract status     |
 | POST   | `/api/creators/:id/contracts/:contractId/download` | `crm:read`   | Presigned contract download URL    |
+| GET    | `/api/creators/documents/expiring`                 | `crm:read`   | Report expiring/expired documents  |
+| GET    | `/api/creators/documents/missing`                  | `crm:read`   | Report missing required documents  |
+| GET    | `/api/creators/contracts/expiring`                 | `crm:read`   | Report expiring/expired contracts  |
 | POST   | `/api/recruitment/leads/:id/convert`               | `crm:update` | Convert lead to creator            |
 
 ---

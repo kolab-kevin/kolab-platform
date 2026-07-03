@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { CreatorSummarySchema } from './creator';
+
 export const CreatorDocumentTypeSchema = z.enum([
   'GOVERNMENT_ID',
   'PASSPORT',
@@ -413,3 +415,96 @@ export const DownloadCreatorContractResponseSchema = z.object({
 });
 
 export type DownloadCreatorContractResponse = z.infer<typeof DownloadCreatorContractResponseSchema>;
+
+export const REQUIRED_CREATOR_DOCUMENT_TYPES = ['GOVERNMENT_ID'] as const;
+
+export const ExpirationReportStatusSchema = z.enum(['MISSING', 'EXPIRING', 'EXPIRED']);
+
+export type ExpirationReportStatus = z.infer<typeof ExpirationReportStatusSchema>;
+
+const reportingPaginationQuerySchema = z.object({
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  creatorId: z.string().min(1).optional(),
+});
+
+export const ExpiringDocumentsQuerySchema = reportingPaginationQuerySchema.extend({
+  days: z.coerce.number().int().min(1).max(365).default(30),
+  includeExpired: z.coerce.boolean().optional().default(false),
+  documentType: CreatorDocumentTypeSchema.optional(),
+});
+
+export type ExpiringDocumentsQuery = z.infer<typeof ExpiringDocumentsQuerySchema>;
+
+export const MissingDocumentsQuerySchema = reportingPaginationQuerySchema.extend({
+  documentType: CreatorDocumentTypeSchema.optional(),
+});
+
+export type MissingDocumentsQuery = z.infer<typeof MissingDocumentsQuerySchema>;
+
+export const ExpiringContractsQuerySchema = reportingPaginationQuerySchema.extend({
+  days: z.coerce.number().int().min(1).max(365).default(30),
+  includeExpired: z.coerce.boolean().optional().default(false),
+  contractType: CreatorContractTypeSchema.optional(),
+});
+
+export type ExpiringContractsQuery = z.infer<typeof ExpiringContractsQuerySchema>;
+
+export const ExpiringCreatorDocumentReportItemSchema = z.object({
+  status: z.enum(['EXPIRING', 'EXPIRED']),
+  creator: CreatorSummarySchema,
+  document: CreatorDocumentSchema,
+  expiresAt: isoDateTimeSchema,
+});
+
+export type ExpiringCreatorDocumentReportItem = z.infer<
+  typeof ExpiringCreatorDocumentReportItemSchema
+>;
+
+export const ListExpiringCreatorDocumentsResponseSchema = z.object({
+  items: z.array(ExpiringCreatorDocumentReportItemSchema),
+  nextCursor: z.string().nullable(),
+});
+
+export type ListExpiringCreatorDocumentsResponse = z.infer<
+  typeof ListExpiringCreatorDocumentsResponseSchema
+>;
+
+export const MissingCreatorDocumentReportItemSchema = z.object({
+  status: z.literal('MISSING'),
+  creator: CreatorSummarySchema,
+  documentType: CreatorDocumentTypeSchema,
+});
+
+export type MissingCreatorDocumentReportItem = z.infer<
+  typeof MissingCreatorDocumentReportItemSchema
+>;
+
+export const ListMissingCreatorDocumentsResponseSchema = z.object({
+  items: z.array(MissingCreatorDocumentReportItemSchema),
+  nextCursor: z.string().nullable(),
+});
+
+export type ListMissingCreatorDocumentsResponse = z.infer<
+  typeof ListMissingCreatorDocumentsResponseSchema
+>;
+
+export const ExpiringCreatorContractReportItemSchema = z.object({
+  status: z.enum(['EXPIRING', 'EXPIRED']),
+  creator: CreatorSummarySchema,
+  contract: CreatorContractSchema,
+  validUntil: isoDateTimeSchema,
+});
+
+export type ExpiringCreatorContractReportItem = z.infer<
+  typeof ExpiringCreatorContractReportItemSchema
+>;
+
+export const ListExpiringCreatorContractsResponseSchema = z.object({
+  items: z.array(ExpiringCreatorContractReportItemSchema),
+  nextCursor: z.string().nullable(),
+});
+
+export type ListExpiringCreatorContractsResponse = z.infer<
+  typeof ListExpiringCreatorContractsResponseSchema
+>;
