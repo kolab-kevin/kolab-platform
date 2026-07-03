@@ -243,6 +243,7 @@ Each result includes a `creator` summary object plus the related document or con
 | PATCH  | `/api/creators/:creatorId/contracts/:contractId`          | `crm:update` | Update title, validity, metadata   |
 | POST   | `/api/creators/:creatorId/contracts/:contractId/versions` | `crm:update` | Register uploaded version metadata |
 | POST   | `/api/creators/:creatorId/contracts/:contractId/status`   | `crm:update` | Update workflow status             |
+| POST   | `/api/creators/:creatorId/contracts/:contractId/sign`     | `crm:update` | Manually sign contract version     |
 | POST   | `/api/creators/:creatorId/contracts/:contractId/download` | `crm:read`   | Presigned download URL (audited)   |
 
 Upload flow:
@@ -251,7 +252,10 @@ Upload flow:
 2. `POST /api/storage/presign-upload` with `resourceKind: "contracts"`
 3. Client `PUT` to presigned URL
 4. `POST /api/creators/:creatorId/contracts/:contractId/versions` — register version metadata
-5. `POST /api/creators/:creatorId/contracts/:contractId/status` — advance workflow (e.g. `SENT` → `SIGNED`)
+5. `POST /api/creators/:creatorId/contracts/:contractId/status` — advance workflow (e.g. `DRAFT` → `SENT`)
+6. `POST /api/creators/:creatorId/contracts/:contractId/sign` — manually sign an uploaded version
+
+Manual signing sets `signedAt` and `signedByUserId` on the contract and selected version, transitions status to `SIGNED`, and emits `creator.contract.signed`. No e-signature provider or email is invoked. Calling sign on an already `SIGNED` contract is idempotent (returns current state, no duplicate audit).
 
 ### Status workflow
 
@@ -265,7 +269,7 @@ Upload flow:
 | `CANCELLED`  | `DRAFT`                                    |
 | `TERMINATED` | `DRAFT`                                    |
 
-When status becomes `SIGNED`, `signedAt` and `signedByUserId` are set on the contract and latest uploaded version. Signed contracts reject title/validity changes and new versions; metadata-only updates are allowed for amendment/termination notes.
+When status becomes `SIGNED`, `signedAt` and `signedByUserId` are set on the contract and latest uploaded version. The dedicated sign endpoint can target a specific `versionId` and optional `signedByUserId`, `signedAt`, and `note`. Signed contracts reject title/validity changes and new versions; metadata-only updates are allowed for amendment/termination notes.
 
 ---
 
@@ -293,6 +297,38 @@ When status becomes `SIGNED`, `signedAt` and `signedByUserId` are set on the con
 ```
 
 Transition to `SIGNED` requires at least one uploaded version with a `storageKey`.
+
+---
+
+## POST `/api/creators/:creatorId/contracts/:contractId/sign`
+
+Manually records contract signing before future e-signature integration. Requires JWT organization context; creator and contract must belong to the active org.
+
+### Sign request (all fields optional)
+
+```json
+{
+  "versionId": "ver-1",
+  "signedByUserId": "user-abc",
+  "signedAt": "2026-07-02T14:00:00.000Z",
+  "note": "Signed in person at agency office"
+}
+```
+
+| Field            | Default when omitted                               |
+| ---------------- | -------------------------------------------------- |
+| `versionId`      | Latest uploaded version with a `storageKey`        |
+| `signedByUserId` | JWT subject (`sub`) of the authenticated user      |
+| `signedAt`       | Current server time                                |
+| `note`           | Stored in contract metadata as `manualSigningNote` |
+
+Contract must be in a status that allows transition to `SIGNED` (`SENT` or `VIEWED`). Already `SIGNED` contracts return `200` with the current detail (idempotent; no second audit event).
+
+### Sign response (200)
+
+Returns `CreatorContractDetail` with updated status, signing timestamps on the contract and selected version, and versions array.
+
+Audit: `creator.contract.signed` with `versionId`, `previousStatus`, `signedByUserId`, and optional `note`.
 
 ---
 
@@ -327,6 +363,7 @@ Issues a short-lived presigned GET URL for the latest uploaded version (or a spe
 | `UpdateCreatorContractSchema`                       | PATCH contract            |
 | `CreateCreatorContractVersionSchema`                | POST contract version     |
 | `UpdateCreatorContractStatusSchema`                 | POST contract status      |
+| `SignCreatorContractSchema`                         | POST contract sign        |
 | `DownloadCreatorContractSchema`                     | POST contract download    |
 | `CreatorExpirationNotificationPreviewRequestSchema` | POST notification preview |
 
@@ -348,6 +385,7 @@ Raw file fields (`file`, `base64`, `body`, etc.) are rejected on all document an
 | `creator.contract.updated`                | Metadata updated               | `creator_contract` |
 | `creator.contract.version_added`          | Version registered             | `creator_contract` |
 | `creator.contract.status_changed`         | Status changed                 | `creator_contract` |
+| `creator.contract.signed`                 | Contract manually signed       | `creator_contract` |
 | `creator.contract.downloaded`             | Download URL issued            | `creator_contract` |
 
 ---

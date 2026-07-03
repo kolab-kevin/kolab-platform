@@ -3,6 +3,7 @@ import type {
   CreateCreatorContractInput,
   CreateCreatorContractVersionInput,
   DownloadCreatorContractInput,
+  SignCreatorContractInput,
   UpdateCreatorContractInput,
   UpdateCreatorContractStatusInput,
 } from '@kolab/types';
@@ -10,6 +11,7 @@ import {
   CreateCreatorContractSchema,
   CreateCreatorContractVersionSchema,
   DownloadCreatorContractSchema,
+  SignCreatorContractSchema,
   UpdateCreatorContractSchema,
   UpdateCreatorContractStatusSchema,
 } from '@kolab/types';
@@ -104,6 +106,20 @@ export class CreatorsContractsController {
     body: UpdateCreatorContractStatusInput,
   ) {
     return this.creatorsContractsService.updateContractStatus(user, creatorId, contractId, body);
+  }
+
+  @Post(':creatorId/contracts/:contractId/sign')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Manually sign a creator contract version' })
+  @ApiResponse({ status: 200, description: 'Creator contract signed' })
+  @ApiResponse({ status: 404, description: 'Creator or contract not found' })
+  signContract(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('creatorId') creatorId: string,
+    @Param('contractId') contractId: string,
+    @Body(new ZodValidationPipe(SignCreatorContractSchema)) body: SignCreatorContractInput,
+  ) {
+    return this.creatorsContractsService.signContract(user, creatorId, contractId, body);
   }
 
   @Post(':creatorId/contracts/:contractId/download')

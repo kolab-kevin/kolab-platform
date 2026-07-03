@@ -21,6 +21,7 @@ import type {
   DownloadCreatorContractInput,
   DownloadCreatorContractResponse,
   ListCreatorContractsResponse,
+  SignCreatorContractInput,
   UpdateCreatorContractInput,
   UpdateCreatorContractStatusInput,
 } from '@kolab/types';
@@ -42,6 +43,7 @@ import {
   assertStorageKeyFileNameMatches,
   findLatestUploadedVersion,
   parseContractVersionStorageKey,
+  toMetadataRecord,
 } from './creators-contracts.utils';
 
 const contractInclude = {
@@ -386,6 +388,89 @@ export class CreatorsContractsService {
     });
 
     return toCreatorContract(updated);
+  }
+
+  async signContract(
+    user: AccessTokenPayload,
+    creatorId: string,
+    contractId: string,
+    input: SignCreatorContractInput = {},
+  ): Promise<CreatorContractDetail> {
+    const organizationId = await this.requireActiveOrganization(user);
+    await this.requireCreatorProfile(organizationId, creatorId);
+    const contract = await this.loadCreatorContract(organizationId, creatorId, contractId, {
+      include: contractInclude,
+    });
+
+    if (contract.status === CreatorContractStatus.SIGNED) {
+      return toCreatorContractDetail(contract);
+    }
+
+    const currentStatus = contract.status as CreatorContractStatusType;
+    assertAllowedContractStatusTransition(currentStatus, 'SIGNED');
+
+    const selectedVersion = findLatestUploadedVersion(contract.versions, input.versionId);
+
+    if (!selectedVersion) {
+      throw new BadRequestException(
+        input.versionId
+          ? 'Contract version not found'
+          : 'Cannot sign contract without an uploaded contract version',
+      );
+    }
+
+    if (!selectedVersion.storageKey) {
+      throw new BadRequestException('Contract version has no uploaded file');
+    }
+
+    const signedAt = input.signedAt ? new Date(input.signedAt) : new Date();
+    const signedByUserId = input.signedByUserId ?? user.sub;
+    const metadataUpdate = input.note
+      ? ({
+          ...toMetadataRecord(contract.metadata),
+          manualSigningNote: input.note,
+        } as Prisma.InputJsonValue)
+      : undefined;
+
+    const updatedContract = await prisma.$transaction(async (tx) => {
+      await tx.creatorContractVersion.update({
+        where: { id: selectedVersion.id },
+        data: {
+          signedAt,
+          signedByUserId,
+        },
+      });
+
+      return tx.creatorContract.update({
+        where: { id: contractId },
+        data: {
+          status: CreatorContractStatus.SIGNED,
+          signedAt,
+          signedByUserId,
+          ...(metadataUpdate !== undefined ? { metadata: metadataUpdate } : {}),
+        },
+        include: contractInclude,
+      });
+    });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.CREATOR_CONTRACT_SIGNED,
+      targetType: AUDIT_TARGET_TYPE.CREATOR_CONTRACT,
+      targetId: contract.id,
+      metadata: {
+        creatorId,
+        versionId: selectedVersion.id,
+        versionNumber: selectedVersion.versionNumber,
+        previousStatus: currentStatus,
+        signedByUserId,
+        signedAt: signedAt.toISOString(),
+        ...(input.note ? { note: input.note } : {}),
+      },
+    });
+
+    return toCreatorContractDetail(updatedContract);
   }
 
   async downloadContract(
