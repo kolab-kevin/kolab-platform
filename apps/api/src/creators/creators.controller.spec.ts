@@ -5,6 +5,7 @@ import { Test } from '@nestjs/testing';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { CreatorsController } from './creators.controller';
 import { CreatorsService } from './creators.service';
+import { CreatorsOnboardingService } from './creators-onboarding.service';
 
 describe('CreatorsController authorization', () => {
   let permissionsGuard: PermissionsGuard;
@@ -32,6 +33,12 @@ describe('CreatorsController authorization', () => {
             getCreatorAvailability: jest.fn(),
             updateCreatorAvailability: jest.fn(),
             convertLeadFromRecruitment: jest.fn(),
+          },
+        },
+        {
+          provide: CreatorsOnboardingService,
+          useValue: {
+            getCreatorOnboarding: jest.fn(),
           },
         },
       ],
