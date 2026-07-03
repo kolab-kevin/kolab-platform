@@ -176,12 +176,41 @@ Issues a short-lived presigned GET URL for the latest uploaded version (or a spe
 
 ---
 
-## Organization document reporting (planned)
+## Organization reporting (implemented)
 
-| Method | Path                               | Permission | Description                    |
-| ------ | ---------------------------------- | ---------- | ------------------------------ |
-| GET    | `/api/creators/documents/expiring` | `crm:read` | List expiring approved docs    |
-| GET    | `/api/creators/documents/missing`  | `crm:read` | Creators missing required docs |
+| Method | Path                               | Permission | Description                                 |
+| ------ | ---------------------------------- | ---------- | ------------------------------------------- |
+| GET    | `/api/creators/documents/expiring` | `crm:read` | Documents expiring or expired within window |
+| GET    | `/api/creators/documents/missing`  | `crm:read` | Active creators missing required documents  |
+| GET    | `/api/creators/contracts/expiring` | `crm:read` | Contracts expiring or expired within window |
+
+These endpoints are organization-scoped read-only reports. No scheduled jobs or notifications are emitted in this milestone.
+
+### Shared query parameters
+
+| Param            | Type    | Default | Description                                        |
+| ---------------- | ------- | ------- | -------------------------------------------------- |
+| `days`           | number  | `30`    | Expiration window for expiring endpoints (max 365) |
+| `includeExpired` | boolean | `false` | Include already-expired rows in expiring endpoints |
+| `creatorId`      | string  | —       | Filter to a single active creator                  |
+| `documentType`   | enum    | —       | Filter expiring/missing document reports           |
+| `contractType`   | enum    | —       | Filter expiring contract reports                   |
+| `limit`          | number  | `20`    | Page size (max 100)                                |
+| `cursor`         | string  | —       | Pagination cursor                                  |
+
+### Required documents (v1)
+
+Missing-document reporting checks for an **approved** document of type `GOVERNMENT_ID` per active creator. `CREATOR_AGREEMENT` contracts are tracked separately via contract expiration reporting.
+
+### Report status values
+
+| Status     | Meaning                                                |
+| ---------- | ------------------------------------------------------ |
+| `MISSING`  | Required approved document not present for creator     |
+| `EXPIRING` | `expiresAt` / `validUntil` falls within the window     |
+| `EXPIRED`  | Expiration date is in the past (`includeExpired=true`) |
+
+Each result includes a `creator` summary object plus the related document or contract metadata.
 
 ---
 
