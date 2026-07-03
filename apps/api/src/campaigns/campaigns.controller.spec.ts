@@ -6,6 +6,7 @@ import { Test } from '@nestjs/testing';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { CampaignsController } from './campaigns.controller';
 import { CampaignsService } from './campaigns.service';
+import { CampaignsAssignmentsService } from './campaigns-assignments.service';
 
 describe('CampaignsController authorization', () => {
   let permissionsGuard: PermissionsGuard;
@@ -36,6 +37,19 @@ describe('CampaignsController authorization', () => {
             acceptApplication: jest.fn(),
             rejectApplication: jest.fn(),
             withdrawApplication: jest.fn(),
+          },
+        },
+        {
+          provide: CampaignsAssignmentsService,
+          useValue: {
+            listAssignments: jest.fn(),
+            getAssignment: jest.fn(),
+            createAssignment: jest.fn(),
+            updateAssignmentStatus: jest.fn(),
+            listCreatorDeliverables: jest.fn(),
+            createCreatorDeliverable: jest.fn(),
+            updateCreatorDeliverable: jest.fn(),
+            updateCreatorDeliverableStatus: jest.fn(),
           },
         },
       ],
@@ -127,5 +141,29 @@ describe('CampaignsController authorization', () => {
     expect(() =>
       permissionsGuard.canActivate(createContext('withdrawApplication', viewerUser)),
     ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to list assignments with crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(permissionsGuard.canActivate(createContext('listAssignments', recruiterUser))).toBe(
+      true,
+    );
+  });
+
+  it('denies viewers from creating assignments', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('createAssignment', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to update assignment status with crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(
+      permissionsGuard.canActivate(createContext('updateAssignmentStatus', recruiterUser)),
+    ).toBe(true);
   });
 });

@@ -1,9 +1,17 @@
 import type {
   Campaign as PrismaCampaign,
   CampaignApplication as PrismaCampaignApplication,
+  CampaignCreatorAssignment as PrismaCampaignCreatorAssignment,
+  CampaignCreatorDeliverable as PrismaCampaignCreatorDeliverable,
   CampaignDeliverable as PrismaCampaignDeliverable,
 } from '@kolab/database';
-import type { Campaign, CampaignApplication, CampaignDeliverable } from '@kolab/types';
+import type {
+  Campaign,
+  CampaignApplication,
+  CampaignCreatorAssignment,
+  CampaignCreatorDeliverable,
+  CampaignDeliverable,
+} from '@kolab/types';
 
 import { toMetadataRecord } from './campaigns.utils';
 
@@ -71,5 +79,48 @@ export function toCampaignApplication(application: PrismaCampaignApplication): C
     metadata: toMetadataRecord(application.metadata),
     createdAt: application.createdAt.toISOString(),
     updatedAt: application.updatedAt.toISOString(),
+  };
+}
+
+export function toCampaignCreatorAssignment(
+  assignment: PrismaCampaignCreatorAssignment,
+): CampaignCreatorAssignment {
+  return {
+    id: assignment.id,
+    organizationId: assignment.organizationId,
+    campaignId: assignment.campaignId,
+    creatorProfileId: assignment.creatorProfileId,
+    applicationId: assignment.applicationId,
+    status: assignment.status as CampaignCreatorAssignment['status'],
+    assignedByUserId: assignment.assignedByUserId,
+    assignedAt: assignment.assignedAt.toISOString(),
+    acceptedAt: assignment.acceptedAt?.toISOString() ?? null,
+    completedAt: assignment.completedAt?.toISOString() ?? null,
+    cancelledAt: assignment.cancelledAt?.toISOString() ?? null,
+    metadata: toMetadataRecord(assignment.metadata),
+    createdAt: assignment.createdAt.toISOString(),
+    updatedAt: assignment.updatedAt.toISOString(),
+  };
+}
+
+export function toCampaignCreatorDeliverable(
+  deliverable: PrismaCampaignCreatorDeliverable,
+): CampaignCreatorDeliverable {
+  return {
+    id: deliverable.id,
+    organizationId: deliverable.organizationId,
+    assignmentId: deliverable.assignmentId,
+    campaignDeliverableId: deliverable.campaignDeliverableId,
+    status: deliverable.status as CampaignCreatorDeliverable['status'],
+    dueAt: deliverable.dueAt?.toISOString() ?? null,
+    submittedAt: deliverable.submittedAt?.toISOString() ?? null,
+    approvedAt: deliverable.approvedAt?.toISOString() ?? null,
+    rejectedAt: deliverable.rejectedAt?.toISOString() ?? null,
+    rejectionReason: deliverable.rejectionReason,
+    submissionUrl: deliverable.submissionUrl,
+    notes: deliverable.notes,
+    metadata: toMetadataRecord(deliverable.metadata),
+    createdAt: deliverable.createdAt.toISOString(),
+    updatedAt: deliverable.updatedAt.toISOString(),
   };
 }

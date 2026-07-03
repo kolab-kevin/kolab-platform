@@ -162,3 +162,94 @@ export function assertApplicationsAllowedForCampaign(status: CampaignStatus): vo
 export function isActiveApplicationStatus(status: CampaignApplicationStatus): boolean {
   return (ACTIVE_CAMPAIGN_APPLICATION_STATUSES as readonly string[]).includes(status);
 }
+
+export const ACTIVE_CAMPAIGN_ASSIGNMENT_STATUSES = ['ASSIGNED', 'ACCEPTED', 'IN_PROGRESS'] as const;
+
+export type ActiveCampaignAssignmentStatus = (typeof ACTIVE_CAMPAIGN_ASSIGNMENT_STATUSES)[number];
+
+export type CampaignAssignmentStatus =
+  'ASSIGNED' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+
+export type CampaignCreatorDeliverableStatus =
+  'ASSIGNED' | 'IN_PROGRESS' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+
+const ASSIGNMENT_STATUS_TRANSITIONS: Record<CampaignAssignmentStatus, CampaignAssignmentStatus[]> =
+  {
+    ASSIGNED: ['ACCEPTED', 'CANCELLED'],
+    ACCEPTED: ['IN_PROGRESS', 'CANCELLED'],
+    IN_PROGRESS: ['COMPLETED', 'CANCELLED'],
+    COMPLETED: [],
+    CANCELLED: [],
+  };
+
+const CREATOR_DELIVERABLE_STATUS_TRANSITIONS: Record<
+  CampaignCreatorDeliverableStatus,
+  CampaignCreatorDeliverableStatus[]
+> = {
+  ASSIGNED: ['IN_PROGRESS', 'CANCELLED'],
+  IN_PROGRESS: ['SUBMITTED', 'CANCELLED'],
+  SUBMITTED: ['APPROVED', 'REJECTED', 'IN_PROGRESS'],
+  APPROVED: [],
+  REJECTED: ['IN_PROGRESS', 'CANCELLED'],
+  CANCELLED: [],
+};
+
+export function assertAllowedAssignmentStatusTransition(
+  currentStatus: CampaignAssignmentStatus,
+  nextStatus: CampaignAssignmentStatus,
+): void {
+  if (currentStatus === nextStatus) {
+    throw new BadRequestException('Assignment status is already set to the requested value');
+  }
+
+  const allowed = ASSIGNMENT_STATUS_TRANSITIONS[currentStatus] ?? [];
+
+  if (!allowed.includes(nextStatus)) {
+    throw new BadRequestException(
+      `Cannot transition assignment status from ${currentStatus} to ${nextStatus}`,
+    );
+  }
+}
+
+export function assertAllowedCreatorDeliverableStatusTransition(
+  currentStatus: CampaignCreatorDeliverableStatus,
+  nextStatus: CampaignCreatorDeliverableStatus,
+): void {
+  if (currentStatus === nextStatus) {
+    throw new BadRequestException(
+      'Creator deliverable status is already set to the requested value',
+    );
+  }
+
+  const allowed = CREATOR_DELIVERABLE_STATUS_TRANSITIONS[currentStatus] ?? [];
+
+  if (!allowed.includes(nextStatus)) {
+    throw new BadRequestException(
+      `Cannot transition creator deliverable status from ${currentStatus} to ${nextStatus}`,
+    );
+  }
+}
+
+export function assertAssignmentsAllowedForCampaign(status: CampaignStatus): void {
+  if (status === 'ARCHIVED' || status === 'CANCELLED' || status === 'COMPLETED') {
+    throw new BadRequestException(
+      'Assignments cannot be created for archived, cancelled, or completed campaigns',
+    );
+  }
+}
+
+export function assertCreatorDeliverableIsEditable(status: CampaignCreatorDeliverableStatus): void {
+  if (status === 'APPROVED' || status === 'CANCELLED') {
+    throw new BadRequestException('Creator deliverable cannot be modified in the current status');
+  }
+}
+
+export function assertCreatorDeliverablesAllowedForAssignment(
+  status: CampaignAssignmentStatus,
+): void {
+  if (status === 'CANCELLED' || status === 'COMPLETED') {
+    throw new BadRequestException(
+      'Creator deliverables cannot be added to cancelled or completed assignments',
+    );
+  }
+}

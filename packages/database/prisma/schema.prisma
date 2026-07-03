@@ -195,6 +195,7 @@ model User {
   createdCampaigns        Campaign[]               @relation("CampaignCreator")
   invitedCampaignApplications CampaignApplication[]  @relation("CampaignApplicationInviter")
   reviewedCampaignApplications CampaignApplication[] @relation("CampaignApplicationReviewer")
+  assignedCampaignCreatorAssignments CampaignCreatorAssignment[] @relation("CampaignCreatorAssignmentAssigner")
 
   @@map("users")
 }
@@ -243,6 +244,8 @@ model Organization {
   campaigns            Campaign[]
   campaignDeliverables CampaignDeliverable[]
   campaignApplications CampaignApplication[]
+  campaignCreatorAssignments CampaignCreatorAssignment[]
+  campaignCreatorDeliverables CampaignCreatorDeliverable[]
 
   @@index([status])
   @@map("organizations")
@@ -537,6 +540,7 @@ model CreatorProfile {
   documents        CreatorDocument[]
   contracts        CreatorContract[]
   campaignApplications CampaignApplication[]
+  campaignCreatorAssignments CampaignCreatorAssignment[]
 
   @@unique([organizationId, userId])
   @@index([organizationId])
@@ -751,6 +755,7 @@ model Campaign {
 
   deliverables CampaignDeliverable[]
   applications CampaignApplication[]
+  creatorAssignments CampaignCreatorAssignment[]
 
   @@index([organizationId])
   @@index([organizationId, status])
@@ -775,6 +780,8 @@ model CampaignDeliverable {
   metadata       Json                      @default("{}")
   createdAt      DateTime                  @default(now()) @map("created_at")
   updatedAt      DateTime                  @updatedAt @map("updated_at")
+
+  creatorDeliverables CampaignCreatorDeliverable[]
 
   @@index([organizationId])
   @@index([organizationId, campaignId])
@@ -821,6 +828,8 @@ model CampaignApplication {
   createdAt        DateTime                  @default(now()) @map("created_at")
   updatedAt        DateTime                  @updatedAt @map("updated_at")
 
+  assignment CampaignCreatorAssignment?
+
   @@index([organizationId])
   @@index([organizationId, campaignId])
   @@index([organizationId, status])
@@ -829,4 +838,84 @@ model CampaignApplication {
   @@index([creatorProfileId])
   @@index([campaignId, creatorProfileId])
   @@map("campaign_applications")
+}
+
+enum CampaignAssignmentStatus {
+  ASSIGNED
+  ACCEPTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum CampaignCreatorDeliverableStatus {
+  ASSIGNED
+  IN_PROGRESS
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model CampaignCreatorAssignment {
+  id               String                   @id @default(cuid())
+  organizationId   String                   @map("organization_id")
+  organization     Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  campaignId       String                   @map("campaign_id")
+  campaign         Campaign                 @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorProfileId String                   @map("creator_profile_id")
+  creatorProfile   CreatorProfile           @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  applicationId    String?                  @unique @map("application_id")
+  application      CampaignApplication?     @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  status           CampaignAssignmentStatus @default(ASSIGNED)
+  assignedByUserId String                   @map("assigned_by_user_id")
+  assignedBy       User                     @relation("CampaignCreatorAssignmentAssigner", fields: [assignedByUserId], references: [id], onDelete: Restrict)
+  assignedAt       DateTime                 @default(now()) @map("assigned_at")
+  acceptedAt       DateTime?                @map("accepted_at")
+  completedAt      DateTime?                @map("completed_at")
+  cancelledAt      DateTime?                @map("cancelled_at")
+  metadata         Json                     @default("{}")
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  updatedAt        DateTime                 @updatedAt @map("updated_at")
+
+  creatorDeliverables CampaignCreatorDeliverable[]
+
+  @@index([organizationId])
+  @@index([organizationId, campaignId])
+  @@index([organizationId, status])
+  @@index([campaignId])
+  @@index([campaignId, status])
+  @@index([creatorProfileId])
+  @@index([campaignId, creatorProfileId])
+  @@map("campaign_creator_assignments")
+}
+
+model CampaignCreatorDeliverable {
+  id                   String                         @id @default(cuid())
+  organizationId       String                         @map("organization_id")
+  organization         Organization                   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assignmentId         String                         @map("assignment_id")
+  assignment           CampaignCreatorAssignment      @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  campaignDeliverableId String                        @map("campaign_deliverable_id")
+  campaignDeliverable  CampaignDeliverable            @relation(fields: [campaignDeliverableId], references: [id], onDelete: Cascade)
+  status               CampaignCreatorDeliverableStatus @default(ASSIGNED)
+  dueAt                DateTime?                      @map("due_at")
+  submittedAt          DateTime?                      @map("submitted_at")
+  approvedAt           DateTime?                      @map("approved_at")
+  rejectedAt           DateTime?                      @map("rejected_at")
+  rejectionReason      String?                        @map("rejection_reason")
+  submissionUrl        String?                        @map("submission_url")
+  notes                String?
+  metadata             Json                           @default("{}")
+  createdAt            DateTime                       @default(now()) @map("created_at")
+  updatedAt            DateTime                       @updatedAt @map("updated_at")
+
+  @@unique([assignmentId, campaignDeliverableId])
+  @@index([organizationId])
+  @@index([organizationId, assignmentId])
+  @@index([organizationId, status])
+  @@index([assignmentId])
+  @@index([assignmentId, status])
+  @@index([campaignDeliverableId])
+  @@map("campaign_creator_deliverables")
 }
