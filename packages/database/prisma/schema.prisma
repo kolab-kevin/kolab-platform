@@ -192,6 +192,7 @@ model User {
   uploadedCreatorDocumentVersions CreatorDocumentVersion[] @relation("CreatorDocumentVersionUploader")
   signedCreatorContracts  CreatorContract[]        @relation("CreatorContractSigner")
   signedCreatorContractVersions CreatorContractVersion[] @relation("CreatorContractVersionSigner")
+  createdCampaigns        Campaign[]               @relation("CampaignCreator")
 
   @@map("users")
 }
@@ -237,6 +238,8 @@ model Organization {
   creatorDocumentVersions CreatorDocumentVersion[]
   creatorContracts     CreatorContract[]
   creatorContractVersions CreatorContractVersion[]
+  campaigns            Campaign[]
+  campaignDeliverables CampaignDeliverable[]
 
   @@index([status])
   @@map("organizations")
@@ -690,4 +693,88 @@ model CreatorContractVersion {
   @@index([contractId])
   @@index([signedByUserId])
   @@map("creator_contract_versions")
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+  ARCHIVED
+}
+
+enum CampaignType {
+  BRAND_DEAL
+  LIVE_STREAM
+  TIKTOK_SHOP
+  UGC
+  AFFILIATE
+  OTHER
+}
+
+enum CampaignDeliverableStatus {
+  DRAFT
+  OPEN
+  IN_PROGRESS
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model Campaign {
+  id                  String         @id @default(cuid())
+  organizationId      String         @map("organization_id")
+  organization        Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title               String
+  description         String?
+  brandName           String?        @map("brand_name")
+  campaignType        CampaignType   @map("campaign_type")
+  status              CampaignStatus @default(DRAFT)
+  budgetAmount        Decimal?       @map("budget_amount") @db.Decimal(12, 2)
+  budgetCurrency      String?        @map("budget_currency")
+  startsAt            DateTime?      @map("starts_at")
+  endsAt              DateTime?      @map("ends_at")
+  applicationDeadline DateTime?      @map("application_deadline")
+  brief               Json           @default("{}")
+  requirements        Json           @default("{}")
+  metadata            Json           @default("{}")
+  createdByUserId     String         @map("created_by_user_id")
+  createdBy           User           @relation("CampaignCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  deliverables CampaignDeliverable[]
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, campaignType])
+  @@index([organizationId, startsAt])
+  @@index([organizationId, endsAt])
+  @@index([createdByUserId])
+  @@map("campaigns")
+}
+
+model CampaignDeliverable {
+  id             String                    @id @default(cuid())
+  organizationId String                    @map("organization_id")
+  organization   Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  campaignId     String                    @map("campaign_id")
+  campaign       Campaign                  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  status         CampaignDeliverableStatus @default(DRAFT)
+  dueAt          DateTime?                 @map("due_at")
+  requirements   Json                      @default("{}")
+  metadata       Json                      @default("{}")
+  createdAt      DateTime                  @default(now()) @map("created_at")
+  updatedAt      DateTime                  @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([organizationId, campaignId])
+  @@index([organizationId, status])
+  @@index([campaignId])
+  @@index([campaignId, status])
+  @@map("campaign_deliverables")
 }

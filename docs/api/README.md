@@ -58,6 +58,7 @@ Implemented Release 0.2 modules:
 - [Agency management](./agency.md) (Release 0.3)
 - [Recruitment CRM](./recruitment.md) (Release 0.3)
 - [Recruiter profiles](./recruiters.md) (Release 0.3)
+- [Campaigns](./campaigns.md) (Release 0.4 foundation)
 
 **Release 0.3 (planning):**
 
@@ -65,6 +66,7 @@ Implemented Release 0.2 modules:
 
 **Release 0.4+ (planning):**
 
+- [Campaigns API](./campaigns.md) (foundation implemented)
 - [Storage API (presign helpers)](./storage.md)
 - [Creator Documents & Contracts API](./creator-documents-contracts.md)
 - [Creators API (implemented)](./creators.md)

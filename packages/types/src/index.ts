@@ -2,6 +2,7 @@ export * from './admin';
 export * from './agency';
 export * from './audit';
 export * from './auth';
+export * from './campaigns';
 export * from './creator';
 export * from './creator-compliance';
 export * from './creator-documents-contracts';

@@ -40,6 +40,12 @@ export const AUDIT_ACTION = {
   CREATOR_CONTRACT_DOWNLOADED: 'creator.contract.downloaded',
   RECRUITER_CREATED: 'recruiter.created',
   RECRUITER_UPDATED: 'recruiter.updated',
+  CAMPAIGN_CREATED: 'campaign.created',
+  CAMPAIGN_UPDATED: 'campaign.updated',
+  CAMPAIGN_STATUS_CHANGED: 'campaign.status_changed',
+  CAMPAIGN_DELIVERABLE_CREATED: 'campaign.deliverable.created',
+  CAMPAIGN_DELIVERABLE_UPDATED: 'campaign.deliverable.updated',
+  CAMPAIGN_DELIVERABLE_STATUS_CHANGED: 'campaign.deliverable.status_changed',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {
@@ -54,4 +60,6 @@ export const AUDIT_TARGET_TYPE = {
   CREATOR_DOCUMENT: 'creator_document',
   CREATOR_CONTRACT: 'creator_contract',
   RECRUITER: 'recruiter',
+  CAMPAIGN: 'campaign',
+  CAMPAIGN_DELIVERABLE: 'campaign_deliverable',
 } as const;
