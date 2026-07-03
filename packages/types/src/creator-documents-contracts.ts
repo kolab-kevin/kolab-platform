@@ -398,6 +398,20 @@ export const UpdateCreatorContractStatusSchema = z
 
 export type UpdateCreatorContractStatusInput = z.infer<typeof UpdateCreatorContractStatusSchema>;
 
+export const SignCreatorContractSchema = z
+  .object({
+    versionId: z.string().min(1).optional(),
+    signedByUserId: z.string().min(1).optional(),
+    signedAt: isoDateTimeSchema.optional(),
+    note: z.string().trim().min(1).max(2000).optional(),
+  })
+  .strict()
+  .refine((data) => objectHasNoRawFileFields(data), {
+    message: 'Raw file upload fields are not allowed on contract sign request',
+  });
+
+export type SignCreatorContractInput = z.infer<typeof SignCreatorContractSchema>;
+
 export const DownloadCreatorContractSchema = z
   .object({
     versionId: z.string().min(1).optional(),

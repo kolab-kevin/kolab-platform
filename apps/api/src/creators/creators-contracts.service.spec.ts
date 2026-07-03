@@ -429,6 +429,177 @@ describe('CreatorsContractsService', () => {
       }),
     ).rejects.toThrow(ConflictException);
   });
+
+  describe('signContract', () => {
+    const sentContractWithVersion = {
+      ...baseContract,
+      status: 'SENT',
+      versions: [baseVersion],
+    };
+
+    it('signs the latest uploaded version', async () => {
+      (prisma.creatorContract.findFirst as jest.Mock).mockResolvedValue(sentContractWithVersion);
+      (prisma.$transaction as jest.Mock).mockImplementation(async (callback) =>
+        callback({
+          creatorContractVersion: { update: jest.fn() },
+          creatorContract: {
+            update: jest.fn().mockResolvedValue({
+              ...sentContractWithVersion,
+              status: 'SIGNED',
+              signedAt: new Date('2026-07-02T14:00:00.000Z'),
+              signedByUserId: 'manager-1',
+              versions: [
+                {
+                  ...baseVersion,
+                  signedAt: new Date('2026-07-02T14:00:00.000Z'),
+                  signedByUserId: 'manager-1',
+                },
+              ],
+            }),
+          },
+        }),
+      );
+
+      const result = await service.signContract(managerToken, 'creator-1', 'contract-1');
+
+      expect(result.status).toBe('SIGNED');
+      expect(result.signedByUserId).toBe('manager-1');
+      expect(auditService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: AUDIT_ACTION.CREATOR_CONTRACT_SIGNED,
+          targetType: AUDIT_TARGET_TYPE.CREATOR_CONTRACT,
+          metadata: expect.objectContaining({
+            versionId: 'ver-1',
+            previousStatus: 'SENT',
+            signedByUserId: 'manager-1',
+          }),
+        }),
+      );
+    });
+
+    it('signs a specified version with custom signer and timestamp', async () => {
+      const secondVersion = {
+        ...baseVersion,
+        id: 'ver-2',
+        versionNumber: 2,
+        storageKey:
+          'organizations/org-1/creators/creator-1/contracts/contract-1/versions/ver-2/amended.pdf',
+        fileName: 'amended.pdf',
+      };
+      (prisma.creatorContract.findFirst as jest.Mock).mockResolvedValue({
+        ...sentContractWithVersion,
+        versions: [baseVersion, secondVersion],
+      });
+      (prisma.$transaction as jest.Mock).mockImplementation(async (callback) =>
+        callback({
+          creatorContractVersion: { update: jest.fn() },
+          creatorContract: {
+            update: jest.fn().mockResolvedValue({
+              ...sentContractWithVersion,
+              status: 'SIGNED',
+              signedAt: new Date('2026-07-02T15:00:00.000Z'),
+              signedByUserId: 'signer-9',
+              versions: [
+                baseVersion,
+                {
+                  ...secondVersion,
+                  signedAt: new Date('2026-07-02T15:00:00.000Z'),
+                  signedByUserId: 'signer-9',
+                },
+              ],
+            }),
+          },
+        }),
+      );
+
+      const result = await service.signContract(managerToken, 'creator-1', 'contract-1', {
+        versionId: 'ver-2',
+        signedByUserId: 'signer-9',
+        signedAt: '2026-07-02T15:00:00.000Z',
+        note: 'Signed in person',
+      });
+
+      expect(result.status).toBe('SIGNED');
+      expect(result.signedByUserId).toBe('signer-9');
+      expect(auditService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: AUDIT_ACTION.CREATOR_CONTRACT_SIGNED,
+          metadata: expect.objectContaining({
+            versionId: 'ver-2',
+            signedByUserId: 'signer-9',
+            note: 'Signed in person',
+          }),
+        }),
+      );
+    });
+
+    it('rejects signing when no uploaded version exists', async () => {
+      (prisma.creatorContract.findFirst as jest.Mock).mockResolvedValue({
+        ...sentContractWithVersion,
+        versions: [],
+      });
+
+      await expect(service.signContract(managerToken, 'creator-1', 'contract-1')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('rejects signing a version without storageKey', async () => {
+      (prisma.creatorContract.findFirst as jest.Mock).mockResolvedValue({
+        ...sentContractWithVersion,
+        versions: [{ ...baseVersion, id: 'ver-empty', storageKey: null }],
+      });
+
+      await expect(
+        service.signContract(managerToken, 'creator-1', 'contract-1', {
+          versionId: 'ver-empty',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('returns idempotently when contract is already signed', async () => {
+      (prisma.creatorContract.findFirst as jest.Mock).mockResolvedValue({
+        ...baseContract,
+        status: 'SIGNED',
+        signedAt: new Date('2026-07-02T14:00:00.000Z'),
+        signedByUserId: 'manager-1',
+        versions: [
+          {
+            ...baseVersion,
+            signedAt: new Date('2026-07-02T14:00:00.000Z'),
+            signedByUserId: 'manager-1',
+          },
+        ],
+      });
+
+      const result = await service.signContract(managerToken, 'creator-1', 'contract-1');
+
+      expect(result.status).toBe('SIGNED');
+      expect(auditService.record).not.toHaveBeenCalled();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('enforces organization isolation', async () => {
+      (prisma.creatorContract.findFirst as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.signContract(otherOrgToken, 'creator-1', 'contract-1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('keeps signed contracts immutable after signing', async () => {
+      (prisma.creatorContract.findFirst as jest.Mock).mockResolvedValue({
+        ...baseContract,
+        status: 'SIGNED',
+      });
+
+      await expect(
+        service.updateContract(managerToken, 'creator-1', 'contract-1', {
+          title: 'Changed title',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
 });
 
 describe('contract status workflow helpers', () => {

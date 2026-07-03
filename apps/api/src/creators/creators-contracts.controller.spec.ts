@@ -26,6 +26,7 @@ describe('CreatorsContractsController authorization', () => {
             updateContract: jest.fn(),
             addContractVersion: jest.fn(),
             updateContractStatus: jest.fn(),
+            signContract: jest.fn(),
             downloadContract: jest.fn(),
           },
         },
@@ -83,6 +84,20 @@ describe('CreatorsContractsController authorization', () => {
     expect(() =>
       permissionsGuard.canActivate(createContext('updateContractStatus', viewerUser)),
     ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to sign contracts with crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(permissionsGuard.canActivate(createContext('signContract', recruiterUser))).toBe(true);
+  });
+
+  it('denies viewers from signing contracts', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() => permissionsGuard.canActivate(createContext('signContract', viewerUser))).toThrow(
+      ForbiddenException,
+    );
   });
 
   it('allows recruiters to download contracts with crm:read', () => {

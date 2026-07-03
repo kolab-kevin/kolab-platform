@@ -36,6 +36,7 @@ export const AUDIT_ACTION = {
   CREATOR_CONTRACT_UPDATED: 'creator.contract.updated',
   CREATOR_CONTRACT_VERSION_ADDED: 'creator.contract.version_added',
   CREATOR_CONTRACT_STATUS_CHANGED: 'creator.contract.status_changed',
+  CREATOR_CONTRACT_SIGNED: 'creator.contract.signed',
   CREATOR_CONTRACT_DOWNLOADED: 'creator.contract.downloaded',
   RECRUITER_CREATED: 'recruiter.created',
   RECRUITER_UPDATED: 'recruiter.updated',
