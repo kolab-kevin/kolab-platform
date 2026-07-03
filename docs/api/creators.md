@@ -42,20 +42,27 @@ All routes are scoped to the JWT `organizationId`. Users must have an active org
 
 ## Endpoints
 
-| Method | Path                                             | Permission   | Description                       |
-| ------ | ------------------------------------------------ | ------------ | --------------------------------- |
-| GET    | `/api/creators`                                  | `crm:read`   | List creators (filter, cursor)    |
-| GET    | `/api/creators/:id`                              | `crm:read`   | Get creator detail                |
-| PATCH  | `/api/creators/:id`                              | `crm:update` | Update creator profile fields     |
-| GET    | `/api/creators/:id/platform-accounts`            | `crm:read`   | List creator platform accounts    |
-| POST   | `/api/creators/:id/platform-accounts`            | `crm:update` | Add a creator platform account    |
-| PATCH  | `/api/creators/:id/platform-accounts/:accountId` | `crm:update` | Update a creator platform account |
-| DELETE | `/api/creators/:id/platform-accounts/:accountId` | `crm:update` | Remove a creator platform account |
-| GET    | `/api/creators/:id/skills`                       | `crm:read`   | Get creator skills profile        |
-| PATCH  | `/api/creators/:id/skills`                       | `crm:update` | Update creator skills profile     |
-| GET    | `/api/creators/:id/availability`                 | `crm:read`   | Get creator availability          |
-| PATCH  | `/api/creators/:id/availability`                 | `crm:update` | Update creator availability       |
-| POST   | `/api/recruitment/leads/:id/convert`             | `crm:update` | Convert lead to creator           |
+| Method | Path                                               | Permission   | Description                        |
+| ------ | -------------------------------------------------- | ------------ | ---------------------------------- |
+| GET    | `/api/creators`                                    | `crm:read`   | List creators (filter, cursor)     |
+| GET    | `/api/creators/:id`                                | `crm:read`   | Get creator detail                 |
+| PATCH  | `/api/creators/:id`                                | `crm:update` | Update creator profile fields      |
+| GET    | `/api/creators/:id/platform-accounts`              | `crm:read`   | List creator platform accounts     |
+| POST   | `/api/creators/:id/platform-accounts`              | `crm:update` | Add a creator platform account     |
+| PATCH  | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update` | Update a creator platform account  |
+| DELETE | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update` | Remove a creator platform account  |
+| GET    | `/api/creators/:id/skills`                         | `crm:read`   | Get creator skills profile         |
+| PATCH  | `/api/creators/:id/skills`                         | `crm:update` | Update creator skills profile      |
+| GET    | `/api/creators/:id/availability`                   | `crm:read`   | Get creator availability           |
+| PATCH  | `/api/creators/:id/availability`                   | `crm:update` | Update creator availability        |
+| GET    | `/api/creators/:id/documents`                      | `crm:read`   | List creator documents             |
+| GET    | `/api/creators/:id/documents/:documentId`          | `crm:read`   | Get creator document detail        |
+| POST   | `/api/creators/:id/documents`                      | `crm:update` | Create creator document            |
+| PATCH  | `/api/creators/:id/documents/:documentId`          | `crm:update` | Update creator document metadata   |
+| POST   | `/api/creators/:id/documents/:documentId/versions` | `crm:update` | Register uploaded document version |
+| POST   | `/api/creators/:id/documents/:documentId/review`   | `crm:update` | Review creator document            |
+| POST   | `/api/creators/:id/documents/:documentId/download` | `crm:read`   | Presigned document download URL    |
+| POST   | `/api/recruitment/leads/:id/convert`               | `crm:update` | Convert lead to creator            |
 
 ---
 
@@ -455,5 +462,7 @@ Every query and mutation is scoped to `organizationId` from the JWT. Creators in
 
 ## Related docs
 
+- [Creator Documents & Contracts API](./creator-documents-contracts.md)
+- [Storage API](./storage.md)
 - [Recruitment CRM API](./recruitment.md)
 - Shared types: `packages/types/src/creator.ts`
