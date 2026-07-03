@@ -30,6 +30,12 @@ describe('CampaignsController authorization', () => {
             createDeliverable: jest.fn(),
             updateDeliverable: jest.fn(),
             updateDeliverableStatus: jest.fn(),
+            listApplications: jest.fn(),
+            inviteApplication: jest.fn(),
+            applyToCampaign: jest.fn(),
+            acceptApplication: jest.fn(),
+            rejectApplication: jest.fn(),
+            withdrawApplication: jest.fn(),
           },
         },
       ],
@@ -88,6 +94,38 @@ describe('CampaignsController authorization', () => {
 
     expect(() =>
       permissionsGuard.canActivate(createContext('updateCampaignStatus', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to list applications with crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(permissionsGuard.canActivate(createContext('listApplications', recruiterUser))).toBe(
+      true,
+    );
+  });
+
+  it('denies viewers from inviting creators', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('inviteApplication', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to accept applications with crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(permissionsGuard.canActivate(createContext('acceptApplication', recruiterUser))).toBe(
+      true,
+    );
+  });
+
+  it('denies viewers from withdrawing applications', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('withdrawApplication', viewerUser)),
     ).toThrow(ForbiddenException);
   });
 });

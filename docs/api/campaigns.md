@@ -1,4 +1,4 @@
-# Campaigns API (Release 0.4 foundation)
+# Campaigns API (Release 0.4 foundation + creator applications)
 
 **Status:** Implemented in `@kolab/api`  
 **Base path:** `/api/campaigns`  
@@ -8,18 +8,20 @@
 
 ## Overview
 
-Campaign Management provides organization-scoped campaign metadata and deliverable workflow APIs. This foundation release covers campaign CRUD, status transitions, and deliverable tracking only.
+Campaign Management provides organization-scoped campaign metadata, deliverable workflow, and creator application/invitation APIs.
 
-**Not included:** creator applications, creator assignments, payments, analytics dashboards, livestream schedules, or TikTok integration.
+**Not included:** creator assignments to deliverables, payments, analytics dashboards, livestream schedules, or TikTok integration.
 
 ---
 
 ## Permissions
 
-| Permission   | Used for                                      |
-| ------------ | --------------------------------------------- |
-| `crm:read`   | List/get campaigns and deliverables           |
-| `crm:update` | Create/update campaigns, deliverables, status |
+| Permission   | Used for                                                         |
+| ------------ | ---------------------------------------------------------------- |
+| `crm:read`   | List/get campaigns, deliverables, and applications               |
+| `crm:update` | Create/update campaigns, deliverables, applications, and reviews |
+
+All routes require active `OrganizationMembership`. Campaigns are scoped to JWT `organizationId`.
 
 All routes require active `OrganizationMembership`. Campaigns are scoped to JWT `organizationId`.
 
@@ -39,17 +41,23 @@ All routes require active `OrganizationMembership`. Campaigns are scoped to JWT 
 
 ## Endpoints
 
-| Method | Path                                                            | Permission   | Description                     |
-| ------ | --------------------------------------------------------------- | ------------ | ------------------------------- |
-| GET    | `/api/campaigns`                                                | `crm:read`   | List campaigns (filter, cursor) |
-| POST   | `/api/campaigns`                                                | `crm:update` | Create campaign (`DRAFT`)       |
-| GET    | `/api/campaigns/:campaignId`                                    | `crm:read`   | Get campaign detail             |
-| PATCH  | `/api/campaigns/:campaignId`                                    | `crm:update` | Update campaign fields          |
-| POST   | `/api/campaigns/:campaignId/status`                             | `crm:update` | Update campaign status          |
-| GET    | `/api/campaigns/:campaignId/deliverables`                       | `crm:read`   | List campaign deliverables      |
-| POST   | `/api/campaigns/:campaignId/deliverables`                       | `crm:update` | Create deliverable (`DRAFT`)    |
-| PATCH  | `/api/campaigns/:campaignId/deliverables/:deliverableId`        | `crm:update` | Update deliverable fields       |
-| POST   | `/api/campaigns/:campaignId/deliverables/:deliverableId/status` | `crm:update` | Update deliverable status       |
+| Method | Path                                                              | Permission   | Description                     |
+| ------ | ----------------------------------------------------------------- | ------------ | ------------------------------- |
+| GET    | `/api/campaigns`                                                  | `crm:read`   | List campaigns (filter, cursor) |
+| POST   | `/api/campaigns`                                                  | `crm:update` | Create campaign (`DRAFT`)       |
+| GET    | `/api/campaigns/:campaignId`                                      | `crm:read`   | Get campaign detail             |
+| PATCH  | `/api/campaigns/:campaignId`                                      | `crm:update` | Update campaign fields          |
+| POST   | `/api/campaigns/:campaignId/status`                               | `crm:update` | Update campaign status          |
+| GET    | `/api/campaigns/:campaignId/deliverables`                         | `crm:read`   | List campaign deliverables      |
+| POST   | `/api/campaigns/:campaignId/deliverables`                         | `crm:update` | Create deliverable (`DRAFT`)    |
+| PATCH  | `/api/campaigns/:campaignId/deliverables/:deliverableId`          | `crm:update` | Update deliverable fields       |
+| POST   | `/api/campaigns/:campaignId/deliverables/:deliverableId/status`   | `crm:update` | Update deliverable status       |
+| GET    | `/api/campaigns/:campaignId/applications`                         | `crm:read`   | List campaign applications      |
+| POST   | `/api/campaigns/:campaignId/applications/invite`                  | `crm:update` | Invite creator (`INVITED`)      |
+| POST   | `/api/campaigns/:campaignId/applications/apply`                   | `crm:update` | Creator applies (`APPLIED`)     |
+| POST   | `/api/campaigns/:campaignId/applications/:applicationId/accept`   | `crm:update` | Accept application              |
+| POST   | `/api/campaigns/:campaignId/applications/:applicationId/reject`   | `crm:update` | Reject application              |
+| POST   | `/api/campaigns/:campaignId/applications/:applicationId/withdraw` | `crm:update` | Withdraw application            |
 
 ---
 
@@ -138,6 +146,59 @@ Deliverables cannot be added to archived or cancelled campaigns. Approved or can
 
 ---
 
+## Creator applications
+
+Applications link a `CreatorProfile` to a campaign through an invite or self-apply workflow. At most **one active application** (`INVITED` or `APPLIED`) may exist per campaign + creator pair.
+
+Applications cannot be submitted to archived, cancelled, or completed campaigns. The campaign and creator profile must belong to the JWT organization.
+
+### Application status workflow
+
+| From        | Allowed next statuses                                       |
+| ----------- | ----------------------------------------------------------- |
+| `INVITED`   | `APPLIED`, `ACCEPTED`, `REJECTED`, `WITHDRAWN`, `CANCELLED` |
+| `APPLIED`   | `ACCEPTED`, `REJECTED`, `WITHDRAWN`, `CANCELLED`            |
+| `ACCEPTED`  | _(terminal)_                                                |
+| `REJECTED`  | _(terminal)_                                                |
+| `WITHDRAWN` | _(terminal)_                                                |
+| `CANCELLED` | _(terminal)_                                                |
+
+When a creator applies while an `INVITED` record exists, the invite transitions to `APPLIED` instead of creating a duplicate row.
+
+### POST `/api/campaigns/:campaignId/applications/invite`
+
+Body: `creatorProfileId` (required), optional `message`, optional `metadata`.
+
+Creates `INVITED` application with `source: INVITE`. Sets `invitedByUserId` from JWT `sub`.
+
+### POST `/api/campaigns/:campaignId/applications/apply`
+
+Body: `creatorProfileId` (required), optional `message`, optional `metadata`.
+
+Creates `APPLIED` application with `source: CREATOR_APPLIED` and sets `appliedAt`, or transitions an existing `INVITED` row to `APPLIED`.
+
+### POST `/api/campaigns/:campaignId/applications/:applicationId/accept`
+
+Optional `metadata`. Sets `reviewedByUserId`, `reviewedAt`, status `ACCEPTED`.
+
+### POST `/api/campaigns/:campaignId/applications/:applicationId/reject`
+
+Optional `decisionReason`, optional `metadata`. Sets review fields and status `REJECTED`.
+
+### POST `/api/campaigns/:campaignId/applications/:applicationId/withdraw`
+
+Optional `metadata`. Sets status `WITHDRAWN`.
+
+### Application sources
+
+`INVITE`, `CREATOR_APPLIED`, `MANUAL`
+
+### Application statuses
+
+`INVITED`, `APPLIED`, `ACCEPTED`, `REJECTED`, `WITHDRAWN`, `CANCELLED`
+
+---
+
 ## Campaign types
 
 `BRAND_DEAL`, `LIVE_STREAM`, `TIKTOK_SHOP`, `UGC`, `AFFILIATE`, `OTHER`
@@ -162,12 +223,17 @@ Deliverables cannot be added to archived or cancelled campaigns. Approved or can
 | `campaign.deliverable.created`        | Deliverable created        | `campaign_deliverable` |
 | `campaign.deliverable.updated`        | Deliverable updated        | `campaign_deliverable` |
 | `campaign.deliverable.status_changed` | Deliverable status changed | `campaign_deliverable` |
+| `campaign.application.invited`        | Creator invited            | `campaign_application` |
+| `campaign.application.applied`        | Creator applied            | `campaign_application` |
+| `campaign.application.accepted`       | Application accepted       | `campaign_application` |
+| `campaign.application.rejected`       | Application rejected       | `campaign_application` |
+| `campaign.application.withdrawn`      | Application withdrawn      | `campaign_application` |
 
 ---
 
 ## Organization isolation
 
-Every query filters by JWT `organizationId`. Cross-org campaign or deliverable ids return `404`.
+Every query filters by JWT `organizationId`. Cross-org campaign, deliverable, or application ids return `404`.
 
 ---
 
@@ -181,7 +247,7 @@ Every query filters by JWT `organizationId`. Cross-org campaign or deliverable i
 
 ## Future extension points
 
-- Creator applications and assignments
+- Creator assignments to deliverables
 - Campaign analytics dashboards
 - Payment and payout linkage
 - Livestream schedule integration

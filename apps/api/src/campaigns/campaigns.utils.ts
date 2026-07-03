@@ -114,3 +114,51 @@ export function assertDeliverablesAllowedForCampaign(status: CampaignStatus): vo
     );
   }
 }
+
+export const ACTIVE_CAMPAIGN_APPLICATION_STATUSES = ['INVITED', 'APPLIED'] as const;
+
+export type ActiveCampaignApplicationStatus = (typeof ACTIVE_CAMPAIGN_APPLICATION_STATUSES)[number];
+
+export type CampaignApplicationStatus =
+  'INVITED' | 'APPLIED' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN' | 'CANCELLED';
+
+const APPLICATION_STATUS_TRANSITIONS: Record<
+  CampaignApplicationStatus,
+  CampaignApplicationStatus[]
+> = {
+  INVITED: ['APPLIED', 'ACCEPTED', 'REJECTED', 'WITHDRAWN', 'CANCELLED'],
+  APPLIED: ['ACCEPTED', 'REJECTED', 'WITHDRAWN', 'CANCELLED'],
+  ACCEPTED: [],
+  REJECTED: [],
+  WITHDRAWN: [],
+  CANCELLED: [],
+};
+
+export function assertAllowedApplicationStatusTransition(
+  currentStatus: CampaignApplicationStatus,
+  nextStatus: CampaignApplicationStatus,
+): void {
+  if (currentStatus === nextStatus) {
+    throw new BadRequestException('Application status is already set to the requested value');
+  }
+
+  const allowed = APPLICATION_STATUS_TRANSITIONS[currentStatus] ?? [];
+
+  if (!allowed.includes(nextStatus)) {
+    throw new BadRequestException(
+      `Cannot transition application status from ${currentStatus} to ${nextStatus}`,
+    );
+  }
+}
+
+export function assertApplicationsAllowedForCampaign(status: CampaignStatus): void {
+  if (status === 'ARCHIVED' || status === 'CANCELLED' || status === 'COMPLETED') {
+    throw new BadRequestException(
+      'Applications cannot be submitted to archived, cancelled, or completed campaigns',
+    );
+  }
+}
+
+export function isActiveApplicationStatus(status: CampaignApplicationStatus): boolean {
+  return (ACTIVE_CAMPAIGN_APPLICATION_STATUSES as readonly string[]).includes(status);
+}

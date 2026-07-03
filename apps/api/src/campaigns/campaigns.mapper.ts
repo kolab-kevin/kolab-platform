@@ -1,8 +1,9 @@
 import type {
   Campaign as PrismaCampaign,
+  CampaignApplication as PrismaCampaignApplication,
   CampaignDeliverable as PrismaCampaignDeliverable,
 } from '@kolab/database';
-import type { Campaign, CampaignDeliverable } from '@kolab/types';
+import type { Campaign, CampaignApplication, CampaignDeliverable } from '@kolab/types';
 
 import { toMetadataRecord } from './campaigns.utils';
 
@@ -50,5 +51,25 @@ export function toCampaignDeliverable(deliverable: PrismaCampaignDeliverable): C
     metadata: toMetadataRecord(deliverable.metadata),
     createdAt: deliverable.createdAt.toISOString(),
     updatedAt: deliverable.updatedAt.toISOString(),
+  };
+}
+
+export function toCampaignApplication(application: PrismaCampaignApplication): CampaignApplication {
+  return {
+    id: application.id,
+    organizationId: application.organizationId,
+    campaignId: application.campaignId,
+    creatorProfileId: application.creatorProfileId,
+    status: application.status as CampaignApplication['status'],
+    source: application.source as CampaignApplication['source'],
+    message: application.message,
+    invitedByUserId: application.invitedByUserId,
+    appliedAt: application.appliedAt?.toISOString() ?? null,
+    reviewedByUserId: application.reviewedByUserId,
+    reviewedAt: application.reviewedAt?.toISOString() ?? null,
+    decisionReason: application.decisionReason,
+    metadata: toMetadataRecord(application.metadata),
+    createdAt: application.createdAt.toISOString(),
+    updatedAt: application.updatedAt.toISOString(),
   };
 }
