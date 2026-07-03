@@ -5,6 +5,7 @@ import { AdminModule } from './admin/admin.module';
 import { AgencyModule } from './agency/agency.module';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
+import { CampaignsModule } from './campaigns/campaigns.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { OrganizationRolesGuard } from './common/guards/organization-roles.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
@@ -34,6 +35,7 @@ import { StorageModule } from './storage/storage.module';
     ProfileModule,
     AdminModule,
     AgencyModule,
+    CampaignsModule,
     CreatorsModule,
     RecruitmentModule,
     RecruitersModule,
