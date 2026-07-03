@@ -41,8 +41,20 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Prepare backend workspace packages
-        run: pnpm ci:prepare-backend
+      - name: Prisma generate
+        run: pnpm --filter @kolab/database exec prisma generate --schema prisma/schema.prisma
+      - name: Build @kolab/types
+        run: pnpm --filter @kolab/types build
+      - name: Build @kolab/config
+        run: pnpm --filter @kolab/config build
+      - name: Build @kolab/auth
+        run: pnpm --filter @kolab/auth build
+      - name: Build @kolab/database
+        run: pnpm --filter @kolab/database build
+      - name: Build @kolab/storage
+        run: pnpm --filter @kolab/storage build
+      - name: Build @kolab/observability
+        run: pnpm --filter @kolab/observability build
       - name: Lint @kolab/api
         run: pnpm --filter @kolab/api lint
       - name: Markdownlint docs
@@ -64,33 +76,26 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Prisma validate
         run: pnpm --filter @kolab/database exec prisma validate --schema prisma/schema.prisma
-      - name: Prepare backend workspace packages
-        run: pnpm ci:prepare-backend
+      - name: Prisma generate
+        run: pnpm --filter @kolab/database exec prisma generate --schema prisma/schema.prisma
+      - name: Build @kolab/types
+        run: pnpm --filter @kolab/types build
+      - name: Build @kolab/config
+        run: pnpm --filter @kolab/config build
+      - name: Build @kolab/auth
+        run: pnpm --filter @kolab/auth build
+      - name: Build @kolab/database
+        run: pnpm --filter @kolab/database build
+      - name: Build @kolab/storage
+        run: pnpm --filter @kolab/storage build
+      - name: Build @kolab/observability
+        run: pnpm --filter @kolab/observability build
       - name: Test @kolab/auth
         run: pnpm --filter @kolab/auth test
       - name: Test @kolab/storage
         run: pnpm --filter @kolab/storage test
       - name: Test @kolab/api
         run: pnpm --filter @kolab/api test
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-      - name: Prepare backend workspace packages
-        run: pnpm ci:prepare-backend
-      - name: Build @kolab/api
-        run: pnpm --filter @kolab/api build
 
   typecheck:
     name: Typecheck
@@ -106,10 +111,54 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Prepare backend workspace packages
-        run: pnpm ci:prepare-backend
+      - name: Prisma generate
+        run: pnpm --filter @kolab/database exec prisma generate --schema prisma/schema.prisma
+      - name: Build @kolab/types
+        run: pnpm --filter @kolab/types build
+      - name: Build @kolab/config
+        run: pnpm --filter @kolab/config build
+      - name: Build @kolab/auth
+        run: pnpm --filter @kolab/auth build
+      - name: Build @kolab/database
+        run: pnpm --filter @kolab/database build
+      - name: Build @kolab/storage
+        run: pnpm --filter @kolab/storage build
+      - name: Build @kolab/observability
+        run: pnpm --filter @kolab/observability build
       - name: Typecheck @kolab/api
         run: pnpm --filter @kolab/api typecheck
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Prisma generate
+        run: pnpm --filter @kolab/database exec prisma generate --schema prisma/schema.prisma
+      - name: Build @kolab/types
+        run: pnpm --filter @kolab/types build
+      - name: Build @kolab/config
+        run: pnpm --filter @kolab/config build
+      - name: Build @kolab/auth
+        run: pnpm --filter @kolab/auth build
+      - name: Build @kolab/database
+        run: pnpm --filter @kolab/database build
+      - name: Build @kolab/storage
+        run: pnpm --filter @kolab/storage build
+      - name: Build @kolab/observability
+        run: pnpm --filter @kolab/observability build
+      - name: Build @kolab/api
+        run: pnpm --filter @kolab/api build
 
   audit:
     name: Security audit
