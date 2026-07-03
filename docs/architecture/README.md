@@ -42,6 +42,10 @@ Enterprise monorepo powering multiple business verticals from a single foundatio
 
 **Release 0.4+ (planning):** Creator Documents & Contracts — see [Documents & Contracts architecture](./creator-documents-contracts.md) and [Product plan](../product/creator-documents-contracts.md).
 
+**Release 0.5+ (planning):** Live Intelligence & Gifter Analytics — see [Live Intelligence architecture](./live-intelligence.md) and [Product plan](../product/live-intelligence.md).
+
+**Credits & token (planning):** KOLAB Credits ledger first — see [Token economy architecture](./token-economy.md) and [Product plan](../product/token-economy.md).
+
 ## Infrastructure
 
 - PostgreSQL 16 — primary datastore (Prisma ORM)
