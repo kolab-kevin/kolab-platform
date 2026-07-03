@@ -46,6 +46,11 @@ export const AUDIT_ACTION = {
   CAMPAIGN_DELIVERABLE_CREATED: 'campaign.deliverable.created',
   CAMPAIGN_DELIVERABLE_UPDATED: 'campaign.deliverable.updated',
   CAMPAIGN_DELIVERABLE_STATUS_CHANGED: 'campaign.deliverable.status_changed',
+  CAMPAIGN_APPLICATION_INVITED: 'campaign.application.invited',
+  CAMPAIGN_APPLICATION_APPLIED: 'campaign.application.applied',
+  CAMPAIGN_APPLICATION_ACCEPTED: 'campaign.application.accepted',
+  CAMPAIGN_APPLICATION_REJECTED: 'campaign.application.rejected',
+  CAMPAIGN_APPLICATION_WITHDRAWN: 'campaign.application.withdrawn',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {
@@ -62,4 +67,5 @@ export const AUDIT_TARGET_TYPE = {
   RECRUITER: 'recruiter',
   CAMPAIGN: 'campaign',
   CAMPAIGN_DELIVERABLE: 'campaign_deliverable',
+  CAMPAIGN_APPLICATION: 'campaign_application',
 } as const;

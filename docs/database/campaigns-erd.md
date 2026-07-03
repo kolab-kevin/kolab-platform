@@ -1,15 +1,15 @@
-# Campaign Management Data Model (Release 0.4 foundation)
+# Campaign Management Data Model (Release 0.4 foundation + applications)
 
-**Status:** Implemented in `feature/campaign-foundation`  
+**Status:** Implemented in `feature/campaign-foundation` and `feature/campaign-creator-applications`  
 Prisma schema: `packages/database/prisma/schema.prisma`
 
 ---
 
 ## Overview
 
-Campaign Management adds organization-scoped campaign metadata and deliverable workflow tables. All rows include `organizationId` and cascade-delete with the parent organization.
+Campaign Management adds organization-scoped campaign metadata, deliverable workflow, and creator application tables. All rows include `organizationId` and cascade-delete with the parent organization.
 
-This foundation does **not** include creator assignments, applications, payments, or analytics tables.
+Creator assignments to deliverables, payments, and analytics tables are not included yet.
 
 ---
 
@@ -19,8 +19,13 @@ This foundation does **not** include creator assignments, applications, payments
 erDiagram
   Organization ||--o{ Campaign : has
   Organization ||--o{ CampaignDeliverable : has
+  Organization ||--o{ CampaignApplication : has
   User ||--o{ Campaign : "created campaigns"
+  User ||--o{ CampaignApplication : "invited applications"
+  User ||--o{ CampaignApplication : "reviewed applications"
+  CreatorProfile ||--o{ CampaignApplication : has
   Campaign ||--o{ CampaignDeliverable : has
+  Campaign ||--o{ CampaignApplication : has
 
   Campaign {
     string id PK
@@ -52,6 +57,24 @@ erDiagram
     enum status
     datetime dueAt
     json requirements
+    json metadata
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  CampaignApplication {
+    string id PK
+    string organizationId FK
+    string campaignId FK
+    string creatorProfileId FK
+    enum status
+    enum source
+    string message
+    string invitedByUserId FK
+    datetime appliedAt
+    string reviewedByUserId FK
+    datetime reviewedAt
+    string decisionReason
     json metadata
     datetime createdAt
     datetime updatedAt
@@ -107,6 +130,32 @@ Indexes: `(organization_id)`, `(organization_id, campaign_id)`, `(organization_i
 
 ---
 
+## `campaign_applications`
+
+| Column                | Type                        | Notes                                      |
+| --------------------- | --------------------------- | ------------------------------------------ |
+| `id`                  | `TEXT` PK                   | `cuid()`                                   |
+| `organization_id`     | `TEXT` FK                   | Required; cascade on org delete            |
+| `campaign_id`         | `TEXT` FK                   | Required; cascade on campaign delete       |
+| `creator_profile_id`  | `TEXT` FK                   | Required; cascade on creator delete        |
+| `status`              | `CampaignApplicationStatus` | Default `INVITED`                          |
+| `source`              | `CampaignApplicationSource` | Required                                   |
+| `message`             | `TEXT`                      | Nullable                                   |
+| `invited_by_user_id`  | `TEXT` FK                   | Nullable; references `users.id` (set null) |
+| `applied_at`          | `TIMESTAMP`                 | Nullable                                   |
+| `reviewed_by_user_id` | `TEXT` FK                   | Nullable; references `users.id` (set null) |
+| `reviewed_at`         | `TIMESTAMP`                 | Nullable                                   |
+| `decision_reason`     | `TEXT`                      | Nullable                                   |
+| `metadata`            | `JSONB`                     | Default `{}`                               |
+| `created_at`          | `TIMESTAMP`                 | Auto                                       |
+| `updated_at`          | `TIMESTAMP`                 | Auto                                       |
+
+Indexes: `(organization_id)`, `(organization_id, campaign_id)`, `(organization_id, status)`, `(campaign_id)`, `(campaign_id, status)`, `(creator_profile_id)`, `(campaign_id, creator_profile_id)`.
+
+Partial unique index (SQL migration): one active application per campaign + creator where `status IN ('INVITED', 'APPLIED')`.
+
+---
+
 ## Enums
 
 ### `CampaignStatus`
@@ -121,15 +170,22 @@ Indexes: `(organization_id)`, `(organization_id, campaign_id)`, `(organization_i
 
 `DRAFT`, `OPEN`, `IN_PROGRESS`, `SUBMITTED`, `APPROVED`, `REJECTED`, `CANCELLED`
 
+### `CampaignApplicationStatus`
+
+`INVITED`, `APPLIED`, `ACCEPTED`, `REJECTED`, `WITHDRAWN`, `CANCELLED`
+
+### `CampaignApplicationSource`
+
+`INVITE`, `CREATOR_APPLIED`, `MANUAL`
+
 ---
 
 ## Future extensions
 
-| Area                 | Planned change                                |
-| -------------------- | --------------------------------------------- |
-| Creator applications | `CampaignApplication` table                   |
-| Creator assignments  | `CampaignCreatorAssignment` join table        |
-| Recruitment CRM      | Nullable `campaignId` FK on `CreatorLead`     |
-| Contracts            | Nullable `campaignId` FK on `CreatorContract` |
-| Payments             | Payout/invoice linkage tables                 |
-| Analytics            | Read models or materialized reporting tables  |
+| Area                | Planned change                                |
+| ------------------- | --------------------------------------------- |
+| Creator assignments | `CampaignCreatorAssignment` join table        |
+| Recruitment CRM     | Nullable `campaignId` FK on `CreatorLead`     |
+| Contracts           | Nullable `campaignId` FK on `CreatorContract` |
+| Payments            | Payout/invoice linkage tables                 |
+| Analytics           | Read models or materialized reporting tables  |

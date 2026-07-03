@@ -193,6 +193,8 @@ model User {
   signedCreatorContracts  CreatorContract[]        @relation("CreatorContractSigner")
   signedCreatorContractVersions CreatorContractVersion[] @relation("CreatorContractVersionSigner")
   createdCampaigns        Campaign[]               @relation("CampaignCreator")
+  invitedCampaignApplications CampaignApplication[]  @relation("CampaignApplicationInviter")
+  reviewedCampaignApplications CampaignApplication[] @relation("CampaignApplicationReviewer")
 
   @@map("users")
 }
@@ -240,6 +242,7 @@ model Organization {
   creatorContractVersions CreatorContractVersion[]
   campaigns            Campaign[]
   campaignDeliverables CampaignDeliverable[]
+  campaignApplications CampaignApplication[]
 
   @@index([status])
   @@map("organizations")
@@ -533,6 +536,7 @@ model CreatorProfile {
   platformAccounts CreatorPlatformAccount[]
   documents        CreatorDocument[]
   contracts        CreatorContract[]
+  campaignApplications CampaignApplication[]
 
   @@unique([organizationId, userId])
   @@index([organizationId])
@@ -746,6 +750,7 @@ model Campaign {
   updatedAt           DateTime       @updatedAt @map("updated_at")
 
   deliverables CampaignDeliverable[]
+  applications CampaignApplication[]
 
   @@index([organizationId])
   @@index([organizationId, status])
@@ -777,4 +782,51 @@ model CampaignDeliverable {
   @@index([campaignId])
   @@index([campaignId, status])
   @@map("campaign_deliverables")
+}
+
+enum CampaignApplicationStatus {
+  INVITED
+  APPLIED
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+  CANCELLED
+}
+
+enum CampaignApplicationSource {
+  INVITE
+  CREATOR_APPLIED
+  MANUAL
+}
+
+model CampaignApplication {
+  id               String                    @id @default(cuid())
+  organizationId   String                    @map("organization_id")
+  organization     Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  campaignId       String                    @map("campaign_id")
+  campaign         Campaign                  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorProfileId String                    @map("creator_profile_id")
+  creatorProfile   CreatorProfile            @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  status           CampaignApplicationStatus @default(INVITED)
+  source           CampaignApplicationSource
+  message          String?
+  invitedByUserId  String?                   @map("invited_by_user_id")
+  invitedBy        User?                     @relation("CampaignApplicationInviter", fields: [invitedByUserId], references: [id], onDelete: SetNull)
+  appliedAt        DateTime?                 @map("applied_at")
+  reviewedByUserId String?                   @map("reviewed_by_user_id")
+  reviewedBy       User?                     @relation("CampaignApplicationReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+  reviewedAt       DateTime?                 @map("reviewed_at")
+  decisionReason   String?                   @map("decision_reason")
+  metadata         Json                      @default("{}")
+  createdAt        DateTime                  @default(now()) @map("created_at")
+  updatedAt        DateTime                  @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([organizationId, campaignId])
+  @@index([organizationId, status])
+  @@index([campaignId])
+  @@index([campaignId, status])
+  @@index([creatorProfileId])
+  @@index([campaignId, creatorProfileId])
+  @@map("campaign_applications")
 }

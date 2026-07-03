@@ -1,6 +1,8 @@
 import type { AccessTokenPayload } from '@kolab/auth';
 import type { Campaign as PrismaCampaign } from '@kolab/database';
 import {
+  CampaignApplicationSource,
+  CampaignApplicationStatus,
   CampaignDeliverableStatus,
   CampaignStatus,
   MembershipStatus,
@@ -8,26 +10,42 @@ import {
   prisma,
 } from '@kolab/database';
 import type {
+  AcceptCampaignApplicationInput,
+  ApplyCampaignApplicationInput,
   Campaign,
+  CampaignApplication,
+  CampaignApplicationListQuery,
   CampaignDeliverable,
   CampaignListQuery,
   CreateCampaignDeliverableInput,
   CreateCampaignInput,
+  InviteCampaignApplicationInput,
+  ListCampaignApplicationsResponse,
   ListCampaignDeliverablesResponse,
   ListCampaignsResponse,
+  RejectCampaignApplicationInput,
   UpdateCampaignDeliverableInput,
   UpdateCampaignDeliverableStatusInput,
   UpdateCampaignInput,
   UpdateCampaignStatusInput,
+  WithdrawCampaignApplicationInput,
 } from '@kolab/types';
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
 import { AUDIT_ACTION, AUDIT_TARGET_TYPE } from '../audit/audit-actions';
-import { toCampaign, toCampaignDeliverable } from './campaigns.mapper';
+import { toCampaign, toCampaignApplication, toCampaignDeliverable } from './campaigns.mapper';
 import {
+  ACTIVE_CAMPAIGN_APPLICATION_STATUSES,
+  assertAllowedApplicationStatusTransition,
   assertAllowedCampaignStatusTransition,
   assertAllowedDeliverableStatusTransition,
+  assertApplicationsAllowedForCampaign,
   assertCampaignIsEditable,
   assertDeliverableIsEditable,
   assertDeliverablesAllowedForCampaign,
@@ -364,6 +382,267 @@ export class CampaignsService {
     return toCampaignDeliverable(updated);
   }
 
+  async listApplications(
+    user: AccessTokenPayload,
+    campaignId: string,
+    query: CampaignApplicationListQuery,
+  ): Promise<ListCampaignApplicationsResponse> {
+    const organizationId = await this.requireActiveOrganization(user);
+    await this.loadCampaign(organizationId, campaignId);
+
+    const applications = await prisma.campaignApplication.findMany({
+      where: {
+        organizationId,
+        campaignId,
+        ...(query.status ? { status: query.status } : {}),
+        ...(query.creatorProfileId ? { creatorProfileId: query.creatorProfileId } : {}),
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    });
+
+    return {
+      items: applications.map(toCampaignApplication),
+    };
+  }
+
+  async inviteApplication(
+    user: AccessTokenPayload,
+    campaignId: string,
+    input: InviteCampaignApplicationInput,
+  ): Promise<CampaignApplication> {
+    const organizationId = await this.requireActiveOrganization(user);
+    const campaign = await this.loadCampaign(organizationId, campaignId);
+
+    assertApplicationsAllowedForCampaign(campaign.status as Campaign['status']);
+    await this.loadCreatorProfile(organizationId, input.creatorProfileId);
+    await this.assertNoActiveApplication(organizationId, campaignId, input.creatorProfileId);
+
+    const application = await prisma.campaignApplication.create({
+      data: {
+        organizationId,
+        campaignId,
+        creatorProfileId: input.creatorProfileId,
+        status: CampaignApplicationStatus.INVITED,
+        source: CampaignApplicationSource.INVITE,
+        message: input.message ?? null,
+        invitedByUserId: user.sub,
+        metadata: (input.metadata ?? {}) as Prisma.InputJsonValue,
+      },
+    });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.CAMPAIGN_APPLICATION_INVITED,
+      targetType: AUDIT_TARGET_TYPE.CAMPAIGN_APPLICATION,
+      targetId: application.id,
+      metadata: {
+        campaignId,
+        creatorProfileId: input.creatorProfileId,
+        status: application.status,
+      },
+    });
+
+    return toCampaignApplication(application);
+  }
+
+  async applyToCampaign(
+    user: AccessTokenPayload,
+    campaignId: string,
+    input: ApplyCampaignApplicationInput,
+  ): Promise<CampaignApplication> {
+    const organizationId = await this.requireActiveOrganization(user);
+    const campaign = await this.loadCampaign(organizationId, campaignId);
+
+    assertApplicationsAllowedForCampaign(campaign.status as Campaign['status']);
+    await this.loadCreatorProfile(organizationId, input.creatorProfileId);
+
+    const existingActive = await this.findActiveApplication(
+      organizationId,
+      campaignId,
+      input.creatorProfileId,
+    );
+
+    if (existingActive?.status === CampaignApplicationStatus.APPLIED) {
+      throw new ConflictException('An active application already exists for this creator');
+    }
+
+    if (existingActive?.status === CampaignApplicationStatus.INVITED) {
+      assertAllowedApplicationStatusTransition('INVITED', 'APPLIED');
+
+      const updated = await prisma.campaignApplication.update({
+        where: { id: existingActive.id },
+        data: {
+          status: CampaignApplicationStatus.APPLIED,
+          source: CampaignApplicationSource.CREATOR_APPLIED,
+          appliedAt: new Date(),
+          message: input.message ?? existingActive.message,
+          ...(input.metadata !== undefined
+            ? { metadata: input.metadata as Prisma.InputJsonValue }
+            : {}),
+        },
+      });
+
+      await this.auditService.record({
+        organizationId,
+        actorUserId: user.sub,
+        action: AUDIT_ACTION.CAMPAIGN_APPLICATION_APPLIED,
+        targetType: AUDIT_TARGET_TYPE.CAMPAIGN_APPLICATION,
+        targetId: updated.id,
+        metadata: {
+          campaignId,
+          creatorProfileId: input.creatorProfileId,
+          previousStatus: existingActive.status,
+          status: updated.status,
+        },
+      });
+
+      return toCampaignApplication(updated);
+    }
+
+    const application = await prisma.campaignApplication.create({
+      data: {
+        organizationId,
+        campaignId,
+        creatorProfileId: input.creatorProfileId,
+        status: CampaignApplicationStatus.APPLIED,
+        source: CampaignApplicationSource.CREATOR_APPLIED,
+        message: input.message ?? null,
+        appliedAt: new Date(),
+        metadata: (input.metadata ?? {}) as Prisma.InputJsonValue,
+      },
+    });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.CAMPAIGN_APPLICATION_APPLIED,
+      targetType: AUDIT_TARGET_TYPE.CAMPAIGN_APPLICATION,
+      targetId: application.id,
+      metadata: {
+        campaignId,
+        creatorProfileId: input.creatorProfileId,
+        status: application.status,
+      },
+    });
+
+    return toCampaignApplication(application);
+  }
+
+  async acceptApplication(
+    user: AccessTokenPayload,
+    campaignId: string,
+    applicationId: string,
+    input: AcceptCampaignApplicationInput,
+  ): Promise<CampaignApplication> {
+    return this.reviewApplication(user, campaignId, applicationId, 'ACCEPTED', input.metadata);
+  }
+
+  async rejectApplication(
+    user: AccessTokenPayload,
+    campaignId: string,
+    applicationId: string,
+    input: RejectCampaignApplicationInput,
+  ): Promise<CampaignApplication> {
+    return this.reviewApplication(
+      user,
+      campaignId,
+      applicationId,
+      'REJECTED',
+      input.metadata,
+      input.decisionReason ?? null,
+    );
+  }
+
+  async withdrawApplication(
+    user: AccessTokenPayload,
+    campaignId: string,
+    applicationId: string,
+    input: WithdrawCampaignApplicationInput,
+  ): Promise<CampaignApplication> {
+    const organizationId = await this.requireActiveOrganization(user);
+    const existing = await this.loadApplication(organizationId, campaignId, applicationId);
+    const currentStatus = existing.status as CampaignApplication['status'];
+
+    assertAllowedApplicationStatusTransition(currentStatus, 'WITHDRAWN');
+
+    const updated = await prisma.campaignApplication.update({
+      where: { id: applicationId },
+      data: {
+        status: CampaignApplicationStatus.WITHDRAWN,
+        ...(input.metadata !== undefined
+          ? { metadata: input.metadata as Prisma.InputJsonValue }
+          : {}),
+      },
+    });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action: AUDIT_ACTION.CAMPAIGN_APPLICATION_WITHDRAWN,
+      targetType: AUDIT_TARGET_TYPE.CAMPAIGN_APPLICATION,
+      targetId: updated.id,
+      metadata: {
+        campaignId,
+        creatorProfileId: updated.creatorProfileId,
+        previousStatus: currentStatus,
+        status: updated.status,
+      },
+    });
+
+    return toCampaignApplication(updated);
+  }
+
+  private async reviewApplication(
+    user: AccessTokenPayload,
+    campaignId: string,
+    applicationId: string,
+    nextStatus: 'ACCEPTED' | 'REJECTED',
+    metadata?: Record<string, unknown>,
+    decisionReason?: string | null,
+  ): Promise<CampaignApplication> {
+    const organizationId = await this.requireActiveOrganization(user);
+    const existing = await this.loadApplication(organizationId, campaignId, applicationId);
+    const currentStatus = existing.status as CampaignApplication['status'];
+
+    assertAllowedApplicationStatusTransition(currentStatus, nextStatus);
+
+    const reviewedAt = new Date();
+    const updated = await prisma.campaignApplication.update({
+      where: { id: applicationId },
+      data: {
+        status:
+          nextStatus === 'ACCEPTED'
+            ? CampaignApplicationStatus.ACCEPTED
+            : CampaignApplicationStatus.REJECTED,
+        reviewedByUserId: user.sub,
+        reviewedAt,
+        ...(decisionReason !== undefined ? { decisionReason } : {}),
+        ...(metadata !== undefined ? { metadata: metadata as Prisma.InputJsonValue } : {}),
+      },
+    });
+
+    await this.auditService.record({
+      organizationId,
+      actorUserId: user.sub,
+      action:
+        nextStatus === 'ACCEPTED'
+          ? AUDIT_ACTION.CAMPAIGN_APPLICATION_ACCEPTED
+          : AUDIT_ACTION.CAMPAIGN_APPLICATION_REJECTED,
+      targetType: AUDIT_TARGET_TYPE.CAMPAIGN_APPLICATION,
+      targetId: updated.id,
+      metadata: {
+        campaignId,
+        creatorProfileId: updated.creatorProfileId,
+        previousStatus: currentStatus,
+        status: updated.status,
+        ...(decisionReason ? { decisionReason } : {}),
+      },
+    });
+
+    return toCampaignApplication(updated);
+  }
+
   private async requireActiveOrganization(user: AccessTokenPayload): Promise<string> {
     if (!user.organizationId) {
       throw new ForbiddenException('Active organization context required');
@@ -414,5 +693,63 @@ export class CampaignsService {
     }
 
     return deliverable;
+  }
+
+  private async loadCreatorProfile(organizationId: string, creatorProfileId: string) {
+    const creatorProfile = await prisma.creatorProfile.findFirst({
+      where: {
+        id: creatorProfileId,
+        organizationId,
+      },
+    });
+
+    if (!creatorProfile) {
+      throw new NotFoundException('Creator profile not found');
+    }
+
+    return creatorProfile;
+  }
+
+  private async loadApplication(organizationId: string, campaignId: string, applicationId: string) {
+    const application = await prisma.campaignApplication.findFirst({
+      where: {
+        id: applicationId,
+        campaignId,
+        organizationId,
+      },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Campaign application not found');
+    }
+
+    return application;
+  }
+
+  private async findActiveApplication(
+    organizationId: string,
+    campaignId: string,
+    creatorProfileId: string,
+  ) {
+    return prisma.campaignApplication.findFirst({
+      where: {
+        organizationId,
+        campaignId,
+        creatorProfileId,
+        status: { in: [...ACTIVE_CAMPAIGN_APPLICATION_STATUSES] },
+      },
+    });
+  }
+
+  private async assertNoActiveApplication(
+    organizationId: string,
+    campaignId: string,
+    creatorProfileId: string,
+  ): Promise<void> {
+    const existing = await this.findActiveApplication(organizationId, campaignId, creatorProfileId);
+
+    if (existing) {
+      throw new ConflictException('An active application already exists for this creator');
+    }
   }
 }

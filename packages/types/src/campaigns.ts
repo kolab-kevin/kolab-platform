@@ -205,3 +205,98 @@ export const UpdateCampaignDeliverableStatusSchema = z
 export type UpdateCampaignDeliverableStatusInput = z.infer<
   typeof UpdateCampaignDeliverableStatusSchema
 >;
+
+export const CampaignApplicationStatusSchema = z.enum([
+  'INVITED',
+  'APPLIED',
+  'ACCEPTED',
+  'REJECTED',
+  'WITHDRAWN',
+  'CANCELLED',
+]);
+
+export type CampaignApplicationStatus = z.infer<typeof CampaignApplicationStatusSchema>;
+
+export const CampaignApplicationSourceSchema = z.enum(['INVITE', 'CREATOR_APPLIED', 'MANUAL']);
+
+export type CampaignApplicationSource = z.infer<typeof CampaignApplicationSourceSchema>;
+
+export const CampaignApplicationSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  campaignId: z.string(),
+  creatorProfileId: z.string(),
+  status: CampaignApplicationStatusSchema,
+  source: CampaignApplicationSourceSchema,
+  message: z.string().nullable(),
+  invitedByUserId: z.string().nullable(),
+  appliedAt: isoDateTimeSchema.nullable(),
+  reviewedByUserId: z.string().nullable(),
+  reviewedAt: isoDateTimeSchema.nullable(),
+  decisionReason: z.string().nullable(),
+  metadata: metadataSchema,
+  createdAt: isoDateTimeSchema,
+  updatedAt: isoDateTimeSchema,
+});
+
+export type CampaignApplication = z.infer<typeof CampaignApplicationSchema>;
+
+export const CampaignApplicationListQuerySchema = z.object({
+  status: CampaignApplicationStatusSchema.optional(),
+  creatorProfileId: z.string().min(1).optional(),
+});
+
+export type CampaignApplicationListQuery = z.infer<typeof CampaignApplicationListQuerySchema>;
+
+export const ListCampaignApplicationsResponseSchema = z.object({
+  items: z.array(CampaignApplicationSchema),
+});
+
+export type ListCampaignApplicationsResponse = z.infer<
+  typeof ListCampaignApplicationsResponseSchema
+>;
+
+export const InviteCampaignApplicationSchema = z
+  .object({
+    creatorProfileId: z.string().min(1),
+    message: z.string().trim().min(1).max(5000).nullable().optional(),
+    metadata: metadataSchema.optional(),
+  })
+  .strict();
+
+export type InviteCampaignApplicationInput = z.infer<typeof InviteCampaignApplicationSchema>;
+
+export const ApplyCampaignApplicationSchema = z
+  .object({
+    creatorProfileId: z.string().min(1),
+    message: z.string().trim().min(1).max(5000).nullable().optional(),
+    metadata: metadataSchema.optional(),
+  })
+  .strict();
+
+export type ApplyCampaignApplicationInput = z.infer<typeof ApplyCampaignApplicationSchema>;
+
+export const RejectCampaignApplicationSchema = z
+  .object({
+    decisionReason: z.string().trim().min(1).max(5000).nullable().optional(),
+    metadata: metadataSchema.optional(),
+  })
+  .strict();
+
+export type RejectCampaignApplicationInput = z.infer<typeof RejectCampaignApplicationSchema>;
+
+export const AcceptCampaignApplicationSchema = z
+  .object({
+    metadata: metadataSchema.optional(),
+  })
+  .strict();
+
+export type AcceptCampaignApplicationInput = z.infer<typeof AcceptCampaignApplicationSchema>;
+
+export const WithdrawCampaignApplicationSchema = z
+  .object({
+    metadata: metadataSchema.optional(),
+  })
+  .strict();
+
+export type WithdrawCampaignApplicationInput = z.infer<typeof WithdrawCampaignApplicationSchema>;
