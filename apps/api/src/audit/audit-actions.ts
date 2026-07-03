@@ -31,6 +31,7 @@ export const AUDIT_ACTION = {
   CREATOR_DOCUMENT_VERSION_ADDED: 'creator.document.version_added',
   CREATOR_DOCUMENT_REVIEWED: 'creator.document.reviewed',
   CREATOR_DOCUMENT_DOWNLOADED: 'creator.document.downloaded',
+  CREATOR_DOCUMENT_NOTIFICATION_PREVIEWED: 'creator.document.notification_previewed',
   CREATOR_CONTRACT_CREATED: 'creator.contract.created',
   CREATOR_CONTRACT_UPDATED: 'creator.contract.updated',
   CREATOR_CONTRACT_VERSION_ADDED: 'creator.contract.version_added',

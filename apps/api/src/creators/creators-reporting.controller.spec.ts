@@ -3,6 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 
 import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { CreatorsNotificationsService } from './creators-notifications.service';
 import { CreatorsReportingController } from './creators-reporting.controller';
 import { CreatorsReportingService } from './creators-reporting.service';
 
@@ -23,6 +24,12 @@ describe('CreatorsReportingController authorization', () => {
             listExpiringDocuments: jest.fn(),
             listMissingDocuments: jest.fn(),
             listExpiringContracts: jest.fn(),
+          },
+        },
+        {
+          provide: CreatorsNotificationsService,
+          useValue: {
+            previewExpirationNotifications: jest.fn(),
           },
         },
       ],
@@ -75,6 +82,22 @@ describe('CreatorsReportingController authorization', () => {
     expect(permissionsGuard.canActivate(createContext('listMissingDocuments', recruiterUser))).toBe(
       true,
     );
+  });
+
+  it('allows recruiters to preview notifications with crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(
+      permissionsGuard.canActivate(createContext('previewExpirationNotifications', recruiterUser)),
+    ).toBe(true);
+  });
+
+  it('denies viewers from previewing notifications', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('previewExpirationNotifications', viewerUser)),
+    ).toThrow(ForbiddenException);
   });
 
   it('allows recruiters to list expiring contracts with crm:read', () => {

@@ -1,27 +1,45 @@
 import type { AccessTokenPayload } from '@kolab/auth';
 import type {
+  CreatorExpirationNotificationPreviewRequest,
   ExpiringContractsQuery,
   ExpiringDocumentsQuery,
   MissingDocumentsQuery,
 } from '@kolab/types';
 import {
+  CreatorExpirationNotificationPreviewRequestSchema,
   ExpiringContractsQuerySchema,
   ExpiringDocumentsQuerySchema,
   MissingDocumentsQuerySchema,
 } from '@kolab/types';
-import { Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { RequirePermissions } from '../common/decorators/auth.decorators';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { CreatorsNotificationsService } from './creators-notifications.service';
 import { CreatorsReportingService } from './creators-reporting.service';
 
 @ApiTags('creators')
 @ApiBearerAuth('access-token')
 @Controller('creators')
 export class CreatorsReportingController {
-  constructor(private readonly creatorsReportingService: CreatorsReportingService) {}
+  constructor(
+    private readonly creatorsReportingService: CreatorsReportingService,
+    private readonly creatorsNotificationsService: CreatorsNotificationsService,
+  ) {}
+
+  @Post('documents/notifications/preview')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Preview expiration notification payloads for the organization' })
+  @ApiResponse({ status: 200, description: 'Notification preview payloads generated' })
+  previewExpirationNotifications(
+    @CurrentUser() user: AccessTokenPayload,
+    @Body(new ZodValidationPipe(CreatorExpirationNotificationPreviewRequestSchema))
+    body: CreatorExpirationNotificationPreviewRequest,
+  ) {
+    return this.creatorsNotificationsService.previewExpirationNotifications(user, body);
+  }
 
   @Get('documents/expiring')
   @RequirePermissions('crm:read')
