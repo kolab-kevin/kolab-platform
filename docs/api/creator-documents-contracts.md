@@ -184,7 +184,26 @@ Issues a short-lived presigned GET URL for the latest uploaded version (or a spe
 | GET    | `/api/creators/documents/missing`  | `crm:read` | Active creators missing required documents  |
 | GET    | `/api/creators/contracts/expiring` | `crm:read` | Contracts expiring or expired within window |
 
-These endpoints are organization-scoped read-only reports. No scheduled jobs or notifications are emitted in this milestone.
+These endpoints are organization-scoped read-only reports. Notification preview payloads are available via `POST /api/creators/documents/notifications/preview`. No scheduled jobs or outbound email/SMS delivery exists in this milestone.
+
+### Notification preview
+
+| Method | Path                                            | Permission | Description                                  |
+| ------ | ----------------------------------------------- | ---------- | -------------------------------------------- |
+| POST   | `/api/creators/documents/notifications/preview` | `crm:read` | Generate notification-ready preview payloads |
+
+Preview request body options: `days` (default 30), `includeExpired` (default true), optional `creatorId`, `documentType`, `contractType`.
+
+Each preview item includes:
+
+- `itemType` (`missing_document`, `expiring_document`, `expired_document`, `expiring_contract`, `expired_contract`)
+- `status` (`MISSING`, `EXPIRING`, `EXPIRED`)
+- `creator` summary
+- optional document/contract identifiers and types
+- `dueDate` (nullable for missing documents)
+- `recommendedAction`
+
+Preview generation emits audit event `creator.document.notification_previewed`. Payloads never include storage keys or secrets.
 
 ### Shared query parameters
 
@@ -297,18 +316,19 @@ Issues a short-lived presigned GET URL for the latest uploaded version (or a spe
 
 ## Zod validation (`@kolab/types`)
 
-| Schema                               | Purpose                |
-| ------------------------------------ | ---------------------- |
-| `CreateCreatorDocumentSchema`        | POST document          |
-| `UpdateCreatorDocumentSchema`        | PATCH document         |
-| `CreateCreatorDocumentVersionSchema` | POST document version  |
-| `ReviewCreatorDocumentSchema`        | POST document review   |
-| `DownloadCreatorDocumentSchema`      | POST document download |
-| `CreateCreatorContractSchema`        | POST contract          |
-| `UpdateCreatorContractSchema`        | PATCH contract         |
-| `CreateCreatorContractVersionSchema` | POST contract version  |
-| `UpdateCreatorContractStatusSchema`  | POST contract status   |
-| `DownloadCreatorContractSchema`      | POST contract download |
+| Schema                                              | Purpose                   |
+| --------------------------------------------------- | ------------------------- |
+| `CreateCreatorDocumentSchema`                       | POST document             |
+| `UpdateCreatorDocumentSchema`                       | PATCH document            |
+| `CreateCreatorDocumentVersionSchema`                | POST document version     |
+| `ReviewCreatorDocumentSchema`                       | POST document review      |
+| `DownloadCreatorDocumentSchema`                     | POST document download    |
+| `CreateCreatorContractSchema`                       | POST contract             |
+| `UpdateCreatorContractSchema`                       | PATCH contract            |
+| `CreateCreatorContractVersionSchema`                | POST contract version     |
+| `UpdateCreatorContractStatusSchema`                 | POST contract status      |
+| `DownloadCreatorContractSchema`                     | POST contract download    |
+| `CreatorExpirationNotificationPreviewRequestSchema` | POST notification preview |
 
 Raw file fields (`file`, `base64`, `body`, etc.) are rejected on all document and contract inputs.
 
@@ -316,18 +336,19 @@ Raw file fields (`file`, `base64`, `body`, etc.) are rejected on all document an
 
 ## Audit events
 
-| Action                            | When                  | Target type        |
-| --------------------------------- | --------------------- | ------------------ |
-| `creator.document.created`        | Document created      | `creator_document` |
-| `creator.document.updated`        | Metadata updated      | `creator_document` |
-| `creator.document.version_added`  | Version registered    | `creator_document` |
-| `creator.document.reviewed`       | Review status changed | `creator_document` |
-| `creator.document.downloaded`     | Download URL issued   | `creator_document` |
-| `creator.contract.created`        | Contract created      | `creator_contract` |
-| `creator.contract.updated`        | Metadata updated      | `creator_contract` |
-| `creator.contract.version_added`  | Version registered    | `creator_contract` |
-| `creator.contract.status_changed` | Status changed        | `creator_contract` |
-| `creator.contract.downloaded`     | Download URL issued   | `creator_contract` |
+| Action                                    | When                           | Target type        |
+| ----------------------------------------- | ------------------------------ | ------------------ |
+| `creator.document.created`                | Document created               | `creator_document` |
+| `creator.document.updated`                | Metadata updated               | `creator_document` |
+| `creator.document.version_added`          | Version registered             | `creator_document` |
+| `creator.document.reviewed`               | Review status changed          | `creator_document` |
+| `creator.document.downloaded`             | Download URL issued            | `creator_document` |
+| `creator.document.notification_previewed` | Notification preview generated | `creator_document` |
+| `creator.contract.created`                | Contract created               | `creator_contract` |
+| `creator.contract.updated`                | Metadata updated               | `creator_contract` |
+| `creator.contract.version_added`          | Version registered             | `creator_contract` |
+| `creator.contract.status_changed`         | Status changed                 | `creator_contract` |
+| `creator.contract.downloaded`             | Download URL issued            | `creator_contract` |
 
 ---
 

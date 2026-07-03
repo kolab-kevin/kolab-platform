@@ -7,6 +7,7 @@ import { CreatorsContractsController } from './creators-contracts.controller';
 import { CreatorsContractsService } from './creators-contracts.service';
 import { CreatorsDocumentsController } from './creators-documents.controller';
 import { CreatorsDocumentsService } from './creators-documents.service';
+import { CreatorsNotificationsService } from './creators-notifications.service';
 import { CreatorsReportingController } from './creators-reporting.controller';
 import { CreatorsReportingService } from './creators-reporting.service';
 
@@ -23,12 +24,14 @@ import { CreatorsReportingService } from './creators-reporting.service';
     CreatorsDocumentsService,
     CreatorsContractsService,
     CreatorsReportingService,
+    CreatorsNotificationsService,
   ],
   exports: [
     CreatorsService,
     CreatorsDocumentsService,
     CreatorsContractsService,
     CreatorsReportingService,
+    CreatorsNotificationsService,
   ],
 })
 export class CreatorsModule {}

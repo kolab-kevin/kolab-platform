@@ -508,3 +508,65 @@ export const ListExpiringCreatorContractsResponseSchema = z.object({
 export type ListExpiringCreatorContractsResponse = z.infer<
   typeof ListExpiringCreatorContractsResponseSchema
 >;
+
+export const CreatorExpirationNotificationItemTypeSchema = z.enum([
+  'missing_document',
+  'expiring_document',
+  'expired_document',
+  'expiring_contract',
+  'expired_contract',
+]);
+
+export type CreatorExpirationNotificationItemType = z.infer<
+  typeof CreatorExpirationNotificationItemTypeSchema
+>;
+
+export const CreatorExpirationNotificationPreviewRequestSchema = z
+  .object({
+    days: z.coerce.number().int().min(1).max(365).default(30),
+    includeExpired: z.coerce.boolean().optional().default(true),
+    creatorId: z.string().min(1).optional(),
+    documentType: CreatorDocumentTypeSchema.optional(),
+    contractType: CreatorContractTypeSchema.optional(),
+  })
+  .strict();
+
+export type CreatorExpirationNotificationPreviewRequest = z.infer<
+  typeof CreatorExpirationNotificationPreviewRequestSchema
+>;
+
+export const CreatorExpirationNotificationPreviewItemSchema = z.object({
+  itemType: CreatorExpirationNotificationItemTypeSchema,
+  status: ExpirationReportStatusSchema,
+  creator: CreatorSummarySchema,
+  documentType: CreatorDocumentTypeSchema.optional(),
+  documentId: z.string().optional(),
+  contractType: CreatorContractTypeSchema.optional(),
+  contractId: z.string().optional(),
+  contractTitle: z.string().optional(),
+  dueDate: isoDateTimeSchema.nullable(),
+  recommendedAction: z.string(),
+});
+
+export type CreatorExpirationNotificationPreviewItem = z.infer<
+  typeof CreatorExpirationNotificationPreviewItemSchema
+>;
+
+export const CreatorExpirationNotificationPreviewResponseSchema = z.object({
+  organizationId: z.string(),
+  generatedAt: isoDateTimeSchema,
+  days: z.number().int(),
+  includeExpired: z.boolean(),
+  items: z.array(CreatorExpirationNotificationPreviewItemSchema),
+  summary: z.object({
+    missingDocuments: z.number().int(),
+    expiringDocuments: z.number().int(),
+    expiredDocuments: z.number().int(),
+    expiringContracts: z.number().int(),
+    expiredContracts: z.number().int(),
+  }),
+});
+
+export type CreatorExpirationNotificationPreviewResponse = z.infer<
+  typeof CreatorExpirationNotificationPreviewResponseSchema
+>;
