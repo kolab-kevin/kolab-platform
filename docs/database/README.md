@@ -62,3 +62,7 @@ Legacy `User.role` and `User.platforms` remain until Phase D cleanup.
 **Release 0.4+ (planning):** Creator Documents & Contracts — [Documents & Contracts ERD](./creator-documents-contracts-erd.md).
 
 **Release 0.4 foundation (implemented):** Campaign Management — [Campaigns ERD](./campaigns-erd.md).
+
+**Release 0.5+ (planning):** Live Intelligence — [Live Intelligence ERD](./live-intelligence-erd.md).
+
+**Credits (planning):** KOLAB Credits ledger — see [Token economy architecture](../architecture/token-economy.md).
