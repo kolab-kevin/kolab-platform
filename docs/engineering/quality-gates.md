@@ -6,29 +6,33 @@ Every pull request to `main` or `develop` must pass all quality gates before mer
 
 | Gate              | Local command         | CI job                 | Blocks merge |
 | ----------------- | --------------------- | ---------------------- | ------------ |
-| Backend platform  | `pnpm ci:backend`     | backend-quality-gate   | Yes          |
-| Security audit    | `pnpm audit:ci`       | audit                  | Yes          |
-| License check     | `pnpm check:licenses` | audit                  | Yes          |
-| Cycle check       | `pnpm check:cycles`   | audit                  | Yes          |
+| Backend platform  | `pnpm ci:backend`     | Lint, Test, Build      | Yes          |
+| Security audit    | `pnpm audit:ci`       | Security audit         | Yes          |
+| License check     | `pnpm check:licenses` | Security audit         | Yes          |
+| Cycle check       | `pnpm check:cycles`   | Security audit         | Yes          |
+| Docker build      | —                     | Docker build           | Yes          |
 | Dependency review | —                     | dependency-review (PR) | Yes          |
+| Aggregate gate    | —                     | Quality gate           | Yes          |
 
-The `ci-gate` job aggregates all results — any failure blocks the PR.
+Branch protection requires these GitHub check names: **Lint**, **Test**, **Build**, **Docker build**, and **Quality gate**.
+
+The **Quality gate** job aggregates all results — any failure blocks the PR.
 
 ## Backend gate steps
 
-Runs on every push and pull request to `develop` or `main`. Steps execute in order:
+Runs on every push and pull request to `develop` or `main`:
 
 1. Install dependencies with pnpm 9.15.0
-2. Prisma validate (`@kolab/database`)
-3. Prisma generate
-4. Build `@kolab/types`
-5. Build `@kolab/config`
-6. Test `@kolab/auth`
-7. Test `@kolab/storage`
-8. Typecheck `@kolab/api`
-9. Test `@kolab/api`
-10. Lint `@kolab/api`
-11. Markdownlint `docs/**/*.md`
+2. Prisma validate (**Test** job)
+3. Prisma generate (Lint, Test, Build jobs)
+4. Build `@kolab/types` (**Build** job)
+5. Build `@kolab/config` (**Build** job)
+6. Test `@kolab/auth` (**Test** job)
+7. Test `@kolab/storage` (**Test** job)
+8. Typecheck `@kolab/api` (**Build** job)
+9. Test `@kolab/api` (**Test** job)
+10. Lint `@kolab/api` (**Lint** job)
+11. Markdownlint `docs/**/*.md` (**Lint** job)
 
 CI sets a dummy `DATABASE_URL` for Prisma validation and client generation. Storage tests mock the AWS SDK and do not require real S3 credentials.
 
@@ -58,11 +62,27 @@ Commit messages are validated by Commitlint via the `commit-msg` hook.
 
 ## CI details
 
-### Backend quality gate job
+### Lint job
 
-- Node 20, pnpm 9.15.0, frozen lockfile install
-- Explicit package-scoped commands for backend packages
-- Docs markdownlint scoped to `docs/**/*.md`
+- `@kolab/api` ESLint
+- Docs markdownlint (`docs/**/*.md`)
+
+### Test job
+
+- Prisma schema validation
+- Prisma client generation
+- `@kolab/auth`, `@kolab/storage`, and `@kolab/api` tests
+
+### Build job
+
+- Prisma client generation
+- `@kolab/types` and `@kolab/config` builds
+- `@kolab/api` typecheck
+
+### Docker build job
+
+- Validates `docker/nest-service.Dockerfile` (API) and `docker/next-service.Dockerfile` (Web)
+- Runs after the Build job succeeds
 
 ### Security audit
 
