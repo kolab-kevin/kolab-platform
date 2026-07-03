@@ -246,6 +246,8 @@ model Organization {
   campaignApplications CampaignApplication[]
   campaignCreatorAssignments CampaignCreatorAssignment[]
   campaignCreatorDeliverables CampaignCreatorDeliverable[]
+  liveSessions             LiveSession[]
+  creatorLiveSchedules     CreatorLiveSchedule[]
 
   @@index([status])
   @@map("organizations")
@@ -541,6 +543,8 @@ model CreatorProfile {
   contracts        CreatorContract[]
   campaignApplications CampaignApplication[]
   campaignCreatorAssignments CampaignCreatorAssignment[]
+  liveSessions             LiveSession[]
+  creatorLiveSchedules     CreatorLiveSchedule[]
 
   @@unique([organizationId, userId])
   @@index([organizationId])
@@ -756,6 +760,7 @@ model Campaign {
   deliverables CampaignDeliverable[]
   applications CampaignApplication[]
   creatorAssignments CampaignCreatorAssignment[]
+  liveSessions       LiveSession[]
 
   @@index([organizationId])
   @@index([organizationId, status])
@@ -918,4 +923,78 @@ model CampaignCreatorDeliverable {
   @@index([assignmentId, status])
   @@index([campaignDeliverableId])
   @@map("campaign_creator_deliverables")
+}
+
+enum LivePlatform {
+  TIKTOK
+  BIGO
+  OTHER
+}
+
+enum LiveSessionStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+model LiveSession {
+  id                String            @id @default(cuid())
+  organizationId    String            @map("organization_id")
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creatorProfileId  String            @map("creator_profile_id")
+  creatorProfile    CreatorProfile    @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  campaignId        String?           @map("campaign_id")
+  campaign          Campaign?         @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  platform          LivePlatform
+  platformSessionId String?           @map("platform_session_id")
+  title             String
+  description       String?
+  startedAt         DateTime?         @map("started_at")
+  endedAt           DateTime?         @map("ended_at")
+  scheduledStart    DateTime?         @map("scheduled_start")
+  scheduledEnd      DateTime?         @map("scheduled_end")
+  durationSeconds   Int?              @map("duration_seconds")
+  peakViewers       Int?              @map("peak_viewers")
+  totalViewers      Int?              @map("total_viewers")
+  totalGifts        Int?              @map("total_gifts")
+  totalGiftValue    Decimal?          @map("total_gift_value") @db.Decimal(14, 2)
+  status            LiveSessionStatus @default(SCHEDULED)
+  metadata          Json              @default("{}")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([organizationId, creatorProfileId])
+  @@index([organizationId, status])
+  @@index([organizationId, platform])
+  @@index([organizationId, scheduledStart])
+  @@index([organizationId, startedAt])
+  @@index([creatorProfileId])
+  @@index([campaignId])
+  @@index([platformSessionId])
+  @@map("live_sessions")
+}
+
+model CreatorLiveSchedule {
+  id               String         @id @default(cuid())
+  organizationId   String         @map("organization_id")
+  organization     Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creatorProfileId String         @map("creator_profile_id")
+  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  timezone         String
+  recurrenceRule   String?        @map("recurrence_rule")
+  weekdays         Int[]          @default([])
+  startTime        String         @map("start_time")
+  endTime          String         @map("end_time")
+  active           Boolean        @default(true)
+  metadata         Json           @default("{}")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([organizationId, creatorProfileId])
+  @@index([organizationId, active])
+  @@index([creatorProfileId])
+  @@map("creator_live_schedules")
 }

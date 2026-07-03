@@ -43,6 +43,7 @@ Organization-scoped identity model — see [Identity ERD](./identity-erd.md):
 - **CreatorProfile**, **CreatorPlatformAccount** — creator roster schema
 - **CreatorDocument**, **CreatorDocumentVersion**, **CreatorContract**, **CreatorContractVersion** — documents/contracts schema
 - **Campaign**, **CampaignDeliverable** — campaign management foundation (API implemented)
+- **LiveSession**, **CreatorLiveSchedule** — live intelligence session foundation (schema only)
 - **RefreshToken.sessionId** — optional link to Session (Phase A migration)
 
 Legacy `User.role` and `User.platforms` remain until Phase D cleanup.
@@ -63,6 +64,6 @@ Legacy `User.role` and `User.platforms` remain until Phase D cleanup.
 
 **Release 0.4 foundation (implemented):** Campaign Management — [Campaigns ERD](./campaigns-erd.md).
 
-**Release 0.5+ (planning):** Live Intelligence — [Live Intelligence ERD](./live-intelligence-erd.md).
+**Release 0.5 foundation (implemented):** Live Intelligence session schema — [Live Intelligence ERD](./live-intelligence-erd.md) (`LiveSession`, `CreatorLiveSchedule`).
 
 **Credits (planning):** KOLAB Credits ledger — see [Token economy architecture](../architecture/token-economy.md).
