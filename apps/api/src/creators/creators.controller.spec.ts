@@ -5,6 +5,7 @@ import { Test } from '@nestjs/testing';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { CreatorsController } from './creators.controller';
 import { CreatorsService } from './creators.service';
+import { CreatorsComplianceService } from './creators-compliance.service';
 import { CreatorsOnboardingService } from './creators-onboarding.service';
 
 describe('CreatorsController authorization', () => {
@@ -39,6 +40,12 @@ describe('CreatorsController authorization', () => {
           provide: CreatorsOnboardingService,
           useValue: {
             getCreatorOnboarding: jest.fn(),
+          },
+        },
+        {
+          provide: CreatorsComplianceService,
+          useValue: {
+            getCreatorCompliance: jest.fn(),
           },
         },
       ],

@@ -1,6 +1,7 @@
 import type { AccessTokenPayload } from '@kolab/auth';
 import type {
   CreateCreatorPlatformAccountInput,
+  CreatorComplianceQuery,
   CreatorListQuery,
   UpdateCreatorInput,
   UpdateCreatorPlatformAccountInput,
@@ -9,6 +10,7 @@ import type {
 } from '@kolab/types';
 import {
   CreateCreatorPlatformAccountSchema,
+  CreatorComplianceQuerySchema,
   CreatorListQuerySchema,
   UpdateCreatorPlatformAccountSchema,
   UpdateCreatorSchema,
@@ -22,6 +24,7 @@ import { RequirePermissions } from '../common/decorators/auth.decorators';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { CreatorsService } from './creators.service';
+import { CreatorsComplianceService } from './creators-compliance.service';
 import { CreatorsOnboardingService } from './creators-onboarding.service';
 
 @ApiTags('creators')
@@ -31,6 +34,7 @@ export class CreatorsController {
   constructor(
     private readonly creatorsService: CreatorsService,
     private readonly creatorsOnboardingService: CreatorsOnboardingService,
+    private readonly creatorsComplianceService: CreatorsComplianceService,
   ) {}
 
   @Get()
@@ -152,6 +156,19 @@ export class CreatorsController {
   @ApiResponse({ status: 404, description: 'Creator not found' })
   getCreatorOnboarding(@CurrentUser() user: AccessTokenPayload, @Param('id') creatorId: string) {
     return this.creatorsOnboardingService.getCreatorOnboarding(user, creatorId);
+  }
+
+  @Get(':id/compliance')
+  @RequirePermissions('documents:read')
+  @ApiOperation({ summary: 'Get consolidated creator onboarding and compliance status' })
+  @ApiResponse({ status: 200, description: 'Creator compliance bundle' })
+  @ApiResponse({ status: 404, description: 'Creator not found' })
+  getCreatorCompliance(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') creatorId: string,
+    @Query(new ZodValidationPipe(CreatorComplianceQuerySchema)) query: CreatorComplianceQuery,
+  ) {
+    return this.creatorsComplianceService.getCreatorCompliance(user, creatorId, query);
   }
 
   @Get(':id')

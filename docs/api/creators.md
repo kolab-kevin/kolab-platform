@@ -18,10 +18,13 @@ Release 0.3 does **not** include creator dashboards, campaigns, payments, or ana
 
 ## Permissions
 
-| Permission   | Used for              |
-| ------------ | --------------------- |
-| `crm:read`   | List and get creators |
-| `crm:update` | Update creator fields |
+| Permission       | Used for                                              |
+| ---------------- | ----------------------------------------------------- |
+| `crm:read`       | List and get creators, skills, availability, accounts |
+| `crm:update`     | Update creator profile fields and platform accounts   |
+| `documents:read` | Onboarding checklist, compliance bundle, reporting    |
+
+Document and contract CRUD routes use `documents:read`, `documents:write`, `documents:review`, and `documents:download_sensitive` as documented in [Creator Documents & Contracts API](./creator-documents-contracts.md).
 
 All routes are scoped to the JWT `organizationId`. Users must have an active organization membership.
 
@@ -42,38 +45,41 @@ All routes are scoped to the JWT `organizationId`. Users must have an active org
 
 ## Endpoints
 
-| Method | Path                                               | Permission       | Description                        |
-| ------ | -------------------------------------------------- | ---------------- | ---------------------------------- |
-| GET    | `/api/creators`                                    | `crm:read`       | List creators (filter, cursor)     |
-| GET    | `/api/creators/:id`                                | `crm:read`       | Get creator detail                 |
-| PATCH  | `/api/creators/:id`                                | `crm:update`     | Update creator profile fields      |
-| GET    | `/api/creators/:id/platform-accounts`              | `crm:read`       | List creator platform accounts     |
-| POST   | `/api/creators/:id/platform-accounts`              | `crm:update`     | Add a creator platform account     |
-| PATCH  | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update`     | Update a creator platform account  |
-| DELETE | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update`     | Remove a creator platform account  |
-| GET    | `/api/creators/:id/skills`                         | `crm:read`       | Get creator skills profile         |
-| PATCH  | `/api/creators/:id/skills`                         | `crm:update`     | Update creator skills profile      |
-| GET    | `/api/creators/:id/availability`                   | `crm:read`       | Get creator availability           |
-| PATCH  | `/api/creators/:id/availability`                   | `crm:update`     | Update creator availability        |
-| GET    | `/api/creators/:id/onboarding`                     | `documents:read` | Get creator onboarding checklist   |
-| GET    | `/api/creators/:id/documents`                      | `crm:read`       | List creator documents             |
-| GET    | `/api/creators/:id/documents/:documentId`          | `crm:read`       | Get creator document detail        |
-| POST   | `/api/creators/:id/documents`                      | `crm:update`     | Create creator document            |
-| PATCH  | `/api/creators/:id/documents/:documentId`          | `crm:update`     | Update creator document metadata   |
-| POST   | `/api/creators/:id/documents/:documentId/versions` | `crm:update`     | Register uploaded document version |
-| POST   | `/api/creators/:id/documents/:documentId/review`   | `crm:update`     | Review creator document            |
-| POST   | `/api/creators/:id/documents/:documentId/download` | `crm:read`       | Presigned document download URL    |
-| GET    | `/api/creators/:id/contracts`                      | `crm:read`       | List creator contracts             |
-| GET    | `/api/creators/:id/contracts/:contractId`          | `crm:read`       | Get creator contract detail        |
-| POST   | `/api/creators/:id/contracts`                      | `crm:update`     | Create creator contract            |
-| PATCH  | `/api/creators/:id/contracts/:contractId`          | `crm:update`     | Update creator contract metadata   |
-| POST   | `/api/creators/:id/contracts/:contractId/versions` | `crm:update`     | Register uploaded contract version |
-| POST   | `/api/creators/:id/contracts/:contractId/status`   | `crm:update`     | Update creator contract status     |
-| POST   | `/api/creators/:id/contracts/:contractId/download` | `crm:read`       | Presigned contract download URL    |
-| GET    | `/api/creators/documents/expiring`                 | `crm:read`       | Report expiring/expired documents  |
-| GET    | `/api/creators/documents/missing`                  | `crm:read`       | Report missing required documents  |
-| GET    | `/api/creators/contracts/expiring`                 | `crm:read`       | Report expiring/expired contracts  |
-| POST   | `/api/recruitment/leads/:id/convert`               | `crm:update`     | Convert lead to creator            |
+| Method | Path                                               | Permission         | Description                        |
+| ------ | -------------------------------------------------- | ------------------ | ---------------------------------- |
+| GET    | `/api/creators`                                    | `crm:read`         | List creators (filter, cursor)     |
+| GET    | `/api/creators/:id`                                | `crm:read`         | Get creator detail                 |
+| PATCH  | `/api/creators/:id`                                | `crm:update`       | Update creator profile fields      |
+| GET    | `/api/creators/:id/platform-accounts`              | `crm:read`         | List creator platform accounts     |
+| POST   | `/api/creators/:id/platform-accounts`              | `crm:update`       | Add a creator platform account     |
+| PATCH  | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update`       | Update a creator platform account  |
+| DELETE | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update`       | Remove a creator platform account  |
+| GET    | `/api/creators/:id/skills`                         | `crm:read`         | Get creator skills profile         |
+| PATCH  | `/api/creators/:id/skills`                         | `crm:update`       | Update creator skills profile      |
+| GET    | `/api/creators/:id/availability`                   | `crm:read`         | Get creator availability           |
+| PATCH  | `/api/creators/:id/availability`                   | `crm:update`       | Update creator availability        |
+| GET    | `/api/creators/:id/onboarding`                     | `documents:read`   | Get creator onboarding checklist   |
+| GET    | `/api/creators/:id/compliance`                     | `documents:read`   | Get consolidated compliance bundle |
+| GET    | `/api/creators/:id/documents`                      | `documents:read`   | List creator documents             |
+| GET    | `/api/creators/:id/documents/:documentId`          | `documents:read`   | Get creator document detail        |
+| POST   | `/api/creators/:id/documents`                      | `documents:write`  | Create creator document            |
+| PATCH  | `/api/creators/:id/documents/:documentId`          | `documents:write`  | Update creator document metadata   |
+| POST   | `/api/creators/:id/documents/:documentId/versions` | `documents:write`  | Register uploaded document version |
+| POST   | `/api/creators/:id/documents/:documentId/review`   | `documents:review` | Review creator document            |
+| POST   | `/api/creators/:id/documents/:documentId/download` | `documents:read`   | Presigned document download URL    |
+| GET    | `/api/creators/:id/contracts`                      | `documents:read`   | List creator contracts             |
+| GET    | `/api/creators/:id/contracts/:contractId`          | `documents:read`   | Get creator contract detail        |
+| POST   | `/api/creators/:id/contracts`                      | `documents:write`  | Create creator contract            |
+| PATCH  | `/api/creators/:id/contracts/:contractId`          | `documents:write`  | Update creator contract metadata   |
+| POST   | `/api/creators/:id/contracts/:contractId/versions` | `documents:write`  | Register uploaded contract version |
+| POST   | `/api/creators/:id/contracts/:contractId/status`   | `documents:write`  | Update creator contract status     |
+| POST   | `/api/creators/:id/contracts/:contractId/sign`     | `documents:write`  | Manually sign creator contract     |
+| POST   | `/api/creators/:id/contracts/:contractId/download` | `documents:read`   | Presigned contract download URL    |
+| GET    | `/api/creators/documents/expiring`                 | `documents:read`   | Report expiring/expired documents  |
+| GET    | `/api/creators/documents/missing`                  | `documents:read`   | Report missing required documents  |
+| GET    | `/api/creators/contracts/expiring`                 | `documents:read`   | Report expiring/expired contracts  |
+| POST   | `/api/creators/documents/notifications/preview`    | `documents:read`   | Preview expiration notifications   |
+| POST   | `/api/recruitment/leads/:id/convert`               | `crm:update`       | Convert lead to creator            |
 
 ---
 
@@ -265,6 +271,74 @@ Optional incomplete items use item status `WARNING`. Required incomplete items u
 ```
 
 **Errors:** `404` if the creator does not exist in the active organization; `403` missing permission.
+
+---
+
+## GET `/api/creators/:id/compliance`
+
+Returns a consolidated compliance bundle for a single active creator by reusing existing onboarding, reporting, and permission logic. No storage keys, presigned URLs, or secrets are included.
+
+**Permission:** `documents:read`
+
+### Query parameters
+
+| Param            | Type    | Default | Description                                     |
+| ---------------- | ------- | ------- | ----------------------------------------------- |
+| `days`           | number  | `30`    | Expiration window for document/contract reports |
+| `includeExpired` | boolean | `true`  | Include already expired documents and contracts |
+| `limit`          | number  | `20`    | Max report rows returned per summary section    |
+
+### Response sections
+
+| Section           | Source                                                                         |
+| ----------------- | ------------------------------------------------------------------------------ |
+| `onboarding`      | Full onboarding checklist (`GET /api/creators/:id/onboarding`)                 |
+| `documents`       | Missing and expiring/expired document counts plus report rows                  |
+| `contracts`       | Expiring/expired contract counts plus report rows                              |
+| `sensitiveAccess` | Sensitive document types present on the creator and caller download permission |
+
+Sensitive downloads still require `documents:download_sensitive` at download time; this endpoint only reports whether the current caller has that permission.
+
+### Overall compliance status
+
+| Value           | Meaning                                                                  |
+| --------------- | ------------------------------------------------------------------------ |
+| `NON_COMPLIANT` | Onboarding incomplete, missing required documents, or expired records    |
+| `AT_RISK`       | Required items satisfied but onboarding warnings or upcoming expirations |
+| `COMPLIANT`     | Onboarding complete and no missing/expired compliance issues             |
+
+Org-wide dashboards and notification previews remain on the dedicated reporting and notification endpoints documented in [Creator Documents & Contracts API](./creator-documents-contracts.md).
+
+### Compliance response (200)
+
+```json
+{
+  "creatorId": "creator_abc123",
+  "organizationId": "clx...",
+  "generatedAt": "2026-07-02T22:00:00.000Z",
+  "overallStatus": "AT_RISK",
+  "onboarding": { "overallStatus": "WARNING", "items": [] },
+  "documents": {
+    "missing": 0,
+    "expiring": 1,
+    "expired": 0,
+    "missingItems": [],
+    "expiringItems": []
+  },
+  "contracts": {
+    "expiring": 0,
+    "expired": 0,
+    "expiringItems": []
+  },
+  "sensitiveAccess": {
+    "sensitiveDocumentTypes": ["GOVERNMENT_ID"],
+    "downloadRequiresPermission": "documents:download_sensitive",
+    "callerCanDownloadSensitive": true
+  }
+}
+```
+
+**Errors:** `404` if the creator is not an active member of the organization; `403` missing permission.
 
 ---
 

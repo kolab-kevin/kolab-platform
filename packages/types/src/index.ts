@@ -3,6 +3,7 @@ export * from './agency';
 export * from './audit';
 export * from './auth';
 export * from './creator';
+export * from './creator-compliance';
 export * from './creator-documents-contracts';
 export * from './creator-onboarding';
 export * from './invitation';
