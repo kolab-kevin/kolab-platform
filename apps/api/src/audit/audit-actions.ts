@@ -31,6 +31,11 @@ export const AUDIT_ACTION = {
   CREATOR_DOCUMENT_VERSION_ADDED: 'creator.document.version_added',
   CREATOR_DOCUMENT_REVIEWED: 'creator.document.reviewed',
   CREATOR_DOCUMENT_DOWNLOADED: 'creator.document.downloaded',
+  CREATOR_CONTRACT_CREATED: 'creator.contract.created',
+  CREATOR_CONTRACT_UPDATED: 'creator.contract.updated',
+  CREATOR_CONTRACT_VERSION_ADDED: 'creator.contract.version_added',
+  CREATOR_CONTRACT_STATUS_CHANGED: 'creator.contract.status_changed',
+  CREATOR_CONTRACT_DOWNLOADED: 'creator.contract.downloaded',
   RECRUITER_CREATED: 'recruiter.created',
   RECRUITER_UPDATED: 'recruiter.updated',
 } as const;
@@ -45,5 +50,6 @@ export const AUDIT_TARGET_TYPE = {
   CREATOR: 'creator',
   CREATOR_PLATFORM_ACCOUNT: 'creator_platform_account',
   CREATOR_DOCUMENT: 'creator_document',
+  CREATOR_CONTRACT: 'creator_contract',
   RECRUITER: 'recruiter',
 } as const;

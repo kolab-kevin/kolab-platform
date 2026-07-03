@@ -302,6 +302,7 @@ export const MutableCreatorContractStatusSchema = z.enum([
   'DRAFT',
   'SENT',
   'VIEWED',
+  'SIGNED',
   'EXPIRED',
   'CANCELLED',
   'TERMINATED',
@@ -394,3 +395,21 @@ export const UpdateCreatorContractStatusSchema = z
   });
 
 export type UpdateCreatorContractStatusInput = z.infer<typeof UpdateCreatorContractStatusSchema>;
+
+export const DownloadCreatorContractSchema = z
+  .object({
+    versionId: z.string().min(1).optional(),
+  })
+  .strict();
+
+export type DownloadCreatorContractInput = z.infer<typeof DownloadCreatorContractSchema>;
+
+export const DownloadCreatorContractResponseSchema = z.object({
+  contractId: z.string(),
+  versionId: z.string(),
+  storageKey: z.string(),
+  downloadUrl: z.string().url(),
+  expiresAt: isoDateTimeSchema,
+});
+
+export type DownloadCreatorContractResponse = z.infer<typeof DownloadCreatorContractResponseSchema>;

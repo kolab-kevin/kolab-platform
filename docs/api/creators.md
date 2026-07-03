@@ -62,6 +62,13 @@ All routes are scoped to the JWT `organizationId`. Users must have an active org
 | POST   | `/api/creators/:id/documents/:documentId/versions` | `crm:update` | Register uploaded document version |
 | POST   | `/api/creators/:id/documents/:documentId/review`   | `crm:update` | Review creator document            |
 | POST   | `/api/creators/:id/documents/:documentId/download` | `crm:read`   | Presigned document download URL    |
+| GET    | `/api/creators/:id/contracts`                      | `crm:read`   | List creator contracts             |
+| GET    | `/api/creators/:id/contracts/:contractId`          | `crm:read`   | Get creator contract detail        |
+| POST   | `/api/creators/:id/contracts`                      | `crm:update` | Create creator contract            |
+| PATCH  | `/api/creators/:id/contracts/:contractId`          | `crm:update` | Update creator contract metadata   |
+| POST   | `/api/creators/:id/contracts/:contractId/versions` | `crm:update` | Register uploaded contract version |
+| POST   | `/api/creators/:id/contracts/:contractId/status`   | `crm:update` | Update creator contract status     |
+| POST   | `/api/creators/:id/contracts/:contractId/download` | `crm:read`   | Presigned contract download URL    |
 | POST   | `/api/recruitment/leads/:id/convert`               | `crm:update` | Convert lead to creator            |
 
 ---

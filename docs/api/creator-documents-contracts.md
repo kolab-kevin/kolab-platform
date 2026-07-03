@@ -1,6 +1,6 @@
 # Creator Documents & Contracts API
 
-**Status:** Creator documents API implemented. Contract CRUD remains planned.  
+**Status:** Creator documents and contracts APIs implemented.  
 **Base path:** `/api/creators` (nested resources)  
 **Auth:** Bearer JWT with active organization context  
 **Org type:** `AGENCY` (initially)
@@ -14,20 +14,19 @@ REST API for creator onboarding documents and versioned contracts. Binary files 
 **Available now:**
 
 - [Storage presign helpers](./storage.md)
-- Creator document metadata CRUD, version registration, review workflow, and audited download (this document)
-
-Contract routes are not implemented yet.
+- Creator document metadata CRUD, version registration, review workflow, and audited download
+- Creator contract metadata CRUD, version registration, status workflow, and audited download
 
 ---
 
 ## Permissions summary
 
-| Permission   | Used for                                                    |
-| ------------ | ----------------------------------------------------------- |
-| `crm:read`   | List/get documents, presigned download                      |
-| `crm:update` | Create/update documents, register versions, review workflow |
+| Permission   | Used for                                                                |
+| ------------ | ----------------------------------------------------------------------- |
+| `crm:read`   | List/get documents and contracts, presigned download                    |
+| `crm:update` | Create/update documents and contracts, versions, review/status workflow |
 
-All routes require active `OrganizationMembership`. Document downloads **always** emit `creator.document.downloaded`; sensitive document types include `sensitive: true` in audit metadata.
+All routes require active `OrganizationMembership`. Downloads **always** emit audit events (`creator.document.downloaded`, `creator.contract.downloaded`). Sensitive document types include `sensitive: true` in audit metadata.
 
 ---
 
@@ -163,7 +162,7 @@ Issues a short-lived presigned GET URL for the latest uploaded version (or a spe
 
 `versionId` is optional; defaults to the latest version with a `storageKey`.
 
-### Download response (200)
+### Document download response (200)
 
 ```json
 {
@@ -186,58 +185,120 @@ Issues a short-lived presigned GET URL for the latest uploaded version (or a spe
 
 ---
 
-## Contracts (planned)
+## Contract endpoints (implemented)
 
-| Method | Path                                                   | Permission               | Description                     |
-| ------ | ------------------------------------------------------ | ------------------------ | ------------------------------- |
-| GET    | `/api/creators/:id/contracts`                          | `crm:read`               | List contracts                  |
-| POST   | `/api/creators/:id/contracts`                          | `crm:contracts:manage`   | Create draft contract + v1      |
-| GET    | `/api/creators/:id/contracts/:contractId`              | `crm:read`               | Contract detail + versions      |
-| PATCH  | `/api/creators/:id/contracts/:contractId`              | `crm:contracts:manage`   | Update draft fields / metadata  |
-| POST   | `/api/creators/:id/contracts/:contractId/send`         | `crm:contracts:manage`   | Status → `SENT`                 |
-| POST   | `/api/creators/:id/contracts/:contractId/cancel`       | `crm:contracts:manage`   | Status → `CANCELLED`            |
-| POST   | `/api/creators/:id/contracts/:contractId/sign`         | `crm:contracts:sign`     | Manual sign + lock version      |
-| GET    | `/api/creators/:id/contracts/:contractId/download-url` | `crm:documents:download` | Download executed PDF (audited) |
+| Method | Path                                                      | Permission   | Description                        |
+| ------ | --------------------------------------------------------- | ------------ | ---------------------------------- |
+| GET    | `/api/creators/:creatorId/contracts`                      | `crm:read`   | List contracts for creator         |
+| POST   | `/api/creators/:creatorId/contracts`                      | `crm:update` | Create contract metadata row       |
+| GET    | `/api/creators/:creatorId/contracts/:contractId`          | `crm:read`   | Get contract detail + versions     |
+| PATCH  | `/api/creators/:creatorId/contracts/:contractId`          | `crm:update` | Update title, validity, metadata   |
+| POST   | `/api/creators/:creatorId/contracts/:contractId/versions` | `crm:update` | Register uploaded version metadata |
+| POST   | `/api/creators/:creatorId/contracts/:contractId/status`   | `crm:update` | Update workflow status             |
+| POST   | `/api/creators/:creatorId/contracts/:contractId/download` | `crm:read`   | Presigned download URL (audited)   |
+
+Upload flow:
+
+1. `POST /api/creators/:creatorId/contracts` — create contract (`DRAFT`)
+2. `POST /api/storage/presign-upload` with `resourceKind: "contracts"`
+3. Client `PUT` to presigned URL
+4. `POST /api/creators/:creatorId/contracts/:contractId/versions` — register version metadata
+5. `POST /api/creators/:creatorId/contracts/:contractId/status` — advance workflow (e.g. `SENT` → `SIGNED`)
+
+### Status workflow
+
+| From         | Allowed next statuses                      |
+| ------------ | ------------------------------------------ |
+| `DRAFT`      | `SENT`, `CANCELLED`                        |
+| `SENT`       | `VIEWED`, `SIGNED`, `EXPIRED`, `CANCELLED` |
+| `VIEWED`     | `SIGNED`, `EXPIRED`, `CANCELLED`           |
+| `SIGNED`     | `TERMINATED`                               |
+| `EXPIRED`    | `DRAFT`                                    |
+| `CANCELLED`  | `DRAFT`                                    |
+| `TERMINATED` | `DRAFT`                                    |
+
+When status becomes `SIGNED`, `signedAt` and `signedByUserId` are set on the contract and latest uploaded version. Signed contracts reject title/validity changes and new versions; metadata-only updates are allowed for amendment/termination notes.
 
 ---
 
-## Contract types (planned)
+## Contract types (API enum)
 
 `CREATOR_AGREEMENT`, `AGENCY_AGREEMENT`, `CAMPAIGN_CONTRACT`, `NDA`, `OTHER`
 
-## Contract statuses (planned)
+## Contract statuses (API enum)
 
 `DRAFT`, `SENT`, `VIEWED`, `SIGNED`, `EXPIRED`, `CANCELLED`, `TERMINATED`
 
 ---
 
+## POST `/api/creators/:creatorId/contracts/:contractId/status`
+
+### Status update request
+
+```json
+{
+  "status": "SENT",
+  "metadata": {
+    "sentVia": "email"
+  }
+}
+```
+
+Transition to `SIGNED` requires at least one uploaded version with a `storageKey`.
+
+---
+
+## POST `/api/creators/:creatorId/contracts/:contractId/download`
+
+Issues a short-lived presigned GET URL for the latest uploaded version (or a specific `versionId`).
+
+### Contract download response (200)
+
+```json
+{
+  "contractId": "contract-1",
+  "versionId": "ver-1",
+  "storageKey": "organizations/org-1/creators/creator-1/contracts/contract-1/versions/ver-1/agreement.pdf",
+  "downloadUrl": "https://storage.example/presigned...",
+  "expiresAt": "2026-07-02T12:05:00.000Z"
+}
+```
+
+---
+
 ## Zod validation (`@kolab/types`)
 
-| Schema                               | Purpose              |
-| ------------------------------------ | -------------------- |
-| `CreateCreatorDocumentSchema`        | POST document        |
-| `UpdateCreatorDocumentSchema`        | PATCH metadata       |
-| `CreateCreatorDocumentVersionSchema` | POST version         |
-| `ReviewCreatorDocumentSchema`        | POST review          |
-| `DownloadCreatorDocumentSchema`      | POST download        |
-| `CreateCreatorContractSchema`        | POST contract (plan) |
-| `UpdateCreatorContractSchema`        | PATCH draft (plan)   |
+| Schema                               | Purpose                |
+| ------------------------------------ | ---------------------- |
+| `CreateCreatorDocumentSchema`        | POST document          |
+| `UpdateCreatorDocumentSchema`        | PATCH document         |
+| `CreateCreatorDocumentVersionSchema` | POST document version  |
+| `ReviewCreatorDocumentSchema`        | POST document review   |
+| `DownloadCreatorDocumentSchema`      | POST document download |
+| `CreateCreatorContractSchema`        | POST contract          |
+| `UpdateCreatorContractSchema`        | PATCH contract         |
+| `CreateCreatorContractVersionSchema` | POST contract version  |
+| `UpdateCreatorContractStatusSchema`  | POST contract status   |
+| `DownloadCreatorContractSchema`      | POST contract download |
 
-Raw file fields (`file`, `base64`, `body`, etc.) are rejected on all document inputs.
+Raw file fields (`file`, `base64`, `body`, etc.) are rejected on all document and contract inputs.
 
 ---
 
 ## Audit events
 
-| Action                           | When                  | Target type        |
-| -------------------------------- | --------------------- | ------------------ |
-| `creator.document.created`       | Document created      | `creator_document` |
-| `creator.document.updated`       | Metadata updated      | `creator_document` |
-| `creator.document.version_added` | Version registered    | `creator_document` |
-| `creator.document.reviewed`      | Review status changed | `creator_document` |
-| `creator.document.downloaded`    | Download URL issued   | `creator_document` |
-
-Contract audit events remain planned.
+| Action                            | When                  | Target type        |
+| --------------------------------- | --------------------- | ------------------ |
+| `creator.document.created`        | Document created      | `creator_document` |
+| `creator.document.updated`        | Metadata updated      | `creator_document` |
+| `creator.document.version_added`  | Version registered    | `creator_document` |
+| `creator.document.reviewed`       | Review status changed | `creator_document` |
+| `creator.document.downloaded`     | Download URL issued   | `creator_document` |
+| `creator.contract.created`        | Contract created      | `creator_contract` |
+| `creator.contract.updated`        | Metadata updated      | `creator_contract` |
+| `creator.contract.version_added`  | Version registered    | `creator_contract` |
+| `creator.contract.status_changed` | Status changed        | `creator_contract` |
+| `creator.contract.downloaded`     | Download URL issued   | `creator_contract` |
 
 ---
 
@@ -254,7 +315,6 @@ Every query filters by JWT `organizationId`. Cross-org document or contract ids 
 - E-signature OAuth flows
 - Campaign contract automation
 - Public unauthenticated upload links (future portal milestone)
-- Contract CRUD
 
 ---
 
