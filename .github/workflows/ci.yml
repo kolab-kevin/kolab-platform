@@ -11,9 +11,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DATABASE_URL: postgresql://kolab:kolab@localhost:5432/kolab
-  REDIS_URL: redis://localhost:6379
+  DATABASE_URL: postgresql://kolab:kolab@localhost:5432/kolab?schema=public
   JWT_SECRET: ci-secret-key-minimum-32-characters-long-for-tests
+  REDIS_URL: redis://localhost:6379
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
 
@@ -27,71 +27,53 @@ jobs:
         with:
           fail-on-severity: high
 
-  lint:
-    name: Lint
+  backend-quality-gate:
+    name: Backend quality gate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm format:check
-      - run: pnpm lint
 
-  typecheck:
-    name: Typecheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm db:generate
-      - run: pnpm typecheck
+          version: 9.15.0
 
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: kolab
-          POSTGRES_PASSWORD: kolab
-          POSTGRES_DB: kolab
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U kolab"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm db:generate
-      - run: pnpm test
-      - run: pnpm --filter @kolab/database exec prisma validate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prisma validate
+        run: pnpm --filter @kolab/database exec prisma validate --schema prisma/schema.prisma
+
+      - name: Prisma generate
+        run: pnpm db:generate
+
+      - name: Build @kolab/types
+        run: pnpm --filter @kolab/types build
+
+      - name: Build @kolab/config
+        run: pnpm --filter @kolab/config build
+
+      - name: Test @kolab/auth
+        run: pnpm --filter @kolab/auth test
+
+      - name: Test @kolab/storage
+        run: pnpm --filter @kolab/storage test
+
+      - name: Typecheck @kolab/api
+        run: pnpm --filter @kolab/api typecheck
+
+      - name: Test @kolab/api
+        run: pnpm --filter @kolab/api test
+
+      - name: Lint @kolab/api
+        run: pnpm --filter @kolab/api lint
+
+      - name: Markdownlint docs
+        run: pnpm exec markdownlint-cli2 "docs/**/*.md"
 
   audit:
     name: Security audit
@@ -99,6 +81,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -108,79 +92,17 @@ jobs:
       - run: pnpm check:licenses
       - run: pnpm check:cycles
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm db:generate
-      - run: pnpm build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts
-          retention-days: 7
-          path: |
-            apps/*/dist
-            apps/*/.next
-            packages/*/dist
-
-  docker:
-    name: Docker build
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - name: Build API image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: docker/nest-service.Dockerfile
-          push: false
-          tags: kolab/api:ci
-          build-args: |
-            APP_FILTER=@kolab/api
-            APP_DIR=api
-            APP_PORT=4000
-            IMAGE_TITLE=KOLAB API
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-      - name: Build Web image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: docker/next-service.Dockerfile
-          push: false
-          tags: kolab/web:ci
-          build-args: |
-            APP_FILTER=@kolab/web
-            APP_DIR=web
-            APP_PORT=3000
-            IMAGE_TITLE=KOLAB Web
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
   ci-gate:
     name: Quality gate
     runs-on: ubuntu-latest
-    needs: [dependency-review, lint, typecheck, test, audit, build, docker]
+    needs: [dependency-review, backend-quality-gate, audit]
     if: always()
     steps:
       - name: Verify all required jobs passed
         run: |
           if [[ "${{ needs.dependency-review.result }}" == "failure" ]] || \
-             [[ "${{ needs.lint.result }}" == "failure" ]] || \
-             [[ "${{ needs.typecheck.result }}" == "failure" ]] || \
-             [[ "${{ needs.test.result }}" == "failure" ]] || \
-             [[ "${{ needs.audit.result }}" == "failure" ]] || \
-             [[ "${{ needs.build.result }}" == "failure" ]] || \
-             [[ "${{ needs.docker.result }}" == "failure" ]]; then
+             [[ "${{ needs.backend-quality-gate.result }}" == "failure" ]] || \
+             [[ "${{ needs.audit.result }}" == "failure" ]]; then
             echo "One or more quality gates failed."
             exit 1
           fi

@@ -7,6 +7,8 @@
     "build": "turbo build",
     "lint": "turbo lint && pnpm lint:md",
     "lint:md": "markdownlint-cli2 \"**/*.md\" \"!**/node_modules/**\"",
+    "lint:md:docs": "markdownlint-cli2 \"docs/**/*.md\"",
+    "ci:backend": "pnpm --filter @kolab/database exec prisma validate --schema prisma/schema.prisma && pnpm db:generate && pnpm --filter @kolab/types build && pnpm --filter @kolab/config build && pnpm --filter @kolab/auth test && pnpm --filter @kolab/storage test && pnpm --filter @kolab/api typecheck && pnpm --filter @kolab/api test && pnpm --filter @kolab/api lint && pnpm lint:md:docs",
     "lint:fix": "turbo lint && markdownlint-cli2 --fix \"**/*.md\" \"!**/node_modules/**\"",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,yml,yaml,css}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,yml,yaml,css}\"",
