@@ -28,7 +28,7 @@ export class CreatorsDocumentsController {
   constructor(private readonly creatorsDocumentsService: CreatorsDocumentsService) {}
 
   @Get(':creatorId/documents')
-  @RequirePermissions('crm:read')
+  @RequirePermissions('documents:read')
   @ApiOperation({ summary: 'List documents for a creator' })
   @ApiResponse({ status: 200, description: 'Creator documents list' })
   @ApiResponse({ status: 404, description: 'Creator not found' })
@@ -37,7 +37,7 @@ export class CreatorsDocumentsController {
   }
 
   @Get(':creatorId/documents/:documentId')
-  @RequirePermissions('crm:read')
+  @RequirePermissions('documents:read')
   @ApiOperation({ summary: 'Get creator document detail with versions' })
   @ApiResponse({ status: 200, description: 'Creator document detail' })
   @ApiResponse({ status: 404, description: 'Creator or document not found' })
@@ -50,7 +50,7 @@ export class CreatorsDocumentsController {
   }
 
   @Post(':creatorId/documents')
-  @RequirePermissions('crm:update')
+  @RequirePermissions('documents:write')
   @ApiOperation({ summary: 'Create a creator document record' })
   @ApiResponse({ status: 201, description: 'Creator document created' })
   @ApiResponse({ status: 404, description: 'Creator not found' })
@@ -63,7 +63,7 @@ export class CreatorsDocumentsController {
   }
 
   @Patch(':creatorId/documents/:documentId')
-  @RequirePermissions('crm:update')
+  @RequirePermissions('documents:write')
   @ApiOperation({ summary: 'Update creator document metadata' })
   @ApiResponse({ status: 200, description: 'Creator document updated' })
   @ApiResponse({ status: 404, description: 'Creator or document not found' })
@@ -77,7 +77,7 @@ export class CreatorsDocumentsController {
   }
 
   @Post(':creatorId/documents/:documentId/versions')
-  @RequirePermissions('crm:update')
+  @RequirePermissions('documents:write')
   @ApiOperation({ summary: 'Register an uploaded document version' })
   @ApiResponse({ status: 201, description: 'Document version added' })
   @ApiResponse({ status: 404, description: 'Creator or document not found' })
@@ -92,7 +92,7 @@ export class CreatorsDocumentsController {
   }
 
   @Post(':creatorId/documents/:documentId/review')
-  @RequirePermissions('crm:update')
+  @RequirePermissions('documents:review')
   @ApiOperation({ summary: 'Review a creator document' })
   @ApiResponse({ status: 200, description: 'Creator document reviewed' })
   @ApiResponse({ status: 404, description: 'Creator or document not found' })
@@ -106,7 +106,7 @@ export class CreatorsDocumentsController {
   }
 
   @Post(':creatorId/documents/:documentId/download')
-  @RequirePermissions('crm:read')
+  @RequirePermissions('documents:read')
   @ApiOperation({ summary: 'Create a presigned download URL for a document version' })
   @ApiResponse({ status: 200, description: 'Presigned download URL generated' })
   @ApiResponse({ status: 404, description: 'Creator or document not found' })

@@ -30,7 +30,7 @@ export class CreatorsReportingController {
   ) {}
 
   @Post('documents/notifications/preview')
-  @RequirePermissions('crm:read')
+  @RequirePermissions('documents:read')
   @ApiOperation({ summary: 'Preview expiration notification payloads for the organization' })
   @ApiResponse({ status: 200, description: 'Notification preview payloads generated' })
   previewExpirationNotifications(
@@ -42,7 +42,7 @@ export class CreatorsReportingController {
   }
 
   @Get('documents/expiring')
-  @RequirePermissions('crm:read')
+  @RequirePermissions('documents:read')
   @ApiOperation({ summary: 'List expiring or expired creator documents for the organization' })
   @ApiResponse({ status: 200, description: 'Expiring creator documents report' })
   listExpiringDocuments(
@@ -53,7 +53,7 @@ export class CreatorsReportingController {
   }
 
   @Get('documents/missing')
-  @RequirePermissions('crm:read')
+  @RequirePermissions('documents:read')
   @ApiOperation({ summary: 'List active creators missing required documents' })
   @ApiResponse({ status: 200, description: 'Missing creator documents report' })
   listMissingDocuments(
@@ -64,7 +64,7 @@ export class CreatorsReportingController {
   }
 
   @Get('contracts/expiring')
-  @RequirePermissions('crm:read')
+  @RequirePermissions('documents:read')
   @ApiOperation({ summary: 'List expiring or expired creator contracts for the organization' })
   @ApiResponse({ status: 200, description: 'Expiring creator contracts report' })
   listExpiringContracts(

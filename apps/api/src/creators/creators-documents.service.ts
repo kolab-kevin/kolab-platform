@@ -1,4 +1,5 @@
 import type { AccessTokenPayload } from '@kolab/auth';
+import { userHasPermission } from '@kolab/auth';
 import type {
   CreatorDocument as PrismaCreatorDocument,
   CreatorDocumentVersion as PrismaCreatorDocumentVersion,
@@ -364,6 +365,15 @@ export class CreatorsDocumentsService {
       include: documentInclude,
     });
 
+    const documentType = document.documentType as CreatorDocumentType;
+
+    if (
+      isSensitiveDocumentType(documentType) &&
+      !userHasPermission(user, 'documents:download_sensitive')
+    ) {
+      throw new ForbiddenException('Insufficient permissions to download sensitive documents');
+    }
+
     const version = input.versionId
       ? document.versions.find((item) => item.id === input.versionId)
       : [...document.versions]
@@ -404,7 +414,7 @@ export class CreatorsDocumentsService {
         versionId: version.id,
         versionNumber: version.versionNumber,
         documentType: document.documentType,
-        sensitive: isSensitiveDocumentType(document.documentType as CreatorDocumentType),
+        sensitive: isSensitiveDocumentType(documentType),
       },
     });
 

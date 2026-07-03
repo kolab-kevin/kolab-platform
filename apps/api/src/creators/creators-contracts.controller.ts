@@ -30,7 +30,7 @@ export class CreatorsContractsController {
   constructor(private readonly creatorsContractsService: CreatorsContractsService) {}
 
   @Get(':creatorId/contracts')
-  @RequirePermissions('crm:read')
+  @RequirePermissions('documents:read')
   @ApiOperation({ summary: 'List contracts for a creator' })
   @ApiResponse({ status: 200, description: 'Creator contracts list' })
   @ApiResponse({ status: 404, description: 'Creator not found' })
@@ -39,7 +39,7 @@ export class CreatorsContractsController {
   }
 
   @Get(':creatorId/contracts/:contractId')
-  @RequirePermissions('crm:read')
+  @RequirePermissions('documents:read')
   @ApiOperation({ summary: 'Get creator contract detail with versions' })
   @ApiResponse({ status: 200, description: 'Creator contract detail' })
   @ApiResponse({ status: 404, description: 'Creator or contract not found' })
@@ -52,7 +52,7 @@ export class CreatorsContractsController {
   }
 
   @Post(':creatorId/contracts')
-  @RequirePermissions('crm:update')
+  @RequirePermissions('documents:write')
   @ApiOperation({ summary: 'Create a creator contract record' })
   @ApiResponse({ status: 201, description: 'Creator contract created' })
   @ApiResponse({ status: 404, description: 'Creator not found' })
@@ -65,7 +65,7 @@ export class CreatorsContractsController {
   }
 
   @Patch(':creatorId/contracts/:contractId')
-  @RequirePermissions('crm:update')
+  @RequirePermissions('documents:write')
   @ApiOperation({ summary: 'Update creator contract metadata' })
   @ApiResponse({ status: 200, description: 'Creator contract updated' })
   @ApiResponse({ status: 404, description: 'Creator or contract not found' })
@@ -79,7 +79,7 @@ export class CreatorsContractsController {
   }
 
   @Post(':creatorId/contracts/:contractId/versions')
-  @RequirePermissions('crm:update')
+  @RequirePermissions('documents:write')
   @ApiOperation({ summary: 'Register an uploaded contract version' })
   @ApiResponse({ status: 201, description: 'Contract version added' })
   @ApiResponse({ status: 404, description: 'Creator or contract not found' })
@@ -94,7 +94,7 @@ export class CreatorsContractsController {
   }
 
   @Post(':creatorId/contracts/:contractId/status')
-  @RequirePermissions('crm:update')
+  @RequirePermissions('documents:write')
   @ApiOperation({ summary: 'Update creator contract workflow status' })
   @ApiResponse({ status: 200, description: 'Creator contract status updated' })
   @ApiResponse({ status: 404, description: 'Creator or contract not found' })
@@ -109,7 +109,7 @@ export class CreatorsContractsController {
   }
 
   @Post(':creatorId/contracts/:contractId/sign')
-  @RequirePermissions('crm:update')
+  @RequirePermissions('documents:write')
   @ApiOperation({ summary: 'Manually sign a creator contract version' })
   @ApiResponse({ status: 200, description: 'Creator contract signed' })
   @ApiResponse({ status: 404, description: 'Creator or contract not found' })
@@ -123,7 +123,7 @@ export class CreatorsContractsController {
   }
 
   @Post(':creatorId/contracts/:contractId/download')
-  @RequirePermissions('crm:read')
+  @RequirePermissions('documents:read')
   @ApiOperation({ summary: 'Create a presigned download URL for a contract version' })
   @ApiResponse({ status: 200, description: 'Presigned download URL generated' })
   @ApiResponse({ status: 404, description: 'Creator or contract not found' })

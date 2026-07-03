@@ -112,7 +112,20 @@ sequenceDiagram
 | `crm:delete` | ✓         | ✓         | ✓              | —         | —         | —       | —       | —       | —      |
 | `crm:assign` | ✓         | ✓         | ✓              | ✓         | —         | —       | —       | —       | —      |
 
-Recruitment CRM routes under `/api/recruitment/*` use `@RequirePermissions()` with these CRM permissions. `isSystemAdmin` bypasses all authorization guards.
+Recruitment CRM routes under `/api/recruitment/*` use `@RequirePermissions()` with these CRM permissions. Creator profile routes under `/api/creators/*` (excluding documents/contracts) continue to use CRM permissions.
+
+### Document permissions (Release 0.3)
+
+| Permission                     | ORG_OWNER | ORG_ADMIN | AGENCY_MANAGER | RECRUITER | MODERATOR | SUPPORT | CREATOR | FINANCE | VIEWER |
+| ------------------------------ | --------- | --------- | -------------- | --------- | --------- | ------- | ------- | ------- | ------ |
+| `documents:read`               | ✓         | ✓         | ✓              | ✓         | —         | ✓       | —       | ✓       | —      |
+| `documents:write`              | ✓         | ✓         | ✓              | ✓         | —         | —       | —       | —       | —      |
+| `documents:review`             | ✓         | ✓         | ✓              | —         | —         | —       | —       | —       | —      |
+| `documents:download_sensitive` | ✓         | ✓         | ✓              | —         | —         | —       | —       | —       | —      |
+
+Creator document and contract routes under `/api/creators/*documents*` and `/api/creators/*contracts*` use these document permissions. Sensitive document types (`GOVERNMENT_ID`, `PASSPORT`, `TAX_FORM`, `BANK_INFO`) require `documents:download_sensitive` at the service layer in addition to `documents:read` on the download route. Contract downloads use `documents:read` only.
+
+`isSystemAdmin` bypasses all authorization guards and service-layer permission checks.
 
 ### Guard stack (NestJS — Release 0.2 RBAC implemented)
 

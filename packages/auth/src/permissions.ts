@@ -12,6 +12,17 @@ const crmFullAccess: Permission[] = [
 
 const crmRecruiterAccess: Permission[] = ['crm:read', 'crm:create', 'crm:update', 'crm:assign'];
 
+const documentsFullAccess: Permission[] = [
+  'documents:read',
+  'documents:write',
+  'documents:review',
+  'documents:download_sensitive',
+];
+
+const documentsRecruiterAccess: Permission[] = ['documents:read', 'documents:write'];
+
+const documentsReadOnlyAccess: Permission[] = ['documents:read'];
+
 const memberManagement: Permission[] = [
   'org:read',
   'org:update',
@@ -22,6 +33,7 @@ const memberManagement: Permission[] = [
   'audit:read',
   'sessions:revoke',
   ...crmFullAccess,
+  ...documentsFullAccess,
 ];
 
 const readOnly: Permission[] = ['org:read', 'members:read'];
@@ -39,12 +51,19 @@ export const ORGANIZATION_ROLE_PERMISSIONS: Readonly<
     'members:update_role',
     'audit:read',
     ...crmFullAccess,
+    ...documentsFullAccess,
   ],
-  RECRUITER: ['org:read', 'members:read', 'members:invite', ...crmRecruiterAccess],
+  RECRUITER: [
+    'org:read',
+    'members:read',
+    'members:invite',
+    ...crmRecruiterAccess,
+    ...documentsRecruiterAccess,
+  ],
   CREATOR: readOnly,
   MODERATOR: ['org:read', 'members:read', 'audit:read', 'crm:read'],
-  FINANCE: ['org:read', 'members:read', 'audit:read'],
-  SUPPORT: ['org:read', 'members:read', 'audit:read', 'crm:read'],
+  FINANCE: ['org:read', 'members:read', 'audit:read', ...documentsReadOnlyAccess],
+  SUPPORT: ['org:read', 'members:read', 'audit:read', 'crm:read', ...documentsReadOnlyAccess],
   VIEWER: readOnly,
 };
 

@@ -341,6 +341,72 @@ describe('CreatorsDocumentsService', () => {
     );
   });
 
+  it('allows managers to download sensitive documents', async () => {
+    (prisma.creatorDocument.findFirst as jest.Mock).mockResolvedValue({
+      ...baseDocument,
+      documentType: 'PASSPORT',
+      versions: [baseVersion],
+    });
+
+    await expect(service.downloadDocument(managerToken, 'creator-1', 'doc-1')).resolves.toEqual(
+      expect.objectContaining({ documentId: 'doc-1' }),
+    );
+  });
+
+  it('rejects sensitive downloads for recruiters without documents:download_sensitive', async () => {
+    const recruiterToken: AccessTokenPayload = {
+      ...managerToken,
+      sub: 'recruiter-1',
+      organizationRole: 'RECRUITER',
+    };
+
+    (prisma.creatorDocument.findFirst as jest.Mock).mockResolvedValue({
+      ...baseDocument,
+      versions: [baseVersion],
+    });
+
+    await expect(service.downloadDocument(recruiterToken, 'creator-1', 'doc-1')).rejects.toThrow(
+      ForbiddenException,
+    );
+    expect(getPresignedDownloadUrl).not.toHaveBeenCalled();
+  });
+
+  it('allows recruiters to download non-sensitive documents', async () => {
+    const recruiterToken: AccessTokenPayload = {
+      ...managerToken,
+      sub: 'recruiter-1',
+      organizationRole: 'RECRUITER',
+    };
+
+    (prisma.creatorDocument.findFirst as jest.Mock).mockResolvedValue({
+      ...baseDocument,
+      documentType: 'PROFILE_PHOTO',
+      versions: [baseVersion],
+    });
+
+    await expect(service.downloadDocument(recruiterToken, 'creator-1', 'doc-1')).resolves.toEqual(
+      expect.objectContaining({ documentId: 'doc-1' }),
+    );
+  });
+
+  it('allows system administrators to download sensitive documents', async () => {
+    const systemAdminToken: AccessTokenPayload = {
+      ...managerToken,
+      sub: 'admin-1',
+      organizationRole: 'VIEWER',
+      isSystemAdmin: true,
+    };
+
+    (prisma.creatorDocument.findFirst as jest.Mock).mockResolvedValue({
+      ...baseDocument,
+      versions: [baseVersion],
+    });
+
+    await expect(service.downloadDocument(systemAdminToken, 'creator-1', 'doc-1')).resolves.toEqual(
+      expect.objectContaining({ documentId: 'doc-1' }),
+    );
+  });
+
   it('enforces organization isolation', async () => {
     (prisma.creatorDocument.findFirst as jest.Mock).mockResolvedValue(null);
 
