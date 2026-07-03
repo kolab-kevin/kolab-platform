@@ -16,6 +16,7 @@ REST API for creator onboarding documents and versioned contracts. Binary files 
 - [Storage presign helpers](./storage.md)
 - Creator document metadata CRUD, version registration, review workflow, and audited download
 - Creator contract metadata CRUD, version registration, status workflow, and audited download
+- Creator onboarding checklist derived from profile, document, and contract state (see [Creators API](./creators.md#get-apicreatorsidonboarding))
 
 ---
 

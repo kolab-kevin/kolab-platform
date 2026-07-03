@@ -22,12 +22,16 @@ import { RequirePermissions } from '../common/decorators/auth.decorators';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { CreatorsService } from './creators.service';
+import { CreatorsOnboardingService } from './creators-onboarding.service';
 
 @ApiTags('creators')
 @ApiBearerAuth('access-token')
 @Controller('creators')
 export class CreatorsController {
-  constructor(private readonly creatorsService: CreatorsService) {}
+  constructor(
+    private readonly creatorsService: CreatorsService,
+    private readonly creatorsOnboardingService: CreatorsOnboardingService,
+  ) {}
 
   @Get()
   @RequirePermissions('crm:read')
@@ -139,6 +143,15 @@ export class CreatorsController {
     body: UpdateCreatorStructuredAvailabilityInput,
   ) {
     return this.creatorsService.updateCreatorAvailability(user, creatorId, body);
+  }
+
+  @Get(':id/onboarding')
+  @RequirePermissions('documents:read')
+  @ApiOperation({ summary: 'Get creator onboarding checklist status' })
+  @ApiResponse({ status: 200, description: 'Creator onboarding checklist' })
+  @ApiResponse({ status: 404, description: 'Creator not found' })
+  getCreatorOnboarding(@CurrentUser() user: AccessTokenPayload, @Param('id') creatorId: string) {
+    return this.creatorsOnboardingService.getCreatorOnboarding(user, creatorId);
   }
 
   @Get(':id')

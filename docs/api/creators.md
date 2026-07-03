@@ -42,37 +42,38 @@ All routes are scoped to the JWT `organizationId`. Users must have an active org
 
 ## Endpoints
 
-| Method | Path                                               | Permission   | Description                        |
-| ------ | -------------------------------------------------- | ------------ | ---------------------------------- |
-| GET    | `/api/creators`                                    | `crm:read`   | List creators (filter, cursor)     |
-| GET    | `/api/creators/:id`                                | `crm:read`   | Get creator detail                 |
-| PATCH  | `/api/creators/:id`                                | `crm:update` | Update creator profile fields      |
-| GET    | `/api/creators/:id/platform-accounts`              | `crm:read`   | List creator platform accounts     |
-| POST   | `/api/creators/:id/platform-accounts`              | `crm:update` | Add a creator platform account     |
-| PATCH  | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update` | Update a creator platform account  |
-| DELETE | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update` | Remove a creator platform account  |
-| GET    | `/api/creators/:id/skills`                         | `crm:read`   | Get creator skills profile         |
-| PATCH  | `/api/creators/:id/skills`                         | `crm:update` | Update creator skills profile      |
-| GET    | `/api/creators/:id/availability`                   | `crm:read`   | Get creator availability           |
-| PATCH  | `/api/creators/:id/availability`                   | `crm:update` | Update creator availability        |
-| GET    | `/api/creators/:id/documents`                      | `crm:read`   | List creator documents             |
-| GET    | `/api/creators/:id/documents/:documentId`          | `crm:read`   | Get creator document detail        |
-| POST   | `/api/creators/:id/documents`                      | `crm:update` | Create creator document            |
-| PATCH  | `/api/creators/:id/documents/:documentId`          | `crm:update` | Update creator document metadata   |
-| POST   | `/api/creators/:id/documents/:documentId/versions` | `crm:update` | Register uploaded document version |
-| POST   | `/api/creators/:id/documents/:documentId/review`   | `crm:update` | Review creator document            |
-| POST   | `/api/creators/:id/documents/:documentId/download` | `crm:read`   | Presigned document download URL    |
-| GET    | `/api/creators/:id/contracts`                      | `crm:read`   | List creator contracts             |
-| GET    | `/api/creators/:id/contracts/:contractId`          | `crm:read`   | Get creator contract detail        |
-| POST   | `/api/creators/:id/contracts`                      | `crm:update` | Create creator contract            |
-| PATCH  | `/api/creators/:id/contracts/:contractId`          | `crm:update` | Update creator contract metadata   |
-| POST   | `/api/creators/:id/contracts/:contractId/versions` | `crm:update` | Register uploaded contract version |
-| POST   | `/api/creators/:id/contracts/:contractId/status`   | `crm:update` | Update creator contract status     |
-| POST   | `/api/creators/:id/contracts/:contractId/download` | `crm:read`   | Presigned contract download URL    |
-| GET    | `/api/creators/documents/expiring`                 | `crm:read`   | Report expiring/expired documents  |
-| GET    | `/api/creators/documents/missing`                  | `crm:read`   | Report missing required documents  |
-| GET    | `/api/creators/contracts/expiring`                 | `crm:read`   | Report expiring/expired contracts  |
-| POST   | `/api/recruitment/leads/:id/convert`               | `crm:update` | Convert lead to creator            |
+| Method | Path                                               | Permission       | Description                        |
+| ------ | -------------------------------------------------- | ---------------- | ---------------------------------- |
+| GET    | `/api/creators`                                    | `crm:read`       | List creators (filter, cursor)     |
+| GET    | `/api/creators/:id`                                | `crm:read`       | Get creator detail                 |
+| PATCH  | `/api/creators/:id`                                | `crm:update`     | Update creator profile fields      |
+| GET    | `/api/creators/:id/platform-accounts`              | `crm:read`       | List creator platform accounts     |
+| POST   | `/api/creators/:id/platform-accounts`              | `crm:update`     | Add a creator platform account     |
+| PATCH  | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update`     | Update a creator platform account  |
+| DELETE | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update`     | Remove a creator platform account  |
+| GET    | `/api/creators/:id/skills`                         | `crm:read`       | Get creator skills profile         |
+| PATCH  | `/api/creators/:id/skills`                         | `crm:update`     | Update creator skills profile      |
+| GET    | `/api/creators/:id/availability`                   | `crm:read`       | Get creator availability           |
+| PATCH  | `/api/creators/:id/availability`                   | `crm:update`     | Update creator availability        |
+| GET    | `/api/creators/:id/onboarding`                     | `documents:read` | Get creator onboarding checklist   |
+| GET    | `/api/creators/:id/documents`                      | `crm:read`       | List creator documents             |
+| GET    | `/api/creators/:id/documents/:documentId`          | `crm:read`       | Get creator document detail        |
+| POST   | `/api/creators/:id/documents`                      | `crm:update`     | Create creator document            |
+| PATCH  | `/api/creators/:id/documents/:documentId`          | `crm:update`     | Update creator document metadata   |
+| POST   | `/api/creators/:id/documents/:documentId/versions` | `crm:update`     | Register uploaded document version |
+| POST   | `/api/creators/:id/documents/:documentId/review`   | `crm:update`     | Review creator document            |
+| POST   | `/api/creators/:id/documents/:documentId/download` | `crm:read`       | Presigned document download URL    |
+| GET    | `/api/creators/:id/contracts`                      | `crm:read`       | List creator contracts             |
+| GET    | `/api/creators/:id/contracts/:contractId`          | `crm:read`       | Get creator contract detail        |
+| POST   | `/api/creators/:id/contracts`                      | `crm:update`     | Create creator contract            |
+| PATCH  | `/api/creators/:id/contracts/:contractId`          | `crm:update`     | Update creator contract metadata   |
+| POST   | `/api/creators/:id/contracts/:contractId/versions` | `crm:update`     | Register uploaded contract version |
+| POST   | `/api/creators/:id/contracts/:contractId/status`   | `crm:update`     | Update creator contract status     |
+| POST   | `/api/creators/:id/contracts/:contractId/download` | `crm:read`       | Presigned contract download URL    |
+| GET    | `/api/creators/documents/expiring`                 | `crm:read`       | Report expiring/expired documents  |
+| GET    | `/api/creators/documents/missing`                  | `crm:read`       | Report missing required documents  |
+| GET    | `/api/creators/contracts/expiring`                 | `crm:read`       | Report expiring/expired contracts  |
+| POST   | `/api/recruitment/leads/:id/convert`               | `crm:update`     | Convert lead to creator            |
 
 ---
 
@@ -175,6 +176,95 @@ Returns creator profile data plus related organization context.
 ```
 
 **Errors:** `404` if the creator does not exist in the active organization.
+
+---
+
+## GET `/api/creators/:id/onboarding`
+
+Returns a derived onboarding checklist for a creator using existing profile, document, contract, platform account, availability, and skills data. No new tables are written.
+
+**Permission:** `documents:read`
+
+### Checklist items
+
+| Key                        | Label                    | Required | Complete when                                                         |
+| -------------------------- | ------------------------ | -------- | --------------------------------------------------------------------- |
+| `profile_complete`         | Profile complete         | Yes      | `displayName` and `country` are present                               |
+| `government_id_approved`   | Government ID approved   | Yes      | `GOVERNMENT_ID` document with status `APPROVED`                       |
+| `creator_agreement_signed` | Creator agreement signed | Yes      | `CREATOR_AGREEMENT` contract with status `SIGNED`                     |
+| `platform_account_present` | Platform account present | No       | At least one platform account with status other than `REMOVED`        |
+| `availability_present`     | Availability present     | No       | Non-empty `availability` JSON on the creator profile                  |
+| `skills_present`           | Skills present           | No       | `metadata.skills.skills` or `metadata.skills.categories` is non-empty |
+
+Each item includes `key`, `label`, `status` (`COMPLETE`, `INCOMPLETE`, or `WARNING`), `required`, and `details`.
+
+### Overall status
+
+| Value        | Meaning                                                                |
+| ------------ | ---------------------------------------------------------------------- |
+| `COMPLETE`   | All required items complete                                            |
+| `INCOMPLETE` | At least one required item incomplete                                  |
+| `WARNING`    | All required items complete, but one or more optional items incomplete |
+
+Optional incomplete items use item status `WARNING`. Required incomplete items use item status `INCOMPLETE`.
+
+### Onboarding response (200)
+
+```json
+{
+  "creatorId": "creator_abc123",
+  "organizationId": "clx...",
+  "overallStatus": "WARNING",
+  "items": [
+    {
+      "key": "profile_complete",
+      "label": "Profile complete",
+      "status": "COMPLETE",
+      "required": true,
+      "details": {
+        "missingFields": [],
+        "displayName": "Jane Creator",
+        "country": "US"
+      }
+    },
+    {
+      "key": "government_id_approved",
+      "label": "Government ID approved",
+      "status": "COMPLETE",
+      "required": true,
+      "details": {
+        "documentId": "doc-1",
+        "status": "APPROVED",
+        "documentType": "GOVERNMENT_ID"
+      }
+    },
+    {
+      "key": "creator_agreement_signed",
+      "label": "Creator agreement signed",
+      "status": "COMPLETE",
+      "required": true,
+      "details": {
+        "contractId": "contract-1",
+        "status": "SIGNED",
+        "contractType": "CREATOR_AGREEMENT",
+        "signedAt": "2026-07-02T14:00:00.000Z"
+      }
+    },
+    {
+      "key": "platform_account_present",
+      "label": "Platform account present",
+      "status": "WARNING",
+      "required": false,
+      "details": {
+        "activeAccountCount": 0,
+        "accounts": []
+      }
+    }
+  ]
+}
+```
+
+**Errors:** `404` if the creator does not exist in the active organization; `403` missing permission.
 
 ---
 
