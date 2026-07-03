@@ -1,37 +1,53 @@
 # Quality Gates
 
-Every pull request to `main` must pass all quality gates before merge. CI enforces these in [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml); run `pnpm validate` locally to catch failures early.
+Every pull request to `main` or `develop` must pass all quality gates before merge. CI enforces these in [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml); run `pnpm ci:backend` locally to mirror the backend gate.
 
 ## Gate summary
 
-| Gate              | Local command         | CI job                       | Blocks merge |
-| ----------------- | --------------------- | ---------------------------- | ------------ |
-| Format            | `pnpm format:check`   | lint                         | Yes          |
-| Lint              | `pnpm lint`           | lint                         | Yes          |
-| Typecheck         | `pnpm typecheck`      | typecheck                    | Yes          |
-| Test              | `pnpm test`           | test                         | Yes          |
-| Security audit    | `pnpm audit:ci`       | audit                        | Yes          |
-| License check     | `pnpm check:licenses` | audit                        | Yes          |
-| Cycle check       | `pnpm check:cycles`   | audit                        | Yes          |
-| Build             | `pnpm build`          | build                        | Yes          |
-| Docker build      | —                     | docker                       | Yes          |
-| Dependency review | —                     | dependency-review (PRs only) | Yes          |
+| Gate              | Local command         | CI job                 | Blocks merge |
+| ----------------- | --------------------- | ---------------------- | ------------ |
+| Backend platform  | `pnpm ci:backend`     | Lint, Test, Build      | Yes          |
+| Security audit    | `pnpm audit:ci`       | Security audit         | Yes          |
+| License check     | `pnpm check:licenses` | Security audit         | Yes          |
+| Cycle check       | `pnpm check:cycles`   | Security audit         | Yes          |
+| Docker build      | —                     | Docker build           | Yes          |
+| Dependency review | —                     | dependency-review (PR) | Yes          |
+| Aggregate gate    | —                     | Quality gate           | Yes          |
 
-The `ci-gate` job aggregates all results — any failure blocks the PR.
+Branch protection requires these GitHub check names: **Lint**, **Test**, **Build**, **Docker build**, and **Quality gate**.
+
+The **Quality gate** job aggregates all results — any failure blocks the PR.
+
+## Backend gate steps
+
+Runs on every push and pull request to `develop` or `main`:
+
+1. Install dependencies with pnpm 9.15.0
+2. Prisma validate (**Test** job)
+3. Prisma generate (Lint, Test, Build jobs)
+4. Build `@kolab/types` (**Build** job)
+5. Build `@kolab/config` (**Build** job)
+6. Test `@kolab/auth` (**Test** job)
+7. Test `@kolab/storage` (**Test** job)
+8. Typecheck `@kolab/api` (**Build** job)
+9. Test `@kolab/api` (**Test** job)
+10. Lint `@kolab/api` (**Lint** job)
+11. Markdownlint `docs/**/*.md` (**Lint** job)
+
+CI sets a dummy `DATABASE_URL` for Prisma validation and client generation. Storage tests mock the AWS SDK and do not require real S3 credentials.
 
 ## Local validation
 
-Run the full suite before opening a PR:
+Run the backend gate before opening a PR:
+
+```bash
+pnpm ci:backend
+```
+
+Run the broader repo validation when touching frontend or shared formatting:
 
 ```bash
 pnpm validate
-```
-
-Equivalent to:
-
-```bash
-pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && \
-  pnpm audit:ci && pnpm check:cycles && pnpm check:licenses && pnpm build
 ```
 
 ## Pre-commit hooks
@@ -46,37 +62,33 @@ Commit messages are validated by Commitlint via the `commit-msg` hook.
 
 ## CI details
 
-### Lint
+### Lint job
 
-- Prettier format check across the repo
-- ESLint via Turbo (`turbo lint`) plus markdownlint on all `.md` files
+- `@kolab/api` ESLint
+- Docs markdownlint (`docs/**/*.md`)
 
-### Typecheck
+### Test job
 
-- Requires `pnpm db:generate` first (Prisma client)
-- Turbo runs `typecheck` across all packages with dependency ordering
-
-### Test
-
-- PostgreSQL 16 and Redis 7 service containers
-- `pnpm test` via Turbo
 - Prisma schema validation
+- Prisma client generation
+- `@kolab/auth`, `@kolab/storage`, and `@kolab/api` tests
+
+### Build job
+
+- Prisma client generation
+- `@kolab/types` and `@kolab/config` builds
+- `@kolab/api` typecheck
+
+### Docker build job
+
+- Validates `docker/nest-service.Dockerfile` (API) and `docker/next-service.Dockerfile` (Web)
+- Runs after the Build job succeeds
 
 ### Security audit
 
 - `pnpm audit:ci` — high-severity vulnerabilities in production dependencies
 - `pnpm check:licenses` — allowed license policy (`scripts/check-licenses.mjs`)
 - `pnpm check:cycles` — no circular package dependencies (`scripts/check-cycles.mjs`)
-
-### Build
-
-- Full monorepo build via Turbo
-- Build artifacts uploaded for 7 days
-
-### Docker build
-
-- Validates `docker/nest-service.Dockerfile` (API) and `docker/next-service.Dockerfile` (Web)
-- Runs after build job succeeds
 
 ### Dependency review (PRs only)
 
@@ -86,7 +98,7 @@ Commit messages are validated by Commitlint via the `commit-msg` hook.
 
 Use the [PR template](../../.github/pull_request_template.md):
 
-- [ ] `pnpm validate` passes locally
+- [ ] `pnpm ci:backend` passes locally
 - [ ] Conventional Commits used
 - [ ] Branch follows naming convention
 - [ ] Documentation updated if needed
@@ -96,13 +108,13 @@ Use the [PR template](../../.github/pull_request_template.md):
 
 | Failure      | Fix                                                       |
 | ------------ | --------------------------------------------------------- |
-| Format       | `pnpm format`                                             |
-| ESLint       | `pnpm lint:fix` or fix reported issues                    |
-| Type errors  | Fix types; ensure `pnpm db:generate` ran                  |
+| Prisma       | Run `pnpm db:generate`; fix schema validation errors      |
+| Type errors  | Build `@kolab/types` and `@kolab/config` first            |
 | Test failure | Run `pnpm --filter <package> test` for targeted debugging |
+| ESLint       | Run `pnpm --filter @kolab/api lint`                       |
+| Docs lint    | Run `pnpm lint:md:docs`                                   |
 | Audit        | Update vulnerable dependency or document exception        |
 | Cycle        | Refactor imports to break circular dependency             |
-| Build        | Check Turbo task outputs and env vars in `turbo.json`     |
 
 ## Related docs
 
