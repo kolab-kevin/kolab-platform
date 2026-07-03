@@ -8,6 +8,7 @@ export * from './creator-compliance';
 export * from './creator-documents-contracts';
 export * from './creator-onboarding';
 export * from './invitation';
+export * from './live-intelligence';
 export * from './organization';
 export * from './permissions';
 export * from './platform';
