@@ -1,3 +1,4 @@
+import type { AccessTokenPayload } from '@kolab/auth';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
@@ -46,62 +47,65 @@ describe('CreatorsContractsController authorization', () => {
       }),
     }) as unknown as ExecutionContext;
 
-  const recruiterUser = {
+  const createUser = (
+    organizationRole: AccessTokenPayload['organizationRole'],
+  ): AccessTokenPayload => ({
+    sub: 'user-1',
+    email: 'user@kolab.test',
     role: 'USER',
-    organizationRole: 'RECRUITER',
+    organizationId: 'org-1',
+    organizationRole,
+    sessionId: 'session-1',
     isSystemAdmin: false,
-  };
+  });
 
-  const viewerUser = {
-    role: 'USER',
-    organizationRole: 'VIEWER',
-    isSystemAdmin: false,
-  };
+  const recruiterUser = createUser('RECRUITER');
+  const viewerUser = createUser('VIEWER');
 
-  it('allows recruiters to list contracts with crm:read', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+  it('allows recruiters to list contracts with documents:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:read']);
 
     expect(permissionsGuard.canActivate(createContext('listContracts', recruiterUser))).toBe(true);
   });
 
   it('denies viewers from listing contracts', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:read']);
 
     expect(() => permissionsGuard.canActivate(createContext('listContracts', viewerUser))).toThrow(
       ForbiddenException,
     );
   });
 
-  it('allows recruiters to create contracts with crm:update', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+  it('allows recruiters to create contracts with documents:write', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:write']);
 
     expect(permissionsGuard.canActivate(createContext('createContract', recruiterUser))).toBe(true);
   });
 
   it('denies viewers from updating contract status', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:write']);
 
     expect(() =>
       permissionsGuard.canActivate(createContext('updateContractStatus', viewerUser)),
     ).toThrow(ForbiddenException);
   });
 
-  it('allows recruiters to sign contracts with crm:update', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+  it('allows recruiters to sign contracts with documents:write', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:write']);
 
     expect(permissionsGuard.canActivate(createContext('signContract', recruiterUser))).toBe(true);
   });
 
   it('denies viewers from signing contracts', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:write']);
 
     expect(() => permissionsGuard.canActivate(createContext('signContract', viewerUser))).toThrow(
       ForbiddenException,
     );
   });
 
-  it('allows recruiters to download contracts with crm:read', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+  it('allows recruiters to download contracts with documents:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:read']);
 
     expect(permissionsGuard.canActivate(createContext('downloadContract', recruiterUser))).toBe(
       true,

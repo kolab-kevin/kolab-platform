@@ -88,4 +88,38 @@ describe('permissions', () => {
       expect(organizationRoleHasPermission(role, 'crm:delete')).toBe(false);
     }
   });
+
+  it('grants full document permissions to org owners, org admins, and agency managers', () => {
+    for (const role of ['ORG_OWNER', 'ORG_ADMIN', 'AGENCY_MANAGER'] as const) {
+      expect(organizationRoleHasPermission(role, 'documents:read')).toBe(true);
+      expect(organizationRoleHasPermission(role, 'documents:write')).toBe(true);
+      expect(organizationRoleHasPermission(role, 'documents:review')).toBe(true);
+      expect(organizationRoleHasPermission(role, 'documents:download_sensitive')).toBe(true);
+    }
+  });
+
+  it('grants recruiters document read and write but not review or sensitive download', () => {
+    expect(organizationRoleHasPermission('RECRUITER', 'documents:read')).toBe(true);
+    expect(organizationRoleHasPermission('RECRUITER', 'documents:write')).toBe(true);
+    expect(organizationRoleHasPermission('RECRUITER', 'documents:review')).toBe(false);
+    expect(organizationRoleHasPermission('RECRUITER', 'documents:download_sensitive')).toBe(false);
+  });
+
+  it('grants support and finance document read only', () => {
+    for (const role of ['SUPPORT', 'FINANCE'] as const) {
+      expect(organizationRoleHasPermission(role, 'documents:read')).toBe(true);
+      expect(organizationRoleHasPermission(role, 'documents:write')).toBe(false);
+      expect(organizationRoleHasPermission(role, 'documents:review')).toBe(false);
+      expect(organizationRoleHasPermission(role, 'documents:download_sensitive')).toBe(false);
+    }
+  });
+
+  it('denies document permissions to viewers, creators, and moderators', () => {
+    for (const role of ['VIEWER', 'CREATOR', 'MODERATOR'] as const) {
+      expect(organizationRoleHasPermission(role, 'documents:read')).toBe(false);
+      expect(organizationRoleHasPermission(role, 'documents:write')).toBe(false);
+      expect(organizationRoleHasPermission(role, 'documents:review')).toBe(false);
+      expect(organizationRoleHasPermission(role, 'documents:download_sensitive')).toBe(false);
+    }
+  });
 });

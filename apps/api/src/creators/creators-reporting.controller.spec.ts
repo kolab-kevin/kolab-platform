@@ -1,3 +1,4 @@
+import type { AccessTokenPayload } from '@kolab/auth';
 import { ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
@@ -48,20 +49,23 @@ describe('CreatorsReportingController authorization', () => {
       }),
     }) as unknown as ExecutionContext;
 
-  const recruiterUser = {
+  const createUser = (
+    organizationRole: AccessTokenPayload['organizationRole'],
+  ): AccessTokenPayload => ({
+    sub: 'user-1',
+    email: 'user@kolab.test',
     role: 'USER',
-    organizationRole: 'RECRUITER',
+    organizationId: 'org-1',
+    organizationRole,
+    sessionId: 'session-1',
     isSystemAdmin: false,
-  };
+  });
 
-  const viewerUser = {
-    role: 'USER',
-    organizationRole: 'VIEWER',
-    isSystemAdmin: false,
-  };
+  const recruiterUser = createUser('RECRUITER');
+  const viewerUser = createUser('VIEWER');
 
-  it('allows recruiters to list expiring documents with crm:read', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+  it('allows recruiters to list expiring documents with documents:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:read']);
 
     expect(
       permissionsGuard.canActivate(createContext('listExpiringDocuments', recruiterUser)),
@@ -69,23 +73,23 @@ describe('CreatorsReportingController authorization', () => {
   });
 
   it('denies viewers from listing expiring documents', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:read']);
 
     expect(() =>
       permissionsGuard.canActivate(createContext('listExpiringDocuments', viewerUser)),
     ).toThrow(ForbiddenException);
   });
 
-  it('allows recruiters to list missing documents with crm:read', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+  it('allows recruiters to list missing documents with documents:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:read']);
 
     expect(permissionsGuard.canActivate(createContext('listMissingDocuments', recruiterUser))).toBe(
       true,
     );
   });
 
-  it('allows recruiters to preview notifications with crm:read', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+  it('allows recruiters to preview notifications with documents:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:read']);
 
     expect(
       permissionsGuard.canActivate(createContext('previewExpirationNotifications', recruiterUser)),
@@ -93,15 +97,15 @@ describe('CreatorsReportingController authorization', () => {
   });
 
   it('denies viewers from previewing notifications', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:read']);
 
     expect(() =>
       permissionsGuard.canActivate(createContext('previewExpirationNotifications', viewerUser)),
     ).toThrow(ForbiddenException);
   });
 
-  it('allows recruiters to list expiring contracts with crm:read', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+  it('allows recruiters to list expiring contracts with documents:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['documents:read']);
 
     expect(
       permissionsGuard.canActivate(createContext('listExpiringContracts', recruiterUser)),

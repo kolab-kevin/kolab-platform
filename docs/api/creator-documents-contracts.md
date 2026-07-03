@@ -21,26 +21,44 @@ REST API for creator onboarding documents and versioned contracts. Binary files 
 
 ## Permissions summary
 
-| Permission   | Used for                                                                |
-| ------------ | ----------------------------------------------------------------------- |
-| `crm:read`   | List/get documents and contracts, presigned download                    |
-| `crm:update` | Create/update documents and contracts, versions, review/status workflow |
+Document and contract routes use dedicated document permissions. CRM permissions (`crm:read`, `crm:update`, etc.) remain for creator profile management and recruitment workflows.
 
-All routes require active `OrganizationMembership`. Downloads **always** emit audit events (`creator.document.downloaded`, `creator.contract.downloaded`). Sensitive document types include `sensitive: true` in audit metadata.
+| Permission                     | Used for                                                              |
+| ------------------------------ | --------------------------------------------------------------------- |
+| `documents:read`               | List/get documents and contracts, non-sensitive download, reporting   |
+| `documents:write`              | Create/update documents and contracts, versions, status/sign workflow |
+| `documents:review`             | Document review workflow (approve/reject/under review)                |
+| `documents:download_sensitive` | Download sensitive document types (service-layer check on download)   |
+
+Sensitive document types: `GOVERNMENT_ID`, `PASSPORT`, `TAX_FORM`, `BANK_INFO`. Non-sensitive downloads require `documents:read` only. Contract downloads require `documents:read` only (no `documents:download_sensitive`).
+
+| Role           | Document access                                                       |
+| -------------- | --------------------------------------------------------------------- |
+| ORG_OWNER      | All document permissions                                              |
+| ORG_ADMIN      | All document permissions                                              |
+| AGENCY_MANAGER | All document permissions                                              |
+| RECRUITER      | `documents:read`, `documents:write` (no review or sensitive download) |
+| SUPPORT        | `documents:read` only                                                 |
+| FINANCE        | `documents:read` only                                                 |
+| MODERATOR      | None (CRM read for recruitment only)                                  |
+| CREATOR        | None for internal API                                                 |
+| VIEWER         | None                                                                  |
+
+All routes require active `OrganizationMembership`. Downloads **always** emit audit events (`creator.document.downloaded`, `creator.contract.downloaded`). Sensitive document downloads include `sensitive: true` in audit metadata. `isSystemAdmin` bypasses permission checks.
 
 ---
 
 ## Document endpoints (implemented)
 
-| Method | Path                                                      | Permission   | Description                           |
-| ------ | --------------------------------------------------------- | ------------ | ------------------------------------- |
-| GET    | `/api/creators/:creatorId/documents`                      | `crm:read`   | List documents for creator            |
-| POST   | `/api/creators/:creatorId/documents`                      | `crm:update` | Create document metadata row          |
-| GET    | `/api/creators/:creatorId/documents/:documentId`          | `crm:read`   | Get document detail + versions        |
-| PATCH  | `/api/creators/:creatorId/documents/:documentId`          | `crm:update` | Update title, expiration, metadata    |
-| POST   | `/api/creators/:creatorId/documents/:documentId/versions` | `crm:update` | Register uploaded version metadata    |
-| POST   | `/api/creators/:creatorId/documents/:documentId/review`   | `crm:update` | Review workflow (approve/reject/etc.) |
-| POST   | `/api/creators/:creatorId/documents/:documentId/download` | `crm:read`   | Presigned download URL (audited)      |
+| Method | Path                                                      | Permission         | Description                           |
+| ------ | --------------------------------------------------------- | ------------------ | ------------------------------------- |
+| GET    | `/api/creators/:creatorId/documents`                      | `documents:read`   | List documents for creator            |
+| POST   | `/api/creators/:creatorId/documents`                      | `documents:write`  | Create document metadata row          |
+| GET    | `/api/creators/:creatorId/documents/:documentId`          | `documents:read`   | Get document detail + versions        |
+| PATCH  | `/api/creators/:creatorId/documents/:documentId`          | `documents:write`  | Update title, expiration, metadata    |
+| POST   | `/api/creators/:creatorId/documents/:documentId/versions` | `documents:write`  | Register uploaded version metadata    |
+| POST   | `/api/creators/:creatorId/documents/:documentId/review`   | `documents:review` | Review workflow (approve/reject/etc.) |
+| POST   | `/api/creators/:creatorId/documents/:documentId/download` | `documents:read`   | Presigned download URL (audited)      |
 
 Upload flow:
 
@@ -59,7 +77,7 @@ Upload flow:
 
 `REQUESTED`, `UPLOADED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `EXPIRED`, `ARCHIVED`
 
-Sensitive types (`GOVERNMENT_ID`, `PASSPORT`, `TAX_FORM`, `BANK_INFO`) are flagged in download audit metadata.
+Sensitive types (`GOVERNMENT_ID`, `PASSPORT`, `TAX_FORM`, `BANK_INFO`) require `documents:download_sensitive` to download and are flagged in audit metadata.
 
 ---
 
@@ -150,7 +168,7 @@ Allowed review statuses: `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `EXPIRED`, `ARC
 
 ## POST `/api/creators/:creatorId/documents/:documentId/download`
 
-Issues a short-lived presigned GET URL for the latest uploaded version (or a specific `versionId`).
+Issues a short-lived presigned GET URL for the latest uploaded version (or a specific `versionId`). Route requires `documents:read`. Sensitive document types additionally require `documents:download_sensitive` (enforced in the service layer).
 
 ### Download request
 
@@ -178,19 +196,19 @@ Issues a short-lived presigned GET URL for the latest uploaded version (or a spe
 
 ## Organization reporting (implemented)
 
-| Method | Path                               | Permission | Description                                 |
-| ------ | ---------------------------------- | ---------- | ------------------------------------------- |
-| GET    | `/api/creators/documents/expiring` | `crm:read` | Documents expiring or expired within window |
-| GET    | `/api/creators/documents/missing`  | `crm:read` | Active creators missing required documents  |
-| GET    | `/api/creators/contracts/expiring` | `crm:read` | Contracts expiring or expired within window |
+| Method | Path                               | Permission       | Description                                 |
+| ------ | ---------------------------------- | ---------------- | ------------------------------------------- |
+| GET    | `/api/creators/documents/expiring` | `documents:read` | Documents expiring or expired within window |
+| GET    | `/api/creators/documents/missing`  | `documents:read` | Active creators missing required documents  |
+| GET    | `/api/creators/contracts/expiring` | `documents:read` | Contracts expiring or expired within window |
 
 These endpoints are organization-scoped read-only reports. Notification preview payloads are available via `POST /api/creators/documents/notifications/preview`. No scheduled jobs or outbound email/SMS delivery exists in this milestone.
 
 ### Notification preview
 
-| Method | Path                                            | Permission | Description                                  |
-| ------ | ----------------------------------------------- | ---------- | -------------------------------------------- |
-| POST   | `/api/creators/documents/notifications/preview` | `crm:read` | Generate notification-ready preview payloads |
+| Method | Path                                            | Permission       | Description                                  |
+| ------ | ----------------------------------------------- | ---------------- | -------------------------------------------- |
+| POST   | `/api/creators/documents/notifications/preview` | `documents:read` | Generate notification-ready preview payloads |
 
 Preview request body options: `days` (default 30), `includeExpired` (default true), optional `creatorId`, `documentType`, `contractType`.
 
@@ -235,16 +253,16 @@ Each result includes a `creator` summary object plus the related document or con
 
 ## Contract endpoints (implemented)
 
-| Method | Path                                                      | Permission   | Description                        |
-| ------ | --------------------------------------------------------- | ------------ | ---------------------------------- |
-| GET    | `/api/creators/:creatorId/contracts`                      | `crm:read`   | List contracts for creator         |
-| POST   | `/api/creators/:creatorId/contracts`                      | `crm:update` | Create contract metadata row       |
-| GET    | `/api/creators/:creatorId/contracts/:contractId`          | `crm:read`   | Get contract detail + versions     |
-| PATCH  | `/api/creators/:creatorId/contracts/:contractId`          | `crm:update` | Update title, validity, metadata   |
-| POST   | `/api/creators/:creatorId/contracts/:contractId/versions` | `crm:update` | Register uploaded version metadata |
-| POST   | `/api/creators/:creatorId/contracts/:contractId/status`   | `crm:update` | Update workflow status             |
-| POST   | `/api/creators/:creatorId/contracts/:contractId/sign`     | `crm:update` | Manually sign contract version     |
-| POST   | `/api/creators/:creatorId/contracts/:contractId/download` | `crm:read`   | Presigned download URL (audited)   |
+| Method | Path                                                      | Permission        | Description                        |
+| ------ | --------------------------------------------------------- | ----------------- | ---------------------------------- |
+| GET    | `/api/creators/:creatorId/contracts`                      | `documents:read`  | List contracts for creator         |
+| POST   | `/api/creators/:creatorId/contracts`                      | `documents:write` | Create contract metadata row       |
+| GET    | `/api/creators/:creatorId/contracts/:contractId`          | `documents:read`  | Get contract detail + versions     |
+| PATCH  | `/api/creators/:creatorId/contracts/:contractId`          | `documents:write` | Update title, validity, metadata   |
+| POST   | `/api/creators/:creatorId/contracts/:contractId/versions` | `documents:write` | Register uploaded version metadata |
+| POST   | `/api/creators/:creatorId/contracts/:contractId/status`   | `documents:write` | Update workflow status             |
+| POST   | `/api/creators/:creatorId/contracts/:contractId/sign`     | `documents:write` | Manually sign contract version     |
+| POST   | `/api/creators/:creatorId/contracts/:contractId/download` | `documents:read`  | Presigned download URL (audited)   |
 
 Upload flow:
 
