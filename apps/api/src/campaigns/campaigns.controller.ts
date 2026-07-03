@@ -3,11 +3,17 @@ import type {
   AcceptCampaignApplicationInput,
   ApplyCampaignApplicationInput,
   CampaignApplicationListQuery,
+  CampaignAssignmentListQuery,
   CampaignListQuery,
+  CreateCampaignCreatorAssignmentInput,
+  CreateCampaignCreatorDeliverableInput,
   CreateCampaignDeliverableInput,
   CreateCampaignInput,
   InviteCampaignApplicationInput,
   RejectCampaignApplicationInput,
+  UpdateCampaignCreatorAssignmentStatusInput,
+  UpdateCampaignCreatorDeliverableInput,
+  UpdateCampaignCreatorDeliverableStatusInput,
   UpdateCampaignDeliverableInput,
   UpdateCampaignDeliverableStatusInput,
   UpdateCampaignInput,
@@ -18,11 +24,17 @@ import {
   AcceptCampaignApplicationSchema,
   ApplyCampaignApplicationSchema,
   CampaignApplicationListQuerySchema,
+  CampaignAssignmentListQuerySchema,
   CampaignListQuerySchema,
+  CreateCampaignCreatorAssignmentSchema,
+  CreateCampaignCreatorDeliverableSchema,
   CreateCampaignDeliverableSchema,
   CreateCampaignSchema,
   InviteCampaignApplicationSchema,
   RejectCampaignApplicationSchema,
+  UpdateCampaignCreatorAssignmentStatusSchema,
+  UpdateCampaignCreatorDeliverableSchema,
+  UpdateCampaignCreatorDeliverableStatusSchema,
   UpdateCampaignDeliverableSchema,
   UpdateCampaignDeliverableStatusSchema,
   UpdateCampaignSchema,
@@ -36,12 +48,16 @@ import { RequirePermissions } from '../common/decorators/auth.decorators';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { CampaignsService } from './campaigns.service';
+import { CampaignsAssignmentsService } from './campaigns-assignments.service';
 
 @ApiTags('campaigns')
 @ApiBearerAuth('access-token')
 @Controller('campaigns')
 export class CampaignsController {
-  constructor(private readonly campaignsService: CampaignsService) {}
+  constructor(
+    private readonly campaignsService: CampaignsService,
+    private readonly campaignsAssignmentsService: CampaignsAssignmentsService,
+  ) {}
 
   @Get()
   @RequirePermissions('crm:read')
@@ -139,6 +155,144 @@ export class CampaignsController {
     body: WithdrawCampaignApplicationInput,
   ) {
     return this.campaignsService.withdrawApplication(user, campaignId, applicationId, body);
+  }
+
+  @Get(':campaignId/assignments')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'List campaign creator assignments' })
+  @ApiResponse({ status: 200, description: 'Campaign assignments list' })
+  @ApiResponse({ status: 404, description: 'Campaign not found' })
+  listAssignments(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('campaignId') campaignId: string,
+    @Query(new ZodValidationPipe(CampaignAssignmentListQuerySchema))
+    query: CampaignAssignmentListQuery,
+  ) {
+    return this.campaignsAssignmentsService.listAssignments(user, campaignId, query);
+  }
+
+  @Post(':campaignId/assignments')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Create a campaign creator assignment' })
+  @ApiResponse({ status: 201, description: 'Campaign assignment created' })
+  @ApiResponse({ status: 404, description: 'Campaign or creator not found' })
+  createAssignment(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('campaignId') campaignId: string,
+    @Body(new ZodValidationPipe(CreateCampaignCreatorAssignmentSchema))
+    body: CreateCampaignCreatorAssignmentInput,
+  ) {
+    return this.campaignsAssignmentsService.createAssignment(user, campaignId, body);
+  }
+
+  @Get(':campaignId/assignments/:assignmentId')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Get campaign creator assignment detail' })
+  @ApiResponse({ status: 200, description: 'Campaign assignment detail' })
+  @ApiResponse({ status: 404, description: 'Campaign or assignment not found' })
+  getAssignment(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('campaignId') campaignId: string,
+    @Param('assignmentId') assignmentId: string,
+  ) {
+    return this.campaignsAssignmentsService.getAssignment(user, campaignId, assignmentId);
+  }
+
+  @Post(':campaignId/assignments/:assignmentId/status')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Update campaign creator assignment status' })
+  @ApiResponse({ status: 200, description: 'Campaign assignment status updated' })
+  @ApiResponse({ status: 404, description: 'Campaign or assignment not found' })
+  updateAssignmentStatus(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('campaignId') campaignId: string,
+    @Param('assignmentId') assignmentId: string,
+    @Body(new ZodValidationPipe(UpdateCampaignCreatorAssignmentStatusSchema))
+    body: UpdateCampaignCreatorAssignmentStatusInput,
+  ) {
+    return this.campaignsAssignmentsService.updateAssignmentStatus(
+      user,
+      campaignId,
+      assignmentId,
+      body,
+    );
+  }
+
+  @Get(':campaignId/assignments/:assignmentId/deliverables')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'List creator deliverables for an assignment' })
+  @ApiResponse({ status: 200, description: 'Creator deliverables list' })
+  @ApiResponse({ status: 404, description: 'Campaign or assignment not found' })
+  listCreatorDeliverables(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('campaignId') campaignId: string,
+    @Param('assignmentId') assignmentId: string,
+  ) {
+    return this.campaignsAssignmentsService.listCreatorDeliverables(user, campaignId, assignmentId);
+  }
+
+  @Post(':campaignId/assignments/:assignmentId/deliverables')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Link a campaign deliverable to a creator assignment' })
+  @ApiResponse({ status: 201, description: 'Creator deliverable created' })
+  @ApiResponse({ status: 404, description: 'Campaign, assignment, or deliverable not found' })
+  createCreatorDeliverable(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('campaignId') campaignId: string,
+    @Param('assignmentId') assignmentId: string,
+    @Body(new ZodValidationPipe(CreateCampaignCreatorDeliverableSchema))
+    body: CreateCampaignCreatorDeliverableInput,
+  ) {
+    return this.campaignsAssignmentsService.createCreatorDeliverable(
+      user,
+      campaignId,
+      assignmentId,
+      body,
+    );
+  }
+
+  @Patch(':campaignId/assignments/:assignmentId/deliverables/:creatorDeliverableId')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Update a creator deliverable' })
+  @ApiResponse({ status: 200, description: 'Creator deliverable updated' })
+  @ApiResponse({ status: 404, description: 'Campaign, assignment, or deliverable not found' })
+  updateCreatorDeliverable(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('campaignId') campaignId: string,
+    @Param('assignmentId') assignmentId: string,
+    @Param('creatorDeliverableId') creatorDeliverableId: string,
+    @Body(new ZodValidationPipe(UpdateCampaignCreatorDeliverableSchema))
+    body: UpdateCampaignCreatorDeliverableInput,
+  ) {
+    return this.campaignsAssignmentsService.updateCreatorDeliverable(
+      user,
+      campaignId,
+      assignmentId,
+      creatorDeliverableId,
+      body,
+    );
+  }
+
+  @Post(':campaignId/assignments/:assignmentId/deliverables/:creatorDeliverableId/status')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Update creator deliverable status' })
+  @ApiResponse({ status: 200, description: 'Creator deliverable status updated' })
+  @ApiResponse({ status: 404, description: 'Campaign, assignment, or deliverable not found' })
+  updateCreatorDeliverableStatus(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('campaignId') campaignId: string,
+    @Param('assignmentId') assignmentId: string,
+    @Param('creatorDeliverableId') creatorDeliverableId: string,
+    @Body(new ZodValidationPipe(UpdateCampaignCreatorDeliverableStatusSchema))
+    body: UpdateCampaignCreatorDeliverableStatusInput,
+  ) {
+    return this.campaignsAssignmentsService.updateCreatorDeliverableStatus(
+      user,
+      campaignId,
+      assignmentId,
+      creatorDeliverableId,
+      body,
+    );
   }
 
   @Get(':campaignId/deliverables')

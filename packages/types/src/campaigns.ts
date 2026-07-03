@@ -300,3 +300,152 @@ export const WithdrawCampaignApplicationSchema = z
   .strict();
 
 export type WithdrawCampaignApplicationInput = z.infer<typeof WithdrawCampaignApplicationSchema>;
+
+export const CampaignAssignmentStatusSchema = z.enum([
+  'ASSIGNED',
+  'ACCEPTED',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'CANCELLED',
+]);
+
+export type CampaignAssignmentStatus = z.infer<typeof CampaignAssignmentStatusSchema>;
+
+export const CampaignCreatorDeliverableStatusSchema = z.enum([
+  'ASSIGNED',
+  'IN_PROGRESS',
+  'SUBMITTED',
+  'APPROVED',
+  'REJECTED',
+  'CANCELLED',
+]);
+
+export type CampaignCreatorDeliverableStatus = z.infer<
+  typeof CampaignCreatorDeliverableStatusSchema
+>;
+
+export const CampaignCreatorAssignmentSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  campaignId: z.string(),
+  creatorProfileId: z.string(),
+  applicationId: z.string().nullable(),
+  status: CampaignAssignmentStatusSchema,
+  assignedByUserId: z.string(),
+  assignedAt: isoDateTimeSchema,
+  acceptedAt: isoDateTimeSchema.nullable(),
+  completedAt: isoDateTimeSchema.nullable(),
+  cancelledAt: isoDateTimeSchema.nullable(),
+  metadata: metadataSchema,
+  createdAt: isoDateTimeSchema,
+  updatedAt: isoDateTimeSchema,
+});
+
+export type CampaignCreatorAssignment = z.infer<typeof CampaignCreatorAssignmentSchema>;
+
+export const CampaignCreatorDeliverableSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  assignmentId: z.string(),
+  campaignDeliverableId: z.string(),
+  status: CampaignCreatorDeliverableStatusSchema,
+  dueAt: isoDateTimeSchema.nullable(),
+  submittedAt: isoDateTimeSchema.nullable(),
+  approvedAt: isoDateTimeSchema.nullable(),
+  rejectedAt: isoDateTimeSchema.nullable(),
+  rejectionReason: z.string().nullable(),
+  submissionUrl: z.string().nullable(),
+  notes: z.string().nullable(),
+  metadata: metadataSchema,
+  createdAt: isoDateTimeSchema,
+  updatedAt: isoDateTimeSchema,
+});
+
+export type CampaignCreatorDeliverable = z.infer<typeof CampaignCreatorDeliverableSchema>;
+
+export const CampaignAssignmentListQuerySchema = z.object({
+  status: CampaignAssignmentStatusSchema.optional(),
+  creatorProfileId: z.string().min(1).optional(),
+});
+
+export type CampaignAssignmentListQuery = z.infer<typeof CampaignAssignmentListQuerySchema>;
+
+export const ListCampaignCreatorAssignmentsResponseSchema = z.object({
+  items: z.array(CampaignCreatorAssignmentSchema),
+});
+
+export type ListCampaignCreatorAssignmentsResponse = z.infer<
+  typeof ListCampaignCreatorAssignmentsResponseSchema
+>;
+
+export const CreateCampaignCreatorAssignmentSchema = z
+  .object({
+    creatorProfileId: z.string().min(1),
+    applicationId: z.string().min(1).nullable().optional(),
+    metadata: metadataSchema.optional(),
+  })
+  .strict();
+
+export type CreateCampaignCreatorAssignmentInput = z.infer<
+  typeof CreateCampaignCreatorAssignmentSchema
+>;
+
+export const UpdateCampaignCreatorAssignmentStatusSchema = z
+  .object({
+    status: CampaignAssignmentStatusSchema,
+    metadata: metadataSchema.optional(),
+  })
+  .strict();
+
+export type UpdateCampaignCreatorAssignmentStatusInput = z.infer<
+  typeof UpdateCampaignCreatorAssignmentStatusSchema
+>;
+
+export const ListCampaignCreatorDeliverablesResponseSchema = z.object({
+  items: z.array(CampaignCreatorDeliverableSchema),
+});
+
+export type ListCampaignCreatorDeliverablesResponse = z.infer<
+  typeof ListCampaignCreatorDeliverablesResponseSchema
+>;
+
+export const CreateCampaignCreatorDeliverableSchema = z
+  .object({
+    campaignDeliverableId: z.string().min(1),
+    dueAt: isoDateTimeSchema.nullable().optional(),
+    notes: z.string().trim().min(1).max(5000).nullable().optional(),
+    metadata: metadataSchema.optional(),
+  })
+  .strict();
+
+export type CreateCampaignCreatorDeliverableInput = z.infer<
+  typeof CreateCampaignCreatorDeliverableSchema
+>;
+
+export const UpdateCampaignCreatorDeliverableSchema = z
+  .object({
+    dueAt: optionalNullableIsoDateTimeSchema,
+    submissionUrl: z.string().trim().min(1).max(2048).nullable().optional(),
+    notes: z.string().trim().min(1).max(5000).nullable().optional(),
+    metadata: metadataSchema.optional(),
+  })
+  .strict()
+  .refine((data) => Object.values(data).some((value) => value !== undefined), {
+    message: 'At least one creator deliverable field must be provided',
+  });
+
+export type UpdateCampaignCreatorDeliverableInput = z.infer<
+  typeof UpdateCampaignCreatorDeliverableSchema
+>;
+
+export const UpdateCampaignCreatorDeliverableStatusSchema = z
+  .object({
+    status: CampaignCreatorDeliverableStatusSchema,
+    rejectionReason: z.string().trim().min(1).max(5000).nullable().optional(),
+    metadata: metadataSchema.optional(),
+  })
+  .strict();
+
+export type UpdateCampaignCreatorDeliverableStatusInput = z.infer<
+  typeof UpdateCampaignCreatorDeliverableStatusSchema
+>;

@@ -1,15 +1,15 @@
-# Campaign Management Data Model (Release 0.4 foundation + applications)
+# Campaign Management Data Model (Release 0.4 foundation + applications + assignments)
 
-**Status:** Implemented in `feature/campaign-foundation` and `feature/campaign-creator-applications`  
+**Status:** Implemented across campaign foundation, applications, and assignments branches  
 Prisma schema: `packages/database/prisma/schema.prisma`
 
 ---
 
 ## Overview
 
-Campaign Management adds organization-scoped campaign metadata, deliverable workflow, and creator application tables. All rows include `organizationId` and cascade-delete with the parent organization.
+Campaign Management adds organization-scoped campaign metadata, deliverable workflow, creator application, and creator assignment tables. All rows include `organizationId` and cascade-delete with the parent organization.
 
-Creator assignments to deliverables, payments, and analytics tables are not included yet.
+Payments and analytics tables are not included yet.
 
 ---
 
@@ -20,61 +20,51 @@ erDiagram
   Organization ||--o{ Campaign : has
   Organization ||--o{ CampaignDeliverable : has
   Organization ||--o{ CampaignApplication : has
+  Organization ||--o{ CampaignCreatorAssignment : has
+  Organization ||--o{ CampaignCreatorDeliverable : has
   User ||--o{ Campaign : "created campaigns"
   User ||--o{ CampaignApplication : "invited applications"
   User ||--o{ CampaignApplication : "reviewed applications"
+  User ||--o{ CampaignCreatorAssignment : "assigned assignments"
   CreatorProfile ||--o{ CampaignApplication : has
+  CreatorProfile ||--o{ CampaignCreatorAssignment : has
   Campaign ||--o{ CampaignDeliverable : has
   Campaign ||--o{ CampaignApplication : has
+  Campaign ||--o{ CampaignCreatorAssignment : has
+  CampaignApplication ||--o| CampaignCreatorAssignment : "optional source"
+  CampaignCreatorAssignment ||--o{ CampaignCreatorDeliverable : has
+  CampaignDeliverable ||--o{ CampaignCreatorDeliverable : has
 
-  Campaign {
-    string id PK
-    string organizationId FK
-    string title
-    string description
-    string brandName
-    enum campaignType
-    enum status
-    decimal budgetAmount
-    string budgetCurrency
-    datetime startsAt
-    datetime endsAt
-    datetime applicationDeadline
-    json brief
-    json requirements
-    json metadata
-    string createdByUserId FK
-    datetime createdAt
-    datetime updatedAt
-  }
-
-  CampaignDeliverable {
-    string id PK
-    string organizationId FK
-    string campaignId FK
-    string title
-    string description
-    enum status
-    datetime dueAt
-    json requirements
-    json metadata
-    datetime createdAt
-    datetime updatedAt
-  }
-
-  CampaignApplication {
+  CampaignCreatorAssignment {
     string id PK
     string organizationId FK
     string campaignId FK
     string creatorProfileId FK
+    string applicationId FK
     enum status
-    enum source
-    string message
-    string invitedByUserId FK
-    datetime appliedAt
-    string reviewedByUserId FK
-    datetime reviewedAt
-    string decisionReason
+    string assignedByUserId FK
+    datetime assignedAt
+    datetime acceptedAt
+    datetime completedAt
+    datetime cancelledAt
+    json metadata
+    datetime createdAt
+    datetime updatedAt
+  }
+
+  CampaignCreatorDeliverable {
+    string id PK
+    string organizationId FK
+    string assignmentId FK
+    string campaignDeliverableId FK
+    enum status
+    datetime dueAt
+    datetime submittedAt
+    datetime approvedAt
+    datetime rejectedAt
+    string rejectionReason
+    string submissionUrl
+    string notes
     json metadata
     datetime createdAt
     datetime updatedAt
@@ -150,9 +140,54 @@ Indexes: `(organization_id)`, `(organization_id, campaign_id)`, `(organization_i
 | `created_at`          | `TIMESTAMP`                 | Auto                                       |
 | `updated_at`          | `TIMESTAMP`                 | Auto                                       |
 
-Indexes: `(organization_id)`, `(organization_id, campaign_id)`, `(organization_id, status)`, `(campaign_id)`, `(campaign_id, status)`, `(creator_profile_id)`, `(campaign_id, creator_profile_id)`.
+Partial unique index: one active application per campaign + creator where `status IN ('INVITED', 'APPLIED')`.
 
-Partial unique index (SQL migration): one active application per campaign + creator where `status IN ('INVITED', 'APPLIED')`.
+---
+
+## `campaign_creator_assignments`
+
+| Column                | Type                       | Notes                                      |
+| --------------------- | -------------------------- | ------------------------------------------ |
+| `id`                  | `TEXT` PK                  | `cuid()`                                   |
+| `organization_id`     | `TEXT` FK                  | Required; cascade on org delete            |
+| `campaign_id`         | `TEXT` FK                  | Required; cascade on campaign delete       |
+| `creator_profile_id`  | `TEXT` FK                  | Required; cascade on creator delete        |
+| `application_id`      | `TEXT` FK                  | Nullable unique; references application    |
+| `status`              | `CampaignAssignmentStatus` | Default `ASSIGNED`                         |
+| `assigned_by_user_id` | `TEXT` FK                  | Required; references `users.id` (restrict) |
+| `assigned_at`         | `TIMESTAMP`                | Default now                                |
+| `accepted_at`         | `TIMESTAMP`                | Nullable                                   |
+| `completed_at`        | `TIMESTAMP`                | Nullable                                   |
+| `cancelled_at`        | `TIMESTAMP`                | Nullable                                   |
+| `metadata`            | `JSONB`                    | Default `{}`                               |
+| `created_at`          | `TIMESTAMP`                | Auto                                       |
+| `updated_at`          | `TIMESTAMP`                | Auto                                       |
+
+Partial unique index: one active assignment per campaign + creator where `status IN ('ASSIGNED', 'ACCEPTED', 'IN_PROGRESS')`.
+
+---
+
+## `campaign_creator_deliverables`
+
+| Column                    | Type                               | Notes                                   |
+| ------------------------- | ---------------------------------- | --------------------------------------- |
+| `id`                      | `TEXT` PK                          | `cuid()`                                |
+| `organization_id`         | `TEXT` FK                          | Required; cascade on org delete         |
+| `assignment_id`           | `TEXT` FK                          | Required; cascade on assignment delete  |
+| `campaign_deliverable_id` | `TEXT` FK                          | Required; cascade on deliverable delete |
+| `status`                  | `CampaignCreatorDeliverableStatus` | Default `ASSIGNED`                      |
+| `due_at`                  | `TIMESTAMP`                        | Nullable                                |
+| `submitted_at`            | `TIMESTAMP`                        | Nullable                                |
+| `approved_at`             | `TIMESTAMP`                        | Nullable                                |
+| `rejected_at`             | `TIMESTAMP`                        | Nullable                                |
+| `rejection_reason`        | `TEXT`                             | Nullable                                |
+| `submission_url`          | `TEXT`                             | Nullable                                |
+| `notes`                   | `TEXT`                             | Nullable                                |
+| `metadata`                | `JSONB`                            | Default `{}`                            |
+| `created_at`              | `TIMESTAMP`                        | Auto                                    |
+| `updated_at`              | `TIMESTAMP`                        | Auto                                    |
+
+Unique: `(assignment_id, campaign_deliverable_id)`.
 
 ---
 
@@ -178,14 +213,21 @@ Partial unique index (SQL migration): one active application per campaign + crea
 
 `INVITE`, `CREATOR_APPLIED`, `MANUAL`
 
+### `CampaignAssignmentStatus`
+
+`ASSIGNED`, `ACCEPTED`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`
+
+### `CampaignCreatorDeliverableStatus`
+
+`ASSIGNED`, `IN_PROGRESS`, `SUBMITTED`, `APPROVED`, `REJECTED`, `CANCELLED`
+
 ---
 
 ## Future extensions
 
-| Area                | Planned change                                |
-| ------------------- | --------------------------------------------- |
-| Creator assignments | `CampaignCreatorAssignment` join table        |
-| Recruitment CRM     | Nullable `campaignId` FK on `CreatorLead`     |
-| Contracts           | Nullable `campaignId` FK on `CreatorContract` |
-| Payments            | Payout/invoice linkage tables                 |
-| Analytics           | Read models or materialized reporting tables  |
+| Area            | Planned change                                |
+| --------------- | --------------------------------------------- |
+| Recruitment CRM | Nullable `campaignId` FK on `CreatorLead`     |
+| Contracts       | Nullable `campaignId` FK on `CreatorContract` |
+| Payments        | Payout/invoice linkage tables                 |
+| Analytics       | Read models or materialized reporting tables  |
