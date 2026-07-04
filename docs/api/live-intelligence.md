@@ -595,6 +595,33 @@ Audit events: `creator.intelligence_profile.generated`, `creator.intelligence_pr
 
 ---
 
+## Live trend detection
+
+Deterministic creator-level live trend snapshot comparing recent and prior session windows. Implemented on the Creators API; see [Creators API — Live trend detection](./creators.md#live-trend-detection).
+
+| Method | Path                                   | Permission   | Description                                  |
+| ------ | -------------------------------------- | ------------ | -------------------------------------------- |
+| POST   | `/api/creators/:creatorId/trends/live` | `crm:update` | Generate/replace creator live trend snapshot |
+| GET    | `/api/creators/:creatorId/trends/live` | `crm:read`   | Read stored creator live trend snapshot      |
+
+Stored on `CreatorProfile.metadata.liveTrendSnapshot`. Regenerating replaces the previous snapshot. GET returns `404` when no snapshot exists.
+
+### Trend window rules
+
+| Rule             | Value                                                                |
+| ---------------- | -------------------------------------------------------------------- |
+| Recent window    | Latest 5 live sessions                                               |
+| Prior window     | Previous 5 live sessions                                             |
+| Minimum sessions | Fewer than 3 total sessions → `overallDirection = INSUFFICIENT_DATA` |
+| Metric direction | `UP` / `DOWN` / `FLAT` / `INSUFFICIENT_DATA`                         |
+| Confidence       | Clamped 0–1 based on window coverage and snapshot availability       |
+
+Missing session intelligence snapshots produce `dataQualityWarnings` rather than failing generation.
+
+Audit events: `creator.live_trends.generated`, `creator.live_trends.viewed`.
+
+---
+
 ## Creator live schedules
 
 | Method | Path                              | Permission   | Description     |

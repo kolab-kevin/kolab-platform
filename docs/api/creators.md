@@ -60,6 +60,8 @@ All routes are scoped to the JWT `organizationId`. Users must have an active org
 | PATCH  | `/api/creators/:id/availability`                   | `crm:update`       | Update creator availability              |
 | POST   | `/api/creators/:id/intelligence`                   | `crm:update`       | Generate creator intelligence profile    |
 | GET    | `/api/creators/:id/intelligence`                   | `crm:read`         | Read stored creator intelligence profile |
+| POST   | `/api/creators/:id/trends/live`                    | `crm:update`       | Generate creator live trend snapshot     |
+| GET    | `/api/creators/:id/trends/live`                    | `crm:read`         | Read stored creator live trend snapshot  |
 | GET    | `/api/creators/:id/onboarding`                     | `documents:read`   | Get creator onboarding checklist         |
 | GET    | `/api/creators/:id/compliance`                     | `documents:read`   | Get consolidated compliance bundle       |
 | GET    | `/api/creators/:id/documents`                      | `documents:read`   | List creator documents                   |
@@ -649,6 +651,102 @@ See also: [Live Intelligence API](./live-intelligence.md#creator-intelligence-pr
 
 ---
 
+## Live trend detection
+
+Deterministic trend snapshot comparing recent live sessions against a prior session window. Uses session rollups and stored session intelligence snapshots. No external AI calls and no raw chat/transcript output. Signals are correlational, not causal.
+
+| Method | Path                            | Permission   | Description                                  |
+| ------ | ------------------------------- | ------------ | -------------------------------------------- |
+| POST   | `/api/creators/:id/trends/live` | `crm:update` | Generate/replace creator live trend snapshot |
+| GET    | `/api/creators/:id/trends/live` | `crm:read`   | Read stored creator live trend snapshot      |
+
+Stored on `CreatorProfile.metadata.liveTrendSnapshot`. Regenerating replaces the previous snapshot. GET returns `404` when no snapshot exists.
+
+Compares the latest 5 sessions (recent window) against the previous 5 sessions (prior window). If fewer than 3 sessions exist, `overallDirection` is `INSUFFICIENT_DATA`.
+
+### Trend fields
+
+- Context: `creatorProfileId`, `generatedAt`, `sessionsAnalyzed`, `dateRange`
+- Metric trends: `revenueTrend`, `engagementTrend`, `consistencyTrend`, `gifterQualityTrend`, `triggerEffectivenessTrend`
+- Each metric includes: `metric`, `direction` (`UP`, `DOWN`, `FLAT`, `INSUFFICIENT_DATA`), `currentValue`, `previousValue`, `percentChange`, `confidenceScore` (0–1), `evidence[]`
+- Summary: `overallDirection` (`IMPROVING`, `STABLE`, `DECLINING`, `INSUFFICIENT_DATA`)
+- Narrative arrays: `trendSignals[]`, `regressionRisks[]`, `positiveMomentum[]`, `recommendedFocusAreas[]`, `dataQualityWarnings[]`
+
+Missing session intelligence snapshots produce `dataQualityWarnings` rather than failing generation.
+
+### Trend response (200)
+
+```json
+{
+  "creatorProfileId": "creator_abc123",
+  "generatedAt": "2026-07-04T21:00:00.000Z",
+  "sessionsAnalyzed": 10,
+  "dateRange": {
+    "from": "2026-06-01T18:00:00.000Z",
+    "to": "2026-07-04T20:30:00.000Z"
+  },
+  "revenueTrend": {
+    "metric": "revenue",
+    "direction": "UP",
+    "currentValue": 82.5,
+    "previousValue": 58.2,
+    "percentChange": 41.75,
+    "confidenceScore": 0.85,
+    "evidence": [
+      "Gift revenue averaged 82.50 in the recent window versus 58.20 in the prior window."
+    ]
+  },
+  "engagementTrend": {
+    "metric": "engagement",
+    "direction": "UP",
+    "currentValue": 74,
+    "previousValue": 62,
+    "percentChange": 19.35,
+    "confidenceScore": 0.85,
+    "evidence": []
+  },
+  "consistencyTrend": {
+    "metric": "consistency",
+    "direction": "FLAT",
+    "currentValue": 78,
+    "previousValue": 76,
+    "percentChange": 2.63,
+    "confidenceScore": 0.85,
+    "evidence": []
+  },
+  "gifterQualityTrend": {
+    "metric": "gifterQuality",
+    "direction": "UP",
+    "currentValue": 70,
+    "previousValue": 55,
+    "percentChange": 27.27,
+    "confidenceScore": 0.85,
+    "evidence": []
+  },
+  "triggerEffectivenessTrend": {
+    "metric": "triggerEffectiveness",
+    "direction": "UP",
+    "currentValue": 40,
+    "previousValue": 20,
+    "percentChange": 100,
+    "confidenceScore": 0.85,
+    "evidence": []
+  },
+  "overallDirection": "IMPROVING",
+  "trendSignals": [],
+  "regressionRisks": [],
+  "positiveMomentum": [],
+  "recommendedFocusAreas": [],
+  "dataQualityWarnings": []
+}
+```
+
+**Errors:** `404` if the creator does not exist in the active organization or no live trend snapshot has been generated.
+
+See also: [Live Intelligence API](./live-intelligence.md#live-trend-detection).
+
+---
+
 ## Idempotency (conversion)
 
 Calling conversion again on an already converted lead returns the existing creator with `alreadyConverted: true`. No duplicate user, membership, profile, or platform account rows are created. Audit events are not re-recorded.
@@ -668,6 +766,8 @@ Calling conversion again on an already converted lead returns the existing creat
 | `creator.availability_updated`           | Creator availability updated           | `creator`                  |
 | `creator.intelligence_profile.generated` | Creator intelligence profile generated | `creator`                  |
 | `creator.intelligence_profile.viewed`    | Creator intelligence profile read      | `creator`                  |
+| `creator.live_trends.generated`          | Creator live trend snapshot generated  | `creator`                  |
+| `creator.live_trends.viewed`             | Creator live trend snapshot read       | `creator`                  |
 | `lead.converted`                         | First successful conversion            | `lead`                     |
 
 ---

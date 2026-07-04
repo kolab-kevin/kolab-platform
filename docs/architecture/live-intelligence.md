@@ -258,6 +258,21 @@ Regenerating replaces the previous profile. GET returns `404` when no profile ex
 
 ---
 
+## Live trend detection (implemented)
+
+`POST /api/creators/:creatorId/trends/live` compares recent live session performance against a prior window:
+
+1. Latest 5 live sessions (recent window)
+2. Previous 5 live sessions (prior window)
+3. Session intelligence snapshots when available
+4. Session rollups and trigger analysis as fallbacks
+
+Results are stored on `CreatorProfile.metadata.liveTrendSnapshot`. The engine is deterministic v1 — no external AI calls, no raw chat/transcript output, and all insights use correlational language.
+
+If fewer than 3 sessions exist, `overallDirection` is `INSUFFICIENT_DATA`. Regenerating replaces the prior snapshot. GET returns `404` when no snapshot exists.
+
+---
+
 ## Agency-level analytics
 
 Read models (materialized views or nightly rollups):

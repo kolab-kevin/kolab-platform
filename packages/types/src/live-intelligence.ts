@@ -874,3 +874,48 @@ export const CreatorIntelligenceProfileSchema = z.object({
 });
 
 export type CreatorIntelligenceProfile = z.infer<typeof CreatorIntelligenceProfileSchema>;
+
+export const LiveTrendMetricDirectionSchema = z.enum(['UP', 'DOWN', 'FLAT', 'INSUFFICIENT_DATA']);
+
+export type LiveTrendMetricDirection = z.infer<typeof LiveTrendMetricDirectionSchema>;
+
+export const LiveTrendOverallDirectionSchema = z.enum([
+  'IMPROVING',
+  'STABLE',
+  'DECLINING',
+  'INSUFFICIENT_DATA',
+]);
+
+export type LiveTrendOverallDirection = z.infer<typeof LiveTrendOverallDirectionSchema>;
+
+export const LiveTrendMetricSchema = z.object({
+  metric: z.string(),
+  direction: LiveTrendMetricDirectionSchema,
+  currentValue: z.number(),
+  previousValue: z.number(),
+  percentChange: z.number().nullable(),
+  confidenceScore: z.number().min(0).max(1),
+  evidence: z.array(z.string()),
+});
+
+export type LiveTrendMetric = z.infer<typeof LiveTrendMetricSchema>;
+
+export const CreatorLiveTrendSnapshotSchema = z.object({
+  creatorProfileId: z.string(),
+  generatedAt: isoDateTimeSchema,
+  sessionsAnalyzed: z.number().int().nonnegative(),
+  dateRange: CreatorIntelligenceDateRangeSchema,
+  revenueTrend: LiveTrendMetricSchema,
+  engagementTrend: LiveTrendMetricSchema,
+  consistencyTrend: LiveTrendMetricSchema,
+  gifterQualityTrend: LiveTrendMetricSchema,
+  triggerEffectivenessTrend: LiveTrendMetricSchema,
+  overallDirection: LiveTrendOverallDirectionSchema,
+  trendSignals: z.array(z.string()),
+  regressionRisks: z.array(z.string()),
+  positiveMomentum: z.array(z.string()),
+  recommendedFocusAreas: z.array(z.string()),
+  dataQualityWarnings: z.array(z.string()),
+});
+
+export type CreatorLiveTrendSnapshot = z.infer<typeof CreatorLiveTrendSnapshotSchema>;
