@@ -13,6 +13,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { CreatorsModule } from './creators/creators.module';
 import { HealthModule } from './health/health.module';
 import { InvitationModule } from './invitation/invitation.module';
+import { LiveIntelligenceModule } from './live-intelligence/live-intelligence.module';
 import { ObservabilityModule } from './observability/observability.module';
 import { OrganizationModule } from './organization/organization.module';
 import { ProfileModule } from './profile/profile.module';
@@ -36,6 +37,7 @@ import { StorageModule } from './storage/storage.module';
     AdminModule,
     AgencyModule,
     CampaignsModule,
+    LiveIntelligenceModule,
     CreatorsModule,
     RecruitmentModule,
     RecruitersModule,

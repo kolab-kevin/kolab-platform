@@ -93,3 +93,84 @@ export const ListCreatorLiveSchedulesResponseSchema = z.object({
 export type ListCreatorLiveSchedulesResponse = z.infer<
   typeof ListCreatorLiveSchedulesResponseSchema
 >;
+
+const optionalNullableIsoDateTimeSchema = z.string().datetime().nullable().optional();
+
+export const CreateLiveSessionSchema = z
+  .object({
+    creatorProfileId: z.string().min(1),
+    campaignId: z.string().min(1).nullable().optional(),
+    platform: LivePlatformSchema,
+    platformSessionId: z.string().trim().min(1).max(255).nullable().optional(),
+    title: z.string().trim().min(1).max(255),
+    description: z.string().trim().min(1).max(5000).nullable().optional(),
+    scheduledStart: isoDateTimeSchema.nullable().optional(),
+    scheduledEnd: isoDateTimeSchema.nullable().optional(),
+    metadata: metadataSchema.optional(),
+  })
+  .strict();
+
+export type CreateLiveSessionInput = z.infer<typeof CreateLiveSessionSchema>;
+
+export const UpdateLiveSessionSchema = z
+  .object({
+    campaignId: z.string().min(1).nullable().optional(),
+    platform: LivePlatformSchema.optional(),
+    platformSessionId: z.string().trim().min(1).max(255).nullable().optional(),
+    title: z.string().trim().min(1).max(255).optional(),
+    description: z.string().trim().min(1).max(5000).nullable().optional(),
+    scheduledStart: optionalNullableIsoDateTimeSchema,
+    scheduledEnd: optionalNullableIsoDateTimeSchema,
+    peakViewers: z.number().int().nonnegative().nullable().optional(),
+    totalViewers: z.number().int().nonnegative().nullable().optional(),
+    totalGifts: z.number().int().nonnegative().nullable().optional(),
+    totalGiftValue: giftValueSchema.nullable().optional(),
+    metadata: metadataSchema.optional(),
+  })
+  .strict()
+  .refine((data) => Object.values(data).some((value) => value !== undefined), {
+    message: 'At least one live session field must be provided',
+  });
+
+export type UpdateLiveSessionInput = z.infer<typeof UpdateLiveSessionSchema>;
+
+export const UpdateLiveSessionStatusSchema = z
+  .object({
+    status: LiveSessionStatusSchema,
+    metadata: metadataSchema.optional(),
+  })
+  .strict();
+
+export type UpdateLiveSessionStatusInput = z.infer<typeof UpdateLiveSessionStatusSchema>;
+
+export const CreateCreatorLiveScheduleSchema = z
+  .object({
+    creatorProfileId: z.string().min(1),
+    timezone: z.string().trim().min(1).max(64),
+    recurrenceRule: z.string().trim().min(1).max(2048).nullable().optional(),
+    weekdays: z.array(weekdaySchema).default([]),
+    startTime: timeOfDaySchema,
+    endTime: timeOfDaySchema,
+    active: z.boolean().optional(),
+    metadata: metadataSchema.optional(),
+  })
+  .strict();
+
+export type CreateCreatorLiveScheduleInput = z.infer<typeof CreateCreatorLiveScheduleSchema>;
+
+export const UpdateCreatorLiveScheduleSchema = z
+  .object({
+    timezone: z.string().trim().min(1).max(64).optional(),
+    recurrenceRule: z.string().trim().min(1).max(2048).nullable().optional(),
+    weekdays: z.array(weekdaySchema).optional(),
+    startTime: timeOfDaySchema.optional(),
+    endTime: timeOfDaySchema.optional(),
+    active: z.boolean().optional(),
+    metadata: metadataSchema.optional(),
+  })
+  .strict()
+  .refine((data) => Object.values(data).some((value) => value !== undefined), {
+    message: 'At least one live schedule field must be provided',
+  });
+
+export type UpdateCreatorLiveScheduleInput = z.infer<typeof UpdateCreatorLiveScheduleSchema>;

@@ -1,195 +1,168 @@
-# Live Intelligence API (Planning)
+# Live Intelligence API
 
-**Status:** Planning — not implemented in `@kolab/api`  
-**Base path (planned):** `/api/live`  
+**Status:** Implemented (sessions + schedules foundation)  
+**Base path:** `/api/live`  
 **Auth:** Bearer JWT with active organization context
 
 ---
 
 ## Overview
 
-Live Intelligence APIs provide session management, event ingestion, timeline retrieval, gifter profiles, trigger analytics, and post-live summaries. All routes are organization-scoped.
+Live Intelligence APIs manage live sessions and creator live schedules. Event ingestion, gifter profiles, trigger analytics, and AI summaries are planned for later phases.
 
-**Not implemented:** Prisma schema, controllers, AI inference, platform webhooks, frontend.
+All routes are organization-scoped. Cross-org resource IDs return `404`.
 
 ---
 
-## Permissions (planned)
+## Permissions
 
-| Permission    | Used for                                           |
-| ------------- | -------------------------------------------------- |
-| `live:read`   | Sessions, timeline, profiles, summaries, analytics |
-| `live:write`  | Schedules, manual tags, ingest (service account)   |
-| `live:admin`  | Retention config, exports, erasure requests        |
-| `live:ingest` | Platform webhook / worker ingestion only           |
+| Permission   | Used for                                    |
+| ------------ | ------------------------------------------- |
+| `crm:read`   | List/get sessions and schedules             |
+| `crm:update` | Create/update session status, schedule CRUD |
 
-| Role             | Read            | Write | Admin |
-| ---------------- | --------------- | ----- | ----- |
-| `ORG_OWNER`      | Yes             | Yes   | Yes   |
-| `ORG_ADMIN`      | Yes             | Yes   | Yes   |
-| `AGENCY_MANAGER` | Yes             | Yes   | No    |
-| `RECRUITER`      | Assigned roster | No    | No    |
-| `MODERATOR`      | Yes             | No    | No    |
-| `VIEWER`         | No              | No    | No    |
-
-Recruiters see gifter profiles only for creators on their assigned roster (enforced in service layer).
+| Role             | Read | Update |
+| ---------------- | ---- | ------ |
+| `ORG_OWNER`      | Yes  | Yes    |
+| `ORG_ADMIN`      | Yes  | Yes    |
+| `AGENCY_MANAGER` | Yes  | Yes    |
+| `RECRUITER`      | Yes  | Yes    |
+| `MODERATOR`      | Yes  | No     |
+| `VIEWER`         | No   | No     |
 
 ---
 
 ## Live sessions
 
-| Method | Path                                  | Permission   | Description                                     |
-| ------ | ------------------------------------- | ------------ | ----------------------------------------------- |
-| GET    | `/api/live/sessions`                  | `live:read`  | List sessions (filter by creator, status, date) |
-| POST   | `/api/live/sessions`                  | `live:write` | Create scheduled session                        |
-| GET    | `/api/live/sessions/:sessionId`       | `live:read`  | Session detail                                  |
-| PATCH  | `/api/live/sessions/:sessionId`       | `live:write` | Update metadata / schedule                      |
-| POST   | `/api/live/sessions/:sessionId/start` | `live:write` | Mark LIVE                                       |
-| POST   | `/api/live/sessions/:sessionId/end`   | `live:write` | Mark ENDED; enqueue summary                     |
+| Method | Path                                   | Permission   | Description                    |
+| ------ | -------------------------------------- | ------------ | ------------------------------ |
+| GET    | `/api/live/sessions`                   | `crm:read`   | List sessions (filter, cursor) |
+| POST   | `/api/live/sessions`                   | `crm:update` | Create scheduled session       |
+| GET    | `/api/live/sessions/:sessionId`        | `crm:read`   | Session detail                 |
+| PATCH  | `/api/live/sessions/:sessionId`        | `crm:update` | Update session fields          |
+| POST   | `/api/live/sessions/:sessionId/status` | `crm:update` | Transition session status      |
 
 ### List query parameters
 
-| Param              | Type     | Description         |
-| ------------------ | -------- | ------------------- |
-| `cursor`           | string   | Pagination          |
-| `limit`            | number   | Max 100, default 20 |
-| `creatorProfileId` | string   | Filter              |
-| `campaignId`       | string   | Filter              |
-| `status`           | enum     | `LiveSessionStatus` |
-| `from` / `to`      | datetime | Date range          |
+| Param              | Type   | Description         |
+| ------------------ | ------ | ------------------- |
+| `cursor`           | string | Pagination cursor   |
+| `limit`            | number | Max 100, default 20 |
+| `creatorProfileId` | string | Filter              |
+| `campaignId`       | string | Filter              |
+| `status`           | enum   | `LiveSessionStatus` |
+| `platform`         | enum   | `LivePlatform`      |
 
----
-
-## Creator live schedule
-
-| Method | Path                              | Permission   | Description              |
-| ------ | --------------------------------- | ------------ | ------------------------ |
-| GET    | `/api/live/schedules`             | `live:read`  | List schedules           |
-| POST   | `/api/live/schedules`             | `live:write` | Create schedule entry    |
-| PATCH  | `/api/live/schedules/:scheduleId` | `live:write` | Update                   |
-| DELETE | `/api/live/schedules/:scheduleId` | `live:write` | Soft-delete / deactivate |
-
----
-
-## Event ingestion
-
-| Method | Path                                         | Permission    | Description            |
-| ------ | -------------------------------------------- | ------------- | ---------------------- |
-| POST   | `/api/live/sessions/:sessionId/events`       | `live:ingest` | Single event ingest    |
-| POST   | `/api/live/sessions/:sessionId/events/batch` | `live:ingest` | Batch ingest (max 500) |
-
-### Ingest body (example)
+### Create body
 
 ```json
 {
-  "eventType": "GIFT_RECEIVED",
-  "occurredAt": "2026-07-03T18:45:12.000Z",
-  "platformEventId": "tt-gift-abc123",
-  "externalGifterId": "gifter-789",
-  "gifterDisplayName": "Fan123",
-  "payload": {
-    "giftType": "ROSE",
-    "quantity": 5,
-    "diamondValue": 50
-  }
+  "creatorProfileId": "clxyz...",
+  "campaignId": "clabc...",
+  "platform": "TIKTOK",
+  "platformSessionId": "tt-live-123",
+  "title": "Evening Live",
+  "description": "Q&A stream",
+  "scheduledStart": "2026-07-04T20:00:00.000Z",
+  "scheduledEnd": "2026-07-04T22:00:00.000Z",
+  "metadata": {}
 }
 ```
 
-Idempotent on `(organizationId, platformEventId)`. Returns `409` on duplicate with existing event ID.
+New sessions are created with status `SCHEDULED`. `creatorProfileId` must belong to the active organization. Optional `campaignId` must belong to the same organization.
 
-Platform webhook route (future):
+### Status transitions
 
-| Method | Path                           | Auth                   | Description     |
-| ------ | ------------------------------ | ---------------------- | --------------- |
-| POST   | `/api/live/webhooks/:platform` | Signature verification | External ingest |
+| From        | Allowed next states  |
+| ----------- | -------------------- |
+| `SCHEDULED` | `LIVE`, `CANCELLED`  |
+| `LIVE`      | `ENDED`, `CANCELLED` |
+| `ENDED`     | _(none)_             |
+| `CANCELLED` | _(none)_             |
 
----
+Side effects:
 
-## Timeline and replay
+- Transition to `LIVE` sets `startedAt` when empty.
+- Transition to `ENDED` sets `endedAt` and computes `durationSeconds` from `startedAt` when possible.
 
-| Method | Path                                              | Permission  | Description                  |
-| ------ | ------------------------------------------------- | ----------- | ---------------------------- |
-| GET    | `/api/live/sessions/:sessionId/timeline`          | `live:read` | Merged event stream          |
-| GET    | `/api/live/sessions/:sessionId/timeline/gifts`    | `live:read` | Gift events only             |
-| GET    | `/api/live/sessions/:sessionId/timeline/triggers` | `live:read` | Trigger analysis for session |
+### Update rules
 
-### Timeline query
-
-| Param          | Type     | Description             |
-| -------------- | -------- | ----------------------- |
-| `fromOffsetMs` | number   | Filter by stream offset |
-| `toOffsetMs`   | number   | Filter by stream offset |
-| `eventTypes`   | string[] | Filter by type          |
-| `cursor`       | string   | Keyset pagination       |
+- `ENDED` and `CANCELLED` sessions accept metadata-only updates.
+- Status changes use `POST /status`, not `PATCH`.
 
 ---
 
-## Gifter profiles
+## Creator live schedules
 
-| Method | Path                                          | Permission  | Description                        |
-| ------ | --------------------------------------------- | ----------- | ---------------------------------- |
-| GET    | `/api/live/gifters`                           | `live:read` | List/search gifters                |
-| GET    | `/api/live/gifters/:gifterProfileId`          | `live:read` | Profile detail                     |
-| GET    | `/api/live/gifters/:gifterProfileId/sessions` | `live:read` | Sessions where gifter participated |
-| GET    | `/api/live/gifters/:gifterProfileId/triggers` | `live:read` | Trigger score breakdown            |
+| Method | Path                              | Permission   | Description     |
+| ------ | --------------------------------- | ------------ | --------------- |
+| GET    | `/api/live/schedules`             | `crm:read`   | List schedules  |
+| POST   | `/api/live/schedules`             | `crm:update` | Create schedule |
+| GET    | `/api/live/schedules/:scheduleId` | `crm:read`   | Schedule detail |
+| PATCH  | `/api/live/schedules/:scheduleId` | `crm:update` | Update schedule |
+| DELETE | `/api/live/schedules/:scheduleId` | `crm:update` | Delete schedule |
 
-Audit event: `live.gifter.viewed` on detail access.
+### Schedule list query parameters
+
+| Param              | Type    | Description             |
+| ------------------ | ------- | ----------------------- |
+| `creatorProfileId` | string  | Filter by creator       |
+| `active`           | boolean | Filter active schedules |
+
+### Schedule create body
+
+```json
+{
+  "creatorProfileId": "clxyz...",
+  "timezone": "America/Los_Angeles",
+  "recurrenceRule": "FREQ=WEEKLY",
+  "weekdays": [1, 3, 5],
+  "startTime": "20:00",
+  "endTime": "22:00",
+  "active": true,
+  "metadata": {}
+}
+```
+
+Validation:
+
+- `weekdays` values must be integers `0` (Sunday) through `6` (Saturday).
+- `startTime` and `endTime` must be local `HH:mm` strings in the schedule timezone.
 
 ---
 
-## Post-live summary and analytics
+## Planned endpoints (not implemented)
 
-| Method | Path                                             | Permission   | Description               |
-| ------ | ------------------------------------------------ | ------------ | ------------------------- |
-| GET    | `/api/live/sessions/:sessionId/summary`          | `live:read`  | Post-live AI summary      |
-| POST   | `/api/live/sessions/:sessionId/summary/generate` | `live:write` | Trigger (re)generation    |
-| GET    | `/api/live/analytics/triggers`                   | `live:read`  | Org-level trigger rollups |
-| GET    | `/api/live/analytics/gifters/clusters`           | `live:read`  | Gifter cluster segments   |
-| GET    | `/api/live/analytics/creators/:creatorProfileId` | `live:read`  | Creator live performance  |
-
-Summary response includes `disclaimer` on all AI-derived fields.
+| Area              | Paths                                            |
+| ----------------- | ------------------------------------------------ |
+| Event ingestion   | `POST /api/live/sessions/:sessionId/events`      |
+| Timeline / replay | `GET /api/live/sessions/:sessionId/timeline`     |
+| Gifter profiles   | `GET /api/live/gifters`                          |
+| AI summaries      | `GET /api/live/sessions/:sessionId/summary`      |
+| Real-time coach   | `GET /api/live/sessions/:sessionId/coach/stream` |
 
 ---
 
-## Real-time coach (later phase)
+## Audit events
 
-| Method | Path                                         | Permission  | Description      |
-| ------ | -------------------------------------------- | ----------- | ---------------- |
-| GET    | `/api/live/sessions/:sessionId/coach/stream` | `live:read` | SSE coach alerts |
-
-Credits debited per org policy — see [Token economy](../product/token-economy.md).
-
----
-
-## Audit events (planned)
-
-| Action                    | When                    | Target type            |
-| ------------------------- | ----------------------- | ---------------------- |
-| `live.session.created`    | Session created         | `live_session`         |
-| `live.session.started`    | Session started         | `live_session`         |
-| `live.session.ended`      | Session ended           | `live_session`         |
-| `live.event.ingested`     | Event ingested          | `live_event`           |
-| `live.gifter.viewed`      | Profile detail viewed   | `gifter_profile`       |
-| `live.summary.generated`  | Summary completed       | `live_session_summary` |
-| `live.analysis.completed` | Trigger analysis stored | `trigger_analysis`     |
+| Action                        | When              | Target type     |
+| ----------------------------- | ----------------- | --------------- |
+| `live.session.created`        | Session created   | `live_session`  |
+| `live.session.updated`        | Session updated   | `live_session`  |
+| `live.session.status_changed` | Status transition | `live_session`  |
+| `live.schedule.created`       | Schedule created  | `live_schedule` |
+| `live.schedule.updated`       | Schedule updated  | `live_schedule` |
+| `live.schedule.deleted`       | Schedule deleted  | `live_schedule` |
 
 ---
 
 ## Error handling
 
-| Code  | Condition                                |
-| ----- | ---------------------------------------- |
-| `400` | Invalid event payload or transition      |
-| `403` | Insufficient permission or roster scope  |
-| `404` | Cross-org or missing resource            |
-| `409` | Duplicate platform event ID              |
-| `422` | Session not in valid state for operation |
-
----
-
-## Organization isolation
-
-Every query filters by JWT `organizationId`. Cross-org session or gifter IDs return `404`.
+| Code  | Condition                               |
+| ----- | --------------------------------------- |
+| `400` | Invalid status transition or validation |
+| `403` | Missing org context or permission       |
+| `404` | Cross-org or missing resource           |
 
 ---
 
