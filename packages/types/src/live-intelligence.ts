@@ -302,3 +302,93 @@ export const SessionLiveEventListQuerySchema = z.object({
 });
 
 export type SessionLiveEventListQuery = z.infer<typeof SessionLiveEventListQuerySchema>;
+
+export const GifterSpendingTierSchema = z.enum([
+  'UNKNOWN',
+  'LOW',
+  'MEDIUM',
+  'HIGH',
+  'WHALE',
+  'VIP',
+]);
+
+export type GifterSpendingTier = z.infer<typeof GifterSpendingTierSchema>;
+
+export const GifterProfileSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  platform: LivePlatformSchema,
+  externalGifterId: z.string(),
+  displayName: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+  spendingTier: GifterSpendingTierSchema,
+  totalGiftCount: z.number().int().nonnegative(),
+  totalGiftValue: giftValueSchema,
+  totalSessions: z.number().int().nonnegative(),
+  firstSeenAt: isoDateTimeSchema.nullable(),
+  lastSeenAt: isoDateTimeSchema.nullable(),
+  favoriteCreatorProfileId: z.string().nullable(),
+  favoriteGiftType: z.string().nullable(),
+  triggerProfile: metadataSchema,
+  retentionProfile: metadataSchema,
+  metadata: metadataSchema,
+  createdAt: isoDateTimeSchema,
+  updatedAt: isoDateTimeSchema,
+});
+
+export type GifterProfile = z.infer<typeof GifterProfileSchema>;
+
+export const GifterSessionStatsSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  gifterProfileId: z.string(),
+  liveSessionId: z.string(),
+  creatorProfileId: z.string(),
+  giftCount: z.number().int().nonnegative(),
+  giftValue: giftValueSchema,
+  firstGiftAt: isoDateTimeSchema.nullable(),
+  lastGiftAt: isoDateTimeSchema.nullable(),
+  firstSeenAt: isoDateTimeSchema.nullable(),
+  lastSeenAt: isoDateTimeSchema.nullable(),
+  chatMessageCount: z.number().int().nonnegative(),
+  metadata: metadataSchema,
+  createdAt: isoDateTimeSchema,
+  updatedAt: isoDateTimeSchema,
+});
+
+export type GifterSessionStats = z.infer<typeof GifterSessionStatsSchema>;
+
+export const GifterProfileListQuerySchema = z.object({
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  platform: LivePlatformSchema.optional(),
+  spendingTier: GifterSpendingTierSchema.optional(),
+  favoriteCreatorProfileId: z.string().min(1).optional(),
+  externalGifterId: z.string().min(1).optional(),
+});
+
+export type GifterProfileListQuery = z.infer<typeof GifterProfileListQuerySchema>;
+
+export const ListGifterProfilesResponseSchema = z.object({
+  items: z.array(GifterProfileSchema),
+  nextCursor: z.string().nullable(),
+});
+
+export type ListGifterProfilesResponse = z.infer<typeof ListGifterProfilesResponseSchema>;
+
+export const GifterSessionStatsListQuerySchema = z.object({
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  gifterProfileId: z.string().min(1).optional(),
+  liveSessionId: z.string().min(1).optional(),
+  creatorProfileId: z.string().min(1).optional(),
+});
+
+export type GifterSessionStatsListQuery = z.infer<typeof GifterSessionStatsListQuerySchema>;
+
+export const ListGifterSessionStatsResponseSchema = z.object({
+  items: z.array(GifterSessionStatsSchema),
+  nextCursor: z.string().nullable(),
+});
+
+export type ListGifterSessionStatsResponse = z.infer<typeof ListGifterSessionStatsResponseSchema>;

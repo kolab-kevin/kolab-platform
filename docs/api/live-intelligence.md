@@ -8,7 +8,7 @@
 
 ## Overview
 
-Live Intelligence APIs manage live sessions, creator live schedules, and append-only session event timelines. Gifter profiles, trigger analytics, and AI summaries are planned for later phases.
+Live Intelligence APIs manage live sessions, creator live schedules, append-only session event timelines, and (schema only) persistent gifter profiles. Gifter profile APIs, trigger analytics, and AI summaries are planned for later phases.
 
 All routes are organization-scoped. Cross-org resource IDs return `404`.
 
@@ -207,12 +207,24 @@ Validation:
 
 ## Planned endpoints (not implemented)
 
-| Area            | Paths                                            |
-| --------------- | ------------------------------------------------ |
-| Timeline merge  | `GET /api/live/sessions/:sessionId/timeline`     |
-| Gifter profiles | `GET /api/live/gifters`                          |
-| AI summaries    | `GET /api/live/sessions/:sessionId/summary`      |
-| Real-time coach | `GET /api/live/sessions/:sessionId/coach/stream` |
+| Area            | Paths                                                |
+| --------------- | ---------------------------------------------------- |
+| Gifter profiles | `GET /api/live/gifters`, `GET /api/live/gifters/:id` |
+| Session gifters | `GET /api/live/sessions/:sessionId/gifters`          |
+| Timeline merge  | `GET /api/live/sessions/:sessionId/timeline`         |
+| AI summaries    | `GET /api/live/sessions/:sessionId/summary`          |
+| Real-time coach | `GET /api/live/sessions/:sessionId/coach/stream`     |
+
+### Gifter profile model (schema implemented)
+
+Persistent gifter identity keyed by `(organizationId, platform, externalGifterId)`. Per-session rollups live in `gifter_session_stats`. Profiles store aggregate gift metrics and derived JSON placeholders only — **no chat or transcript content**.
+
+| Model                | Purpose                                                                                              |
+| -------------------- | ---------------------------------------------------------------------------------------------------- |
+| `GifterProfile`      | Cross-session identity, spending tier, favorites, `triggerProfile` / `retentionProfile` placeholders |
+| `GifterSessionStats` | Per-session gift counts/values and `chatMessageCount` (count only)                                   |
+
+> **Privacy:** Gifter profiles contain platform IDs and display names. Treat as PII with RBAC, retention limits, and erasure/anonymization support. Do not copy raw chat or transcript text from `live_events` into profile rows — see [Database ERD](../database/live-intelligence-erd.md#gifter-privacy-and-compliance).
 
 ---
 
