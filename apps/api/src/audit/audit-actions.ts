@@ -65,6 +65,7 @@ export const AUDIT_ACTION = {
   LIVE_EVENT_INGESTED: 'live.event.ingested',
   LIVE_EVENT_BATCH_INGESTED: 'live.event.batch_ingested',
   LIVE_GIFTER_PROFILE_VIEWED: 'live.gifter_profile.viewed',
+  LIVE_GIFTER_ROLLUP_PROCESSED: 'live.gifter_rollup.processed',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {

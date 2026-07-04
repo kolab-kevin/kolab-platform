@@ -37,6 +37,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { LiveIntelligenceService } from './live-intelligence.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
+import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
 
 @ApiTags('live-intelligence')
@@ -47,6 +48,7 @@ export class LiveIntelligenceController {
     private readonly liveIntelligenceService: LiveIntelligenceService,
     private readonly liveIntelligenceEventsService: LiveIntelligenceEventsService,
     private readonly liveIntelligenceGiftersService: LiveIntelligenceGiftersService,
+    private readonly liveIntelligenceGifterRollupsService: LiveIntelligenceGifterRollupsService,
   ) {}
 
   @Get('sessions')
@@ -123,6 +125,18 @@ export class LiveIntelligenceController {
     @Query(new ZodValidationPipe(SessionGifterListQuerySchema)) query: SessionGifterListQuery,
   ) {
     return this.liveIntelligenceGiftersService.listSessionGifters(user, sessionId, query);
+  }
+
+  @Post('sessions/:sessionId/rollups/gifters')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Process live events into gifter profile and session rollups' })
+  @ApiResponse({ status: 201, description: 'Gifter rollup processing result' })
+  @ApiResponse({ status: 404, description: 'Live session not found' })
+  processGifterRollups(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.liveIntelligenceGifterRollupsService.processGifterRollups(user, sessionId);
   }
 
   @Get('sessions/:sessionId')

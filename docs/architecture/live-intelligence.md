@@ -2,7 +2,7 @@
 
 Architecture for KOLAB Live Intelligence and Gifter Analytics.
 
-**Status:** Planning (no implementation in this document)
+**Status:** Partially implemented (sessions, events, gifter read APIs, gifter rollups)
 
 ---
 
@@ -78,13 +78,17 @@ Ingest may later move to a dedicated worker (`apps/ai-services` or `packages/str
 2. Ingest adapter validates signature + org + creator mapping
 3. Normalizer maps to LiveEventType enum + JSON payload
 4. Events written append-only (idempotent by platformEventId)
-5. Async worker updates GifterProfile rollups
+5. Rollup worker/API updates GifterProfile + GifterSessionStats (checkpoint on session metadata)
 6. On session end: enqueue post-live analysis job
 7. ai-services returns TriggerAnalysis + summary → persisted
 8. Audit: live.event.ingested, live.analysis.completed
 ```
 
-Idempotency key: `(organizationId, platform, platformEventId)`.
+Idempotency key: `(organizationId, platform, platformEventId)` for ingest; rollup checkpoint uses processed `live_events.id` values on `LiveSession.metadata.gifterRollup`.
+
+### Gifter rollup processing (implemented)
+
+`POST /api/live/sessions/:sessionId/rollups/gifters` scans supported event types for a session, applies incremental rollups to `GifterProfile` and `GifterSessionStats`, and updates session gift totals. Safe to rerun — already-processed event IDs are skipped via session metadata checkpoint. Chat payloads increment counts only; message text is never persisted on profile rows.
 
 ---
 
