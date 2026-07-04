@@ -174,3 +174,66 @@ export const UpdateCreatorLiveScheduleSchema = z
   });
 
 export type UpdateCreatorLiveScheduleInput = z.infer<typeof UpdateCreatorLiveScheduleSchema>;
+
+export const LiveEventTypeSchema = z.enum([
+  'SESSION_STARTED',
+  'SESSION_ENDED',
+  'CHAT_MESSAGE',
+  'GIFT_RECEIVED',
+  'VOICE_TRANSCRIPT_SEGMENT',
+  'PERFORMANCE_MOMENT',
+  'SONG_STARTED',
+  'SONG_ENDED',
+  'DANCE_MOMENT',
+  'PK_STARTED',
+  'PK_ENDED',
+  'COHOST_JOINED',
+  'COHOST_LEFT',
+  'VIEWER_JOINED',
+  'VIEWER_LEFT',
+  'MODERATOR_ACTION',
+  'SYSTEM_EVENT',
+  'OTHER',
+]);
+
+export type LiveEventType = z.infer<typeof LiveEventTypeSchema>;
+
+export const LiveEventSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  liveSessionId: z.string(),
+  creatorProfileId: z.string(),
+  eventType: LiveEventTypeSchema,
+  occurredAt: isoDateTimeSchema,
+  offsetMs: z.number().int().nonnegative().nullable(),
+  platform: LivePlatformSchema,
+  platformEventId: z.string().nullable(),
+  externalActorId: z.string().nullable(),
+  actorDisplayName: z.string().nullable(),
+  payload: metadataSchema,
+  metadata: metadataSchema,
+  createdAt: isoDateTimeSchema,
+});
+
+export type LiveEvent = z.infer<typeof LiveEventSchema>;
+
+export const LiveEventListQuerySchema = z.object({
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(500).default(100),
+  liveSessionId: z.string().min(1).optional(),
+  creatorProfileId: z.string().min(1).optional(),
+  eventType: LiveEventTypeSchema.optional(),
+  platform: LivePlatformSchema.optional(),
+  externalActorId: z.string().min(1).optional(),
+  occurredFrom: isoDateTimeSchema.optional(),
+  occurredTo: isoDateTimeSchema.optional(),
+});
+
+export type LiveEventListQuery = z.infer<typeof LiveEventListQuerySchema>;
+
+export const ListLiveEventsResponseSchema = z.object({
+  items: z.array(LiveEventSchema),
+  nextCursor: z.string().nullable(),
+});
+
+export type ListLiveEventsResponse = z.infer<typeof ListLiveEventsResponseSchema>;

@@ -248,6 +248,7 @@ model Organization {
   campaignCreatorDeliverables CampaignCreatorDeliverable[]
   liveSessions             LiveSession[]
   creatorLiveSchedules     CreatorLiveSchedule[]
+  liveEvents               LiveEvent[]
 
   @@index([status])
   @@map("organizations")
@@ -545,6 +546,7 @@ model CreatorProfile {
   campaignCreatorAssignments CampaignCreatorAssignment[]
   liveSessions             LiveSession[]
   creatorLiveSchedules     CreatorLiveSchedule[]
+  liveEvents               LiveEvent[]
 
   @@unique([organizationId, userId])
   @@index([organizationId])
@@ -964,6 +966,8 @@ model LiveSession {
   createdAt         DateTime          @default(now()) @map("created_at")
   updatedAt         DateTime          @updatedAt @map("updated_at")
 
+  events LiveEvent[]
+
   @@index([organizationId])
   @@index([organizationId, creatorProfileId])
   @@index([organizationId, status])
@@ -997,4 +1001,56 @@ model CreatorLiveSchedule {
   @@index([organizationId, active])
   @@index([creatorProfileId])
   @@map("creator_live_schedules")
+}
+
+enum LiveEventType {
+  SESSION_STARTED
+  SESSION_ENDED
+  CHAT_MESSAGE
+  GIFT_RECEIVED
+  VOICE_TRANSCRIPT_SEGMENT
+  PERFORMANCE_MOMENT
+  SONG_STARTED
+  SONG_ENDED
+  DANCE_MOMENT
+  PK_STARTED
+  PK_ENDED
+  COHOST_JOINED
+  COHOST_LEFT
+  VIEWER_JOINED
+  VIEWER_LEFT
+  MODERATOR_ACTION
+  SYSTEM_EVENT
+  OTHER
+}
+
+/// Append-only livestream timeline events. No `updatedAt` — compliance redaction uses delete/replace jobs.
+model LiveEvent {
+  id                String        @id @default(cuid())
+  organizationId    String        @map("organization_id")
+  organization      Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  liveSessionId     String        @map("live_session_id")
+  liveSession       LiveSession   @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  creatorProfileId  String        @map("creator_profile_id")
+  creatorProfile    CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  eventType         LiveEventType @map("event_type")
+  occurredAt        DateTime      @map("occurred_at")
+  offsetMs          Int?          @map("offset_ms")
+  platform          LivePlatform
+  platformEventId   String?       @map("platform_event_id")
+  externalActorId   String?       @map("external_actor_id")
+  actorDisplayName  String?       @map("actor_display_name")
+  payload           Json          @default("{}")
+  metadata          Json          @default("{}")
+  createdAt         DateTime      @default(now()) @map("created_at")
+
+  @@unique([organizationId, platform, platformEventId])
+  @@index([organizationId])
+  @@index([liveSessionId, occurredAt])
+  @@index([liveSessionId, offsetMs])
+  @@index([organizationId, creatorProfileId, occurredAt])
+  @@index([organizationId, externalActorId])
+  @@index([organizationId, eventType])
+  @@index([organizationId, occurredAt])
+  @@map("live_events")
 }
