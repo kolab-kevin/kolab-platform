@@ -10,6 +10,7 @@ import { CreatorsController } from './creators.controller';
 import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
 import { CreatorsOnboardingService } from './creators-onboarding.service';
+import { CreatorsPerformanceScoreService } from './creators-performance-score.service';
 
 describe('CreatorsController compliance authorization', () => {
   let permissionsGuard: PermissionsGuard;
@@ -62,6 +63,13 @@ describe('CreatorsController compliance authorization', () => {
           useValue: {
             generateCreatorLiveTrends: jest.fn(),
             getCreatorLiveTrends: jest.fn(),
+          },
+        },
+        {
+          provide: CreatorsPerformanceScoreService,
+          useValue: {
+            generateCreatorPerformanceScore: jest.fn(),
+            getCreatorPerformanceScore: jest.fn(),
           },
         },
       ],

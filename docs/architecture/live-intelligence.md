@@ -273,6 +273,27 @@ If fewer than 3 sessions exist, `overallDirection` is `INSUFFICIENT_DATA`. Regen
 
 ---
 
+## Creator Performance Score
+
+Deterministic v1 explainable scoring layer that combines creator intelligence profile signals, live trend snapshots, session history, campaign participation and execution, compliance, onboarding completion, and recent activity into a single bounded score.
+
+| Endpoint                                          | Storage                                    |
+| ------------------------------------------------- | ------------------------------------------ |
+| `POST /api/creators/:creatorId/performance-score` | `CreatorProfile.metadata.performanceScore` |
+
+Key properties:
+
+- **Deterministic v1** — no external AI calls, no raw chat/transcript output, no raw live event output
+- **Explainable scoring** — component scores, strengths, risks, and recommended actions describe why the score moved
+- **Correlational language only** — insights describe patterns that may correlate with performance, not causal claims
+- **Future input** — designed for campaign matching, roster prioritization, and AI coaching workflows
+
+Compliance failures heavily reduce the overall score. Recent improvement increases `growthScore`; recent decline increases `riskScore`. Campaign completion and approved deliverables improve `campaignExecutionScore`. Missing upstream intelligence or trend snapshots reduce confidence via `dataQualityWarnings` instead of failing generation.
+
+Audit events: `creator.performance_score.generated`, `creator.performance_score.viewed`.
+
+---
+
 ## Agency-level analytics
 
 Read models (materialized views or nightly rollups):

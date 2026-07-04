@@ -82,6 +82,8 @@ export const AUDIT_ACTION = {
   CREATOR_INTELLIGENCE_PROFILE_VIEWED: 'creator.intelligence_profile.viewed',
   CREATOR_LIVE_TRENDS_GENERATED: 'creator.live_trends.generated',
   CREATOR_LIVE_TRENDS_VIEWED: 'creator.live_trends.viewed',
+  CREATOR_PERFORMANCE_SCORE_GENERATED: 'creator.performance_score.generated',
+  CREATOR_PERFORMANCE_SCORE_VIEWED: 'creator.performance_score.viewed',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {

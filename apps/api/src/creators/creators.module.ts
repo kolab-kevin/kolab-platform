@@ -11,6 +11,7 @@ import { CreatorsDocumentsController } from './creators-documents.controller';
 import { CreatorsDocumentsService } from './creators-documents.service';
 import { CreatorsNotificationsService } from './creators-notifications.service';
 import { CreatorsOnboardingService } from './creators-onboarding.service';
+import { CreatorsPerformanceScoreService } from './creators-performance-score.service';
 import { CreatorsReportingController } from './creators-reporting.controller';
 import { CreatorsReportingService } from './creators-reporting.service';
 
@@ -30,6 +31,7 @@ import { CreatorsReportingService } from './creators-reporting.service';
     CreatorsNotificationsService,
     CreatorsOnboardingService,
     CreatorsComplianceService,
+    CreatorsPerformanceScoreService,
   ],
   exports: [
     CreatorsService,
@@ -39,6 +41,7 @@ import { CreatorsReportingService } from './creators-reporting.service';
     CreatorsNotificationsService,
     CreatorsOnboardingService,
     CreatorsComplianceService,
+    CreatorsPerformanceScoreService,
   ],
 })
 export class CreatorsModule {}

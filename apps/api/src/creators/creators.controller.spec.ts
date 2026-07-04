@@ -9,6 +9,7 @@ import { CreatorsController } from './creators.controller';
 import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
 import { CreatorsOnboardingService } from './creators-onboarding.service';
+import { CreatorsPerformanceScoreService } from './creators-performance-score.service';
 
 describe('CreatorsController authorization', () => {
   let permissionsGuard: PermissionsGuard;
@@ -62,6 +63,13 @@ describe('CreatorsController authorization', () => {
           useValue: {
             generateCreatorLiveTrends: jest.fn(),
             getCreatorLiveTrends: jest.fn(),
+          },
+        },
+        {
+          provide: CreatorsPerformanceScoreService,
+          useValue: {
+            generateCreatorPerformanceScore: jest.fn(),
+            getCreatorPerformanceScore: jest.fn(),
           },
         },
       ],
@@ -229,6 +237,38 @@ describe('CreatorsController authorization', () => {
 
     expect(() =>
       permissionsGuard.canActivate(createContext('getCreatorLiveTrends', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to generate creator performance score with crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(
+      permissionsGuard.canActivate(createContext('generateCreatorPerformanceScore', recruiterUser)),
+    ).toBe(true);
+  });
+
+  it('allows recruiters to read creator performance score with crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(
+      permissionsGuard.canActivate(createContext('getCreatorPerformanceScore', recruiterUser)),
+    ).toBe(true);
+  });
+
+  it('denies viewers from generating creator performance score', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('generateCreatorPerformanceScore', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('denies viewers from reading creator performance score', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('getCreatorPerformanceScore', viewerUser)),
     ).toThrow(ForbiddenException);
   });
 });
