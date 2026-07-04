@@ -41,6 +41,7 @@ import { LiveIntelligenceService } from './live-intelligence.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
 import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
+import { LiveIntelligenceRecommendationsService } from './live-intelligence-recommendations.service';
 import { LiveIntelligenceSessionSummaryService } from './live-intelligence-session-summary.service';
 import { LiveIntelligenceTimelineService } from './live-intelligence-timeline.service';
 import { LiveIntelligenceTriggerAnalysisService } from './live-intelligence-trigger-analysis.service';
@@ -57,6 +58,7 @@ export class LiveIntelligenceController {
     private readonly liveIntelligenceTimelineService: LiveIntelligenceTimelineService,
     private readonly liveIntelligenceTriggerAnalysisService: LiveIntelligenceTriggerAnalysisService,
     private readonly liveIntelligenceSessionSummaryService: LiveIntelligenceSessionSummaryService,
+    private readonly liveIntelligenceRecommendationsService: LiveIntelligenceRecommendationsService,
   ) {}
 
   @Get('sessions')
@@ -236,6 +238,36 @@ export class LiveIntelligenceController {
     @Param('sessionId') sessionId: string,
   ) {
     return this.liveIntelligenceSessionSummaryService.getSessionSummary(user, sessionId);
+  }
+
+  @Post('sessions/:sessionId/recommendations')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Generate deterministic live coach recommendations for a session' })
+  @ApiResponse({
+    status: 201,
+    description: 'Recommendations generated and stored on session metadata',
+  })
+  @ApiResponse({ status: 404, description: 'Live session not found' })
+  generateSessionRecommendations(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.liveIntelligenceRecommendationsService.generateSessionRecommendations(
+      user,
+      sessionId,
+    );
+  }
+
+  @Get('sessions/:sessionId/recommendations')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Read stored live coach recommendations for a session' })
+  @ApiResponse({ status: 200, description: 'Stored session recommendations' })
+  @ApiResponse({ status: 404, description: 'Live session or recommendations not found' })
+  getSessionRecommendations(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.liveIntelligenceRecommendationsService.getSessionRecommendations(user, sessionId);
   }
 
   @Get('sessions/:sessionId')

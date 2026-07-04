@@ -1,6 +1,6 @@
 # Live Intelligence API
 
-**Status:** Implemented (sessions, schedules, events, gifter profiles, rollups, timeline/replay/highlights, trigger analysis, session summary)  
+**Status:** Implemented (sessions, schedules, events, gifter profiles, rollups, timeline/replay/highlights, trigger analysis, session summary, coach recommendations)  
 **Base path:** `/api/live`  
 **Auth:** Bearer JWT with active organization context
 
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Live Intelligence APIs manage live sessions, creator live schedules, append-only session event timelines, gifter profile analytics, timeline replay/highlights, deterministic trigger analysis, and post-live session summaries. AI-generated coaching and real-time streams are planned for later phases.
+Live Intelligence APIs manage live sessions, creator live schedules, append-only session event timelines, gifter profile analytics, timeline replay/highlights, deterministic trigger analysis, post-live session summaries, and deterministic coach recommendations. AI-generated coaching streams are planned for later phases.
 
 All routes are organization-scoped. Cross-org resource IDs return `404`.
 
@@ -412,6 +412,52 @@ Audit events: `live.session_summary.generated`, `live.session_summary.viewed`.
 
 ---
 
+## Coach recommendations
+
+Deterministic coaching recommendations derived from session rollups, timeline highlights, trigger analysis, session summary signals, and gifter rollups. No LLMs or external AI services are used.
+
+| Method | Path                                            | Permission   | Description                              |
+| ------ | ----------------------------------------------- | ------------ | ---------------------------------------- |
+| POST   | `/api/live/sessions/:sessionId/recommendations` | `crm:update` | Generate/replace session recommendations |
+| GET    | `/api/live/sessions/:sessionId/recommendations` | `crm:read`   | Read stored session recommendations      |
+
+Recommendations are stored on `LiveSession.metadata.recommendations`. Regenerating replaces the previous snapshot. GET returns `404` when no recommendations exist.
+
+### Recommendation types (v1)
+
+`TRY_MUSIC`, `START_PK`, `END_PK`, `ENGAGE_TOP_GIFTER`, `WELCOME_NEW_VIEWERS`, `THANK_TOP_SUPPORTERS`, `TAKE_SHORT_BREAK`, `IMPROVE_CONSISTENCY`, `RUN_CAMPAIGN_PROMOTION`, `FOLLOW_UP_WITH_WHALES`
+
+Each recommendation includes:
+
+- `id`, `recommendationType`, `priority` (`LOW` | `MEDIUM` | `HIGH`)
+- `confidenceScore` (0.0–1.0)
+- `title`, `description`
+- `supportingEvidence[]`
+- `generatedAt`
+
+```json
+{
+  "sessionId": "clxyz...",
+  "generatedAt": "2026-07-04T21:00:00.000Z",
+  "recommendations": [
+    {
+      "id": "try_music",
+      "recommendationType": "TRY_MUSIC",
+      "priority": "HIGH",
+      "confidenceScore": 0.85,
+      "title": "Repeat music segments that drove gifts",
+      "description": "Song starts correlated with gift activity in this session.",
+      "supportingEvidence": ["1 song-start trigger(s) detected."],
+      "generatedAt": "2026-07-04T21:00:00.000Z"
+    }
+  ]
+}
+```
+
+Audit events: `live.recommendations.generated`, `live.recommendations.viewed`.
+
+---
+
 ## Creator live schedules
 
 | Method | Path                              | Permission   | Description     |
@@ -462,24 +508,26 @@ Validation:
 
 ## Audit events
 
-| Action                            | When                       | Target type      |
-| --------------------------------- | -------------------------- | ---------------- |
-| `live.session.created`            | Session created            | `live_session`   |
-| `live.session.updated`            | Session updated            | `live_session`   |
-| `live.session.status_changed`     | Status transition          | `live_session`   |
-| `live.schedule.created`           | Schedule created           | `live_schedule`  |
-| `live.schedule.updated`           | Schedule updated           | `live_schedule`  |
-| `live.schedule.deleted`           | Schedule deleted           | `live_schedule`  |
-| `live.event.ingested`             | Event ingested             | `live_event`     |
-| `live.event.batch_ingested`       | Batch ingest complete      | `live_session`   |
-| `live.gifter_profile.viewed`      | Gifter profile detail read | `gifter_profile` |
-| `live.gifter_rollup.processed`    | Gifter rollup job complete | `live_session`   |
-| `live.timeline.viewed`            | Session timeline read      | `live_session`   |
-| `live.replay.viewed`              | Session replay read        | `live_session`   |
-| `live.trigger_analysis.generated` | Trigger analysis generated | `live_session`   |
-| `live.trigger_analysis.viewed`    | Trigger analysis read      | `live_session`   |
-| `live.session_summary.generated`  | Session summary generated  | `live_session`   |
-| `live.session_summary.viewed`     | Session summary read       | `live_session`   |
+| Action                            | When                            | Target type      |
+| --------------------------------- | ------------------------------- | ---------------- |
+| `live.session.created`            | Session created                 | `live_session`   |
+| `live.session.updated`            | Session updated                 | `live_session`   |
+| `live.session.status_changed`     | Status transition               | `live_session`   |
+| `live.schedule.created`           | Schedule created                | `live_schedule`  |
+| `live.schedule.updated`           | Schedule updated                | `live_schedule`  |
+| `live.schedule.deleted`           | Schedule deleted                | `live_schedule`  |
+| `live.event.ingested`             | Event ingested                  | `live_event`     |
+| `live.event.batch_ingested`       | Batch ingest complete           | `live_session`   |
+| `live.gifter_profile.viewed`      | Gifter profile detail read      | `gifter_profile` |
+| `live.gifter_rollup.processed`    | Gifter rollup job complete      | `live_session`   |
+| `live.timeline.viewed`            | Session timeline read           | `live_session`   |
+| `live.replay.viewed`              | Session replay read             | `live_session`   |
+| `live.trigger_analysis.generated` | Trigger analysis generated      | `live_session`   |
+| `live.trigger_analysis.viewed`    | Trigger analysis read           | `live_session`   |
+| `live.session_summary.generated`  | Session summary generated       | `live_session`   |
+| `live.session_summary.viewed`     | Session summary read            | `live_session`   |
+| `live.recommendations.generated`  | Coach recommendations generated | `live_session`   |
+| `live.recommendations.viewed`     | Coach recommendations read      | `live_session`   |
 
 ---
 

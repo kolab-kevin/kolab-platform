@@ -9,6 +9,7 @@ import { LiveIntelligenceService } from './live-intelligence.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
 import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
+import { LiveIntelligenceRecommendationsService } from './live-intelligence-recommendations.service';
 import { LiveIntelligenceSessionSummaryService } from './live-intelligence-session-summary.service';
 import { LiveIntelligenceTimelineService } from './live-intelligence-timeline.service';
 import { LiveIntelligenceTriggerAnalysisService } from './live-intelligence-trigger-analysis.service';
@@ -82,6 +83,13 @@ describe('LiveIntelligenceController authorization', () => {
           useValue: {
             generateSessionSummary: jest.fn(),
             getSessionSummary: jest.fn(),
+          },
+        },
+        {
+          provide: LiveIntelligenceRecommendationsService,
+          useValue: {
+            generateSessionRecommendations: jest.fn(),
+            getSessionRecommendations: jest.fn(),
           },
         },
       ],
@@ -250,6 +258,22 @@ describe('LiveIntelligenceController authorization', () => {
 
     expect(() =>
       permissionsGuard.canActivate(createContext('getSessionSummary', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to generate recommendations with crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(
+      permissionsGuard.canActivate(createContext('generateSessionRecommendations', recruiterUser)),
+    ).toBe(true);
+  });
+
+  it('denies viewers reading recommendations without crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('getSessionRecommendations', viewerUser)),
     ).toThrow(ForbiddenException);
   });
 });
