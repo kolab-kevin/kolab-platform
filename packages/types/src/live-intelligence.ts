@@ -919,3 +919,35 @@ export const CreatorLiveTrendSnapshotSchema = z.object({
 });
 
 export type CreatorLiveTrendSnapshot = z.infer<typeof CreatorLiveTrendSnapshotSchema>;
+
+export const CreatorPerformanceScoreBandSchema = z.enum([
+  'EXCELLENT',
+  'GOOD',
+  'FAIR',
+  'NEEDS_ATTENTION',
+  'HIGH_RISK',
+  'INSUFFICIENT_DATA',
+]);
+
+export type CreatorPerformanceScoreBand = z.infer<typeof CreatorPerformanceScoreBandSchema>;
+
+export const CreatorPerformanceScoreSchema = z.object({
+  creatorProfileId: z.string(),
+  generatedAt: isoDateTimeSchema,
+  overallScore: z.number().int().min(0).max(100),
+  scoreBand: CreatorPerformanceScoreBandSchema,
+  reliabilityScore: z.number().int().min(0).max(100),
+  revenueScore: z.number().int().min(0).max(100),
+  engagementScore: z.number().int().min(0).max(100),
+  consistencyScore: z.number().int().min(0).max(100),
+  complianceScore: z.number().int().min(0).max(100),
+  campaignExecutionScore: z.number().int().min(0).max(100),
+  growthScore: z.number().int().min(0).max(100),
+  riskScore: z.number().int().min(0).max(100),
+  strengths: z.array(z.string()),
+  risks: z.array(z.string()),
+  recommendedActions: z.array(z.string()),
+  dataQualityWarnings: z.array(z.string()),
+});
+
+export type CreatorPerformanceScore = z.infer<typeof CreatorPerformanceScoreSchema>;

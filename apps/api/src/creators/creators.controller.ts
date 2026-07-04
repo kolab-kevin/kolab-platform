@@ -28,6 +28,7 @@ import { LiveIntelligenceLiveTrendsService } from '../live-intelligence/live-int
 import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
 import { CreatorsOnboardingService } from './creators-onboarding.service';
+import { CreatorsPerformanceScoreService } from './creators-performance-score.service';
 
 @ApiTags('creators')
 @ApiBearerAuth('access-token')
@@ -39,6 +40,7 @@ export class CreatorsController {
     private readonly creatorsComplianceService: CreatorsComplianceService,
     private readonly liveIntelligenceCreatorProfileService: LiveIntelligenceCreatorProfileService,
     private readonly liveIntelligenceLiveTrendsService: LiveIntelligenceLiveTrendsService,
+    private readonly creatorsPerformanceScoreService: CreatorsPerformanceScoreService,
   ) {}
 
   @Get()
@@ -221,6 +223,33 @@ export class CreatorsController {
   @ApiResponse({ status: 404, description: 'Creator or live trend snapshot not found' })
   getCreatorLiveTrends(@CurrentUser() user: AccessTokenPayload, @Param('id') creatorId: string) {
     return this.liveIntelligenceLiveTrendsService.getCreatorLiveTrends(user, creatorId);
+  }
+
+  @Post(':id/performance-score')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Generate creator performance score' })
+  @ApiResponse({
+    status: 201,
+    description: 'Creator performance score generated and stored on creator metadata',
+  })
+  @ApiResponse({ status: 404, description: 'Creator not found' })
+  generateCreatorPerformanceScore(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') creatorId: string,
+  ) {
+    return this.creatorsPerformanceScoreService.generateCreatorPerformanceScore(user, creatorId);
+  }
+
+  @Get(':id/performance-score')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Read stored creator performance score' })
+  @ApiResponse({ status: 200, description: 'Stored creator performance score' })
+  @ApiResponse({ status: 404, description: 'Creator or performance score not found' })
+  getCreatorPerformanceScore(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') creatorId: string,
+  ) {
+    return this.creatorsPerformanceScoreService.getCreatorPerformanceScore(user, creatorId);
   }
 
   @Get(':id')

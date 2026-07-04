@@ -62,6 +62,8 @@ All routes are scoped to the JWT `organizationId`. Users must have an active org
 | GET    | `/api/creators/:id/intelligence`                   | `crm:read`         | Read stored creator intelligence profile |
 | POST   | `/api/creators/:id/trends/live`                    | `crm:update`       | Generate creator live trend snapshot     |
 | GET    | `/api/creators/:id/trends/live`                    | `crm:read`         | Read stored creator live trend snapshot  |
+| POST   | `/api/creators/:id/performance-score`              | `crm:update`       | Generate creator performance score       |
+| GET    | `/api/creators/:id/performance-score`              | `crm:read`         | Read stored creator performance score    |
 | GET    | `/api/creators/:id/onboarding`                     | `documents:read`   | Get creator onboarding checklist         |
 | GET    | `/api/creators/:id/compliance`                     | `documents:read`   | Get consolidated compliance bundle       |
 | GET    | `/api/creators/:id/documents`                      | `documents:read`   | List creator documents                   |
@@ -747,6 +749,69 @@ See also: [Live Intelligence API](./live-intelligence.md#live-trend-detection).
 
 ---
 
+## Creator Performance Score
+
+Deterministic, explainable creator performance score combining intelligence profile signals, live trends, session history, campaign execution, compliance, onboarding completion, and recent activity. No external AI calls and no raw chat/transcript or live event output. Signals are correlational, not causal.
+
+| Method | Path                                  | Permission   | Description                                |
+| ------ | ------------------------------------- | ------------ | ------------------------------------------ |
+| POST   | `/api/creators/:id/performance-score` | `crm:update` | Generate/replace creator performance score |
+| GET    | `/api/creators/:id/performance-score` | `crm:read`   | Read stored creator performance score      |
+
+Stored on `CreatorProfile.metadata.performanceScore`. Regenerating replaces the previous score. GET returns `404` when no score exists.
+
+Designed as structured input for future campaign matching and AI coaching workflows.
+
+### Score fields
+
+- Summary: `creatorProfileId`, `generatedAt`, `overallScore` (0–100), `scoreBand`
+- Component scores (0–100): `reliabilityScore`, `revenueScore`, `engagementScore`, `consistencyScore`, `complianceScore`, `campaignExecutionScore`, `growthScore`, `riskScore`
+- Narrative arrays: `strengths[]`, `risks[]`, `recommendedActions[]`, `dataQualityWarnings[]`
+
+### Score bands
+
+| Band                | Typical range / condition                          |
+| ------------------- | -------------------------------------------------- |
+| `EXCELLENT`         | Overall score ≥ 85 and compliance is healthy       |
+| `GOOD`              | Overall score 70–84                                |
+| `FAIR`              | Overall score 55–69                                |
+| `NEEDS_ATTENTION`   | Overall score 40–54 or compliance failures present |
+| `HIGH_RISK`         | Overall score < 40                                 |
+| `INSUFFICIENT_DATA` | Not enough live, campaign, or profile signals      |
+
+Compliance failures heavily reduce the overall score. Missing upstream intelligence or trend snapshots produce warnings rather than failing generation.
+
+### Performance score response (200)
+
+```json
+{
+  "creatorProfileId": "creator_abc123",
+  "generatedAt": "2026-07-04T21:00:00.000Z",
+  "overallScore": 78,
+  "scoreBand": "GOOD",
+  "reliabilityScore": 80,
+  "revenueScore": 76,
+  "engagementScore": 74,
+  "consistencyScore": 77,
+  "complianceScore": 92,
+  "campaignExecutionScore": 85,
+  "growthScore": 82,
+  "riskScore": 18,
+  "strengths": ["Compliance signals appear strong across onboarding and documentation checks."],
+  "risks": [],
+  "recommendedActions": [
+    "Maintain current live and campaign patterns while monitoring correlated performance signals."
+  ],
+  "dataQualityWarnings": []
+}
+```
+
+**Errors:** `404` if the creator does not exist in the active organization or no performance score has been generated.
+
+See also: [Architecture — Creator Performance Score](../architecture/live-intelligence.md#creator-performance-score).
+
+---
+
 ## Idempotency (conversion)
 
 Calling conversion again on an already converted lead returns the existing creator with `alreadyConverted: true`. No duplicate user, membership, profile, or platform account rows are created. Audit events are not re-recorded.
@@ -768,6 +833,8 @@ Calling conversion again on an already converted lead returns the existing creat
 | `creator.intelligence_profile.viewed`    | Creator intelligence profile read      | `creator`                  |
 | `creator.live_trends.generated`          | Creator live trend snapshot generated  | `creator`                  |
 | `creator.live_trends.viewed`             | Creator live trend snapshot read       | `creator`                  |
+| `creator.performance_score.generated`    | Creator performance score generated    | `creator`                  |
+| `creator.performance_score.viewed`       | Creator performance score read         | `creator`                  |
 | `lead.converted`                         | First successful conversion            | `lead`                     |
 
 ---
