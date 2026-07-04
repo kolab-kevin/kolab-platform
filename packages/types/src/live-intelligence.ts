@@ -714,3 +714,44 @@ export const SessionRecommendationsResponseSchema = z.object({
 });
 
 export type SessionRecommendationsResponse = z.infer<typeof SessionRecommendationsResponseSchema>;
+
+export const LiveCoachAlertTypeSchema = z.enum([
+  'TOP_GIFTER_ACTIVE',
+  'GIFT_VELOCITY_DROPPING',
+  'VIEWER_SPIKE',
+  'HIGH_VALUE_GIFT_RECEIVED',
+  'TRY_MUSIC_NOW',
+  'START_PK_NOW',
+  'THANK_SUPPORTER',
+  'PROMOTE_CAMPAIGN',
+  'TAKE_BREAK_SOON',
+]);
+
+export type LiveCoachAlertType = z.infer<typeof LiveCoachAlertTypeSchema>;
+
+export const LiveCoachAlertPrioritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH']);
+
+export type LiveCoachAlertPriority = z.infer<typeof LiveCoachAlertPrioritySchema>;
+
+export const LiveCoachAlertItemSchema = z.object({
+  id: z.string(),
+  alertType: LiveCoachAlertTypeSchema,
+  priority: LiveCoachAlertPrioritySchema,
+  title: z.string(),
+  message: z.string(),
+  recommendedAction: z.string(),
+  relatedRecommendationId: z.string().nullable(),
+  relatedEventIds: z.array(z.string()),
+  confidenceScore: z.number().min(0).max(1),
+  generatedAt: isoDateTimeSchema,
+});
+
+export type LiveCoachAlertItem = z.infer<typeof LiveCoachAlertItemSchema>;
+
+export const SessionCoachAlertsResponseSchema = z.object({
+  sessionId: z.string(),
+  generatedAt: isoDateTimeSchema,
+  alerts: z.array(LiveCoachAlertItemSchema),
+});
+
+export type SessionCoachAlertsResponse = z.infer<typeof SessionCoachAlertsResponseSchema>;

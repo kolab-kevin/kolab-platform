@@ -2,7 +2,7 @@
 
 Architecture for KOLAB Live Intelligence and Gifter Analytics.
 
-**Status:** Partially implemented (sessions, events, gifter rollups, timeline/replay, deterministic trigger analysis, deterministic session summary, deterministic coach recommendations)
+**Status:** Partially implemented (sessions, events, gifter rollups, timeline/replay, deterministic trigger analysis, deterministic session summary, deterministic coach recommendations, deterministic coach alerts)
 
 ---
 
@@ -206,6 +206,22 @@ Future batch/AI layer may add narrative coaching on top of the deterministic sum
 Results are stored on `LiveSession.metadata.recommendations`. Each recommendation includes type, priority, confidence score, title, description, and supporting evidence. Rules are fully deterministic — no LLM or external AI calls.
 
 Recommendation types include music/PK engagement, viewer welcome prompts, supporter thank-yous, break reminders, schedule consistency, campaign promotion, and whale follow-up.
+
+---
+
+## Coach alerts (implemented)
+
+`POST /api/live/sessions/:sessionId/coach/alerts` converts recommendation signals and live session intelligence into actionable alert snapshots stored on `LiveSession.metadata.coachAlerts`.
+
+Inputs include:
+
+1. Stored recommendations (`metadata.recommendations`)
+2. Recent timeline events (gift velocity, viewer spikes, high-value gifts)
+3. Gifter rollups (top gifter activity)
+
+Outputs are deterministic alert records with priority, confidence, recommended action, optional recommendation linkage, and related event IDs. No websocket/SSE delivery or AI calls in v1.
+
+Future real-time coach streaming will consume these alert snapshots without replacing the rule-based foundation.
 
 ---
 

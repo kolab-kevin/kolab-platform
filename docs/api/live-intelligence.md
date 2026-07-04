@@ -1,6 +1,6 @@
 # Live Intelligence API
 
-**Status:** Implemented (sessions, schedules, events, gifter profiles, rollups, timeline/replay/highlights, trigger analysis, session summary, coach recommendations)  
+**Status:** Implemented (sessions, schedules, events, gifter profiles, rollups, timeline/replay/highlights, trigger analysis, session summary, coach recommendations, coach alerts)  
 **Base path:** `/api/live`  
 **Auth:** Bearer JWT with active organization context
 
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Live Intelligence APIs manage live sessions, creator live schedules, append-only session event timelines, gifter profile analytics, timeline replay/highlights, deterministic trigger analysis, post-live session summaries, and deterministic coach recommendations. AI-generated coaching streams are planned for later phases.
+Live Intelligence APIs manage live sessions, creator live schedules, append-only session event timelines, gifter profile analytics, timeline replay/highlights, deterministic trigger analysis, post-live session summaries, deterministic coach recommendations, and deterministic coach alerts. Real-time streaming coach delivery is planned for later phases.
 
 All routes are organization-scoped. Cross-org resource IDs return `404`.
 
@@ -458,6 +458,55 @@ Audit events: `live.recommendations.generated`, `live.recommendations.viewed`.
 
 ---
 
+## Coach alerts
+
+Deterministic live coaching alerts derived from stored recommendations, recent timeline events, gift velocity, viewer spikes, high-value gifts, and gifter rollups. No LLMs, websocket/SSE streaming, or raw chat/transcript output.
+
+| Method | Path                                         | Permission   | Description                           |
+| ------ | -------------------------------------------- | ------------ | ------------------------------------- |
+| POST   | `/api/live/sessions/:sessionId/coach/alerts` | `crm:update` | Generate/replace coach alert snapshot |
+| GET    | `/api/live/sessions/:sessionId/coach/alerts` | `crm:read`   | Read stored coach alerts              |
+
+Alerts are stored on `LiveSession.metadata.coachAlerts`. Regenerating replaces the previous snapshot. GET returns `404` when no alerts exist.
+
+### Alert types (v1)
+
+`TOP_GIFTER_ACTIVE`, `GIFT_VELOCITY_DROPPING`, `VIEWER_SPIKE`, `HIGH_VALUE_GIFT_RECEIVED`, `TRY_MUSIC_NOW`, `START_PK_NOW`, `THANK_SUPPORTER`, `PROMOTE_CAMPAIGN`, `TAKE_BREAK_SOON`
+
+Each alert includes:
+
+- `id`, `alertType`, `priority` (`LOW` | `MEDIUM` | `HIGH`)
+- `title`, `message`, `recommendedAction`
+- `relatedRecommendationId` (optional)
+- `relatedEventIds[]`
+- `confidenceScore` (0.0–1.0)
+- `generatedAt`
+
+```json
+{
+  "sessionId": "clxyz...",
+  "generatedAt": "2026-07-04T21:00:00.000Z",
+  "alerts": [
+    {
+      "id": "top_gifter_active",
+      "alertType": "TOP_GIFTER_ACTIVE",
+      "priority": "HIGH",
+      "confidenceScore": 0.75,
+      "title": "Top gifter is active now",
+      "message": "Whale sent gifts during the recent live window.",
+      "recommendedAction": "Acknowledge the top gifter on stream and reinforce engagement.",
+      "relatedRecommendationId": null,
+      "relatedEventIds": ["evt-gift-recent"],
+      "generatedAt": "2026-07-04T21:00:00.000Z"
+    }
+  ]
+}
+```
+
+Audit events: `live.coach_alerts.generated`, `live.coach_alerts.viewed`.
+
+---
+
 ## Creator live schedules
 
 | Method | Path                              | Permission   | Description     |
@@ -528,6 +577,8 @@ Validation:
 | `live.session_summary.viewed`     | Session summary read            | `live_session`   |
 | `live.recommendations.generated`  | Coach recommendations generated | `live_session`   |
 | `live.recommendations.viewed`     | Coach recommendations read      | `live_session`   |
+| `live.coach_alerts.generated`     | Coach alerts generated          | `live_session`   |
+| `live.coach_alerts.viewed`        | Coach alerts read               | `live_session`   |
 
 ---
 

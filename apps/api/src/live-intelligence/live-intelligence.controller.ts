@@ -38,6 +38,7 @@ import { RequirePermissions } from '../common/decorators/auth.decorators';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { LiveIntelligenceService } from './live-intelligence.service';
+import { LiveIntelligenceCoachAlertsService } from './live-intelligence-coach-alerts.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
 import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
@@ -59,6 +60,7 @@ export class LiveIntelligenceController {
     private readonly liveIntelligenceTriggerAnalysisService: LiveIntelligenceTriggerAnalysisService,
     private readonly liveIntelligenceSessionSummaryService: LiveIntelligenceSessionSummaryService,
     private readonly liveIntelligenceRecommendationsService: LiveIntelligenceRecommendationsService,
+    private readonly liveIntelligenceCoachAlertsService: LiveIntelligenceCoachAlertsService,
   ) {}
 
   @Get('sessions')
@@ -268,6 +270,33 @@ export class LiveIntelligenceController {
     @Param('sessionId') sessionId: string,
   ) {
     return this.liveIntelligenceRecommendationsService.getSessionRecommendations(user, sessionId);
+  }
+
+  @Post('sessions/:sessionId/coach/alerts')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Generate deterministic live coach alerts for a session' })
+  @ApiResponse({
+    status: 201,
+    description: 'Coach alerts generated and stored on session metadata',
+  })
+  @ApiResponse({ status: 404, description: 'Live session not found' })
+  generateSessionCoachAlerts(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.liveIntelligenceCoachAlertsService.generateSessionCoachAlerts(user, sessionId);
+  }
+
+  @Get('sessions/:sessionId/coach/alerts')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Read stored live coach alerts for a session' })
+  @ApiResponse({ status: 200, description: 'Stored session coach alerts' })
+  @ApiResponse({ status: 404, description: 'Live session or coach alerts not found' })
+  getSessionCoachAlerts(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.liveIntelligenceCoachAlertsService.getSessionCoachAlerts(user, sessionId);
   }
 
   @Get('sessions/:sessionId')

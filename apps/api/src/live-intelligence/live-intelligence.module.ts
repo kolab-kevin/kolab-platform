@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { AuditModule } from '../audit/audit.module';
 import { LiveIntelligenceController } from './live-intelligence.controller';
 import { LiveIntelligenceService } from './live-intelligence.service';
+import { LiveIntelligenceCoachAlertsService } from './live-intelligence-coach-alerts.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
 import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
@@ -23,6 +24,7 @@ import { LiveIntelligenceTriggerAnalysisService } from './live-intelligence-trig
     LiveIntelligenceTriggerAnalysisService,
     LiveIntelligenceSessionSummaryService,
     LiveIntelligenceRecommendationsService,
+    LiveIntelligenceCoachAlertsService,
   ],
   exports: [
     LiveIntelligenceService,
@@ -33,6 +35,7 @@ import { LiveIntelligenceTriggerAnalysisService } from './live-intelligence-trig
     LiveIntelligenceTriggerAnalysisService,
     LiveIntelligenceSessionSummaryService,
     LiveIntelligenceRecommendationsService,
+    LiveIntelligenceCoachAlertsService,
   ],
 })
 export class LiveIntelligenceModule {}
