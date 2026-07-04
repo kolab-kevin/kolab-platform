@@ -76,6 +76,8 @@ export const AUDIT_ACTION = {
   LIVE_RECOMMENDATIONS_VIEWED: 'live.recommendations.viewed',
   LIVE_COACH_ALERTS_GENERATED: 'live.coach_alerts.generated',
   LIVE_COACH_ALERTS_VIEWED: 'live.coach_alerts.viewed',
+  LIVE_INTELLIGENCE_SNAPSHOT_GENERATED: 'live.intelligence_snapshot.generated',
+  LIVE_INTELLIGENCE_SNAPSHOT_VIEWED: 'live.intelligence_snapshot.viewed',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {

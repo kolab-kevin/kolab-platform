@@ -39,6 +39,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { LiveIntelligenceService } from './live-intelligence.service';
 import { LiveIntelligenceCoachAlertsService } from './live-intelligence-coach-alerts.service';
+import { LiveIntelligenceEngineService } from './live-intelligence-engine.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
 import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
@@ -61,6 +62,7 @@ export class LiveIntelligenceController {
     private readonly liveIntelligenceSessionSummaryService: LiveIntelligenceSessionSummaryService,
     private readonly liveIntelligenceRecommendationsService: LiveIntelligenceRecommendationsService,
     private readonly liveIntelligenceCoachAlertsService: LiveIntelligenceCoachAlertsService,
+    private readonly liveIntelligenceEngineService: LiveIntelligenceEngineService,
   ) {}
 
   @Get('sessions')
@@ -297,6 +299,33 @@ export class LiveIntelligenceController {
     @Param('sessionId') sessionId: string,
   ) {
     return this.liveIntelligenceCoachAlertsService.getSessionCoachAlerts(user, sessionId);
+  }
+
+  @Post('sessions/:sessionId/intelligence')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Generate consolidated live intelligence snapshot for a session' })
+  @ApiResponse({
+    status: 201,
+    description: 'Intelligence snapshot generated and stored on session metadata',
+  })
+  @ApiResponse({ status: 404, description: 'Live session not found' })
+  generateSessionIntelligence(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.liveIntelligenceEngineService.generateSessionIntelligence(user, sessionId);
+  }
+
+  @Get('sessions/:sessionId/intelligence')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Read stored live intelligence snapshot for a session' })
+  @ApiResponse({ status: 200, description: 'Stored intelligence snapshot' })
+  @ApiResponse({ status: 404, description: 'Live session or intelligence snapshot not found' })
+  getSessionIntelligence(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.liveIntelligenceEngineService.getSessionIntelligence(user, sessionId);
   }
 
   @Get('sessions/:sessionId')

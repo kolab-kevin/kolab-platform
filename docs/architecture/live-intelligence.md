@@ -2,7 +2,7 @@
 
 Architecture for KOLAB Live Intelligence and Gifter Analytics.
 
-**Status:** Partially implemented (sessions, events, gifter rollups, timeline/replay, deterministic trigger analysis, deterministic session summary, deterministic coach recommendations, deterministic coach alerts)
+**Status:** Partially implemented (sessions, events, gifter rollups, timeline/replay, deterministic trigger analysis, deterministic session summary, deterministic coach recommendations, deterministic coach alerts, deterministic intelligence engine)
 
 ---
 
@@ -222,6 +222,23 @@ Inputs include:
 Outputs are deterministic alert records with priority, confidence, recommended action, optional recommendation linkage, and related event IDs. No websocket/SSE delivery or AI calls in v1.
 
 Future real-time coach streaming will consume these alert snapshots without replacing the rule-based foundation.
+
+---
+
+## Live Intelligence Engine (implemented)
+
+`POST /api/live/sessions/:sessionId/intelligence` builds a single consolidated snapshot from existing Live Intelligence layers:
+
+1. Live session rollups
+2. Timeline events and highlights
+3. Gifter rollups
+4. Trigger analysis (stored or inline)
+5. Session summary (stored or inline)
+6. Recommendations and coach alerts when available
+
+Results are stored on `LiveSession.metadata.intelligenceSnapshot`. The engine is deterministic v1 — no external AI calls, no raw chat/transcript output, and all insights use correlational language.
+
+The snapshot is designed as structured input for future AI Coach features and agency dashboards. Missing upstream data reduces confidence via `dataQualityWarnings` instead of failing generation.
 
 ---
 

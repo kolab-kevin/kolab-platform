@@ -755,3 +755,63 @@ export const SessionCoachAlertsResponseSchema = z.object({
 });
 
 export type SessionCoachAlertsResponse = z.infer<typeof SessionCoachAlertsResponseSchema>;
+
+export const IntelligenceSnapshotTopGifterSchema = z.object({
+  gifterProfileId: z.string(),
+  externalGifterId: z.string(),
+  displayName: z.string().nullable(),
+  giftCount: z.number().int().nonnegative(),
+  giftValue: z.number().nonnegative(),
+  spendingTier: GifterSpendingTierSchema.nullable(),
+});
+
+export type IntelligenceSnapshotTopGifter = z.infer<typeof IntelligenceSnapshotTopGifterSchema>;
+
+export const IntelligenceSnapshotTopSignalSchema = z.object({
+  signalType: z.string(),
+  label: z.string(),
+  value: z.number().nullable(),
+  relatedEventIds: z.array(z.string()),
+});
+
+export type IntelligenceSnapshotTopSignal = z.infer<typeof IntelligenceSnapshotTopSignalSchema>;
+
+export const IntelligenceSnapshotMomentSchema = z.object({
+  type: z.string(),
+  label: z.string(),
+  offsetMs: z.number().int().nonnegative().nullable(),
+  eventIds: z.array(z.string()),
+});
+
+export type IntelligenceSnapshotMoment = z.infer<typeof IntelligenceSnapshotMomentSchema>;
+
+export const IntelligenceSnapshotTriggerTypeSchema = z.object({
+  triggerType: z.string(),
+  count: z.number().int().nonnegative(),
+});
+
+export type IntelligenceSnapshotTriggerType = z.infer<typeof IntelligenceSnapshotTriggerTypeSchema>;
+
+export const SessionIntelligenceSnapshotSchema = z.object({
+  sessionId: z.string(),
+  creatorProfileId: z.string(),
+  generatedAt: isoDateTimeSchema,
+  sessionHealthScore: z.number().int().min(0).max(100),
+  revenueScore: z.number().int().min(0).max(100),
+  engagementScore: z.number().int().min(0).max(100),
+  consistencyScore: z.number().int().min(0).max(100),
+  gifterQualityScore: z.number().int().min(0).max(100),
+  coachingOpportunityScore: z.number().int().min(0).max(100),
+  overallScore: z.number().int().min(0).max(100),
+  keyStrengths: z.array(z.string()),
+  keyRisks: z.array(z.string()),
+  topSignals: z.array(IntelligenceSnapshotTopSignalSchema),
+  topGifters: z.array(IntelligenceSnapshotTopGifterSchema),
+  topTriggerTypes: z.array(IntelligenceSnapshotTriggerTypeSchema),
+  bestMoments: z.array(IntelligenceSnapshotMomentSchema),
+  weakMoments: z.array(IntelligenceSnapshotMomentSchema),
+  recommendedNextActions: z.array(z.string()),
+  dataQualityWarnings: z.array(z.string()),
+});
+
+export type SessionIntelligenceSnapshot = z.infer<typeof SessionIntelligenceSnapshotSchema>;
