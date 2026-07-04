@@ -10,6 +10,7 @@ import { LiveIntelligenceEventsService } from './live-intelligence-events.servic
 import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
 import { LiveIntelligenceTimelineService } from './live-intelligence-timeline.service';
+import { LiveIntelligenceTriggerAnalysisService } from './live-intelligence-trigger-analysis.service';
 
 describe('LiveIntelligenceController authorization', () => {
   let permissionsGuard: PermissionsGuard;
@@ -66,6 +67,13 @@ describe('LiveIntelligenceController authorization', () => {
             getSessionTimeline: jest.fn(),
             getSessionReplay: jest.fn(),
             getSessionHighlights: jest.fn(),
+          },
+        },
+        {
+          provide: LiveIntelligenceTriggerAnalysisService,
+          useValue: {
+            generateSessionTriggerAnalysis: jest.fn(),
+            getSessionTriggerAnalysis: jest.fn(),
           },
         },
       ],
@@ -202,6 +210,22 @@ describe('LiveIntelligenceController authorization', () => {
 
     expect(() =>
       permissionsGuard.canActivate(createContext('getSessionReplay', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to generate trigger analysis with crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(
+      permissionsGuard.canActivate(createContext('generateSessionTriggerAnalysis', recruiterUser)),
+    ).toBe(true);
+  });
+
+  it('denies viewers reading trigger analysis without crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('getSessionTriggerAnalysis', viewerUser)),
     ).toThrow(ForbiddenException);
   });
 });

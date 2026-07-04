@@ -42,6 +42,7 @@ import { LiveIntelligenceEventsService } from './live-intelligence-events.servic
 import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
 import { LiveIntelligenceTimelineService } from './live-intelligence-timeline.service';
+import { LiveIntelligenceTriggerAnalysisService } from './live-intelligence-trigger-analysis.service';
 
 @ApiTags('live-intelligence')
 @ApiBearerAuth('access-token')
@@ -53,6 +54,7 @@ export class LiveIntelligenceController {
     private readonly liveIntelligenceGiftersService: LiveIntelligenceGiftersService,
     private readonly liveIntelligenceGifterRollupsService: LiveIntelligenceGifterRollupsService,
     private readonly liveIntelligenceTimelineService: LiveIntelligenceTimelineService,
+    private readonly liveIntelligenceTriggerAnalysisService: LiveIntelligenceTriggerAnalysisService,
   ) {}
 
   @Get('sessions')
@@ -175,6 +177,36 @@ export class LiveIntelligenceController {
     @Param('sessionId') sessionId: string,
   ) {
     return this.liveIntelligenceTimelineService.getSessionHighlights(user, sessionId);
+  }
+
+  @Post('sessions/:sessionId/analysis/triggers')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Generate deterministic gift trigger analysis for a live session' })
+  @ApiResponse({
+    status: 201,
+    description: 'Trigger analysis generated and stored on session metadata',
+  })
+  @ApiResponse({ status: 404, description: 'Live session not found' })
+  generateSessionTriggerAnalysis(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.liveIntelligenceTriggerAnalysisService.generateSessionTriggerAnalysis(
+      user,
+      sessionId,
+    );
+  }
+
+  @Get('sessions/:sessionId/analysis/triggers')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Read stored gift trigger analysis for a live session' })
+  @ApiResponse({ status: 200, description: 'Stored trigger analysis' })
+  @ApiResponse({ status: 404, description: 'Live session or trigger analysis not found' })
+  getSessionTriggerAnalysis(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.liveIntelligenceTriggerAnalysisService.getSessionTriggerAnalysis(user, sessionId);
   }
 
   @Get('sessions/:sessionId')

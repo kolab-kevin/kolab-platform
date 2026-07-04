@@ -1,6 +1,6 @@
 # Live Intelligence API
 
-**Status:** Implemented (sessions, schedules, events, gifter profiles, rollups, timeline/replay/highlights)  
+**Status:** Implemented (sessions, schedules, events, gifter profiles, rollups, timeline/replay/highlights, trigger analysis)  
 **Base path:** `/api/live`  
 **Auth:** Bearer JWT with active organization context
 
@@ -322,6 +322,48 @@ Replay access emits audit event `live.replay.viewed`.
 
 ---
 
+## Trigger analysis
+
+Deterministic gift trigger analysis over the append-only session timeline. Results are stored on `LiveSession.metadata.triggerAnalysis` (no `LiveEvent` mutation, no AI).
+
+| Method | Path                                              | Permission   | Description                       |
+| ------ | ------------------------------------------------- | ------------ | --------------------------------- |
+| POST   | `/api/live/sessions/:sessionId/analysis/triggers` | `crm:update` | Generate/replace trigger analysis |
+| GET    | `/api/live/sessions/:sessionId/analysis/triggers` | `crm:read`   | Read stored trigger analysis      |
+
+### Trigger rules (v1, correlation only)
+
+| Trigger type                  | Rule                                                    |
+| ----------------------------- | ------------------------------------------------------- |
+| `SONG_STARTED_GIFTS`          | Gifts within 30s after `SONG_STARTED`                   |
+| `DANCE_MOMENT_GIFTS`          | Gifts within 30s after `DANCE_MOMENT`                   |
+| `PERFORMANCE_MOMENT_GIFTS`    | Gifts within 30s after `PERFORMANCE_MOMENT`             |
+| `PK_STARTED_GIFTS`            | Gifts within 30s after `PK_STARTED`                     |
+| `ACTOR_ACKNOWLEDGEMENT_GIFTS` | Gifts within 30s after acknowledgement payload/metadata |
+| `GIFT_SPIKE`                  | ≥ 3 gifts within 30s                                    |
+| `HIGH_VALUE_GIFT`             | Gift value ≥ 1,000                                      |
+
+Each item includes `confidenceScore` (0–1), `evidence`, `relatedEventIds`, optional `viewerDelta`, and a fixed disclaimer: correlation, not causation. Regenerating analysis replaces the previous `metadata.triggerAnalysis` snapshot.
+
+### Response summary
+
+```json
+{
+  "liveSessionId": "clxyz...",
+  "summary": {
+    "totalTriggers": 4,
+    "topTriggerTypes": [{ "triggerType": "SONG_STARTED_GIFTS", "count": 2 }],
+    "totalGiftValueAttributed": 1250,
+    "generatedAt": "2026-07-04T21:00:00.000Z"
+  },
+  "items": [{ "...": "TriggerAnalysisItem" }]
+}
+```
+
+Audit events: `live.trigger_analysis.generated`, `live.trigger_analysis.viewed`.
+
+---
+
 ## Creator live schedules
 
 | Method | Path                              | Permission   | Description     |
@@ -372,20 +414,22 @@ Validation:
 
 ## Audit events
 
-| Action                         | When                       | Target type      |
-| ------------------------------ | -------------------------- | ---------------- |
-| `live.session.created`         | Session created            | `live_session`   |
-| `live.session.updated`         | Session updated            | `live_session`   |
-| `live.session.status_changed`  | Status transition          | `live_session`   |
-| `live.schedule.created`        | Schedule created           | `live_schedule`  |
-| `live.schedule.updated`        | Schedule updated           | `live_schedule`  |
-| `live.schedule.deleted`        | Schedule deleted           | `live_schedule`  |
-| `live.event.ingested`          | Event ingested             | `live_event`     |
-| `live.event.batch_ingested`    | Batch ingest complete      | `live_session`   |
-| `live.gifter_profile.viewed`   | Gifter profile detail read | `gifter_profile` |
-| `live.gifter_rollup.processed` | Gifter rollup job complete | `live_session`   |
-| `live.timeline.viewed`         | Session timeline read      | `live_session`   |
-| `live.replay.viewed`           | Session replay read        | `live_session`   |
+| Action                            | When                       | Target type      |
+| --------------------------------- | -------------------------- | ---------------- |
+| `live.session.created`            | Session created            | `live_session`   |
+| `live.session.updated`            | Session updated            | `live_session`   |
+| `live.session.status_changed`     | Status transition          | `live_session`   |
+| `live.schedule.created`           | Schedule created           | `live_schedule`  |
+| `live.schedule.updated`           | Schedule updated           | `live_schedule`  |
+| `live.schedule.deleted`           | Schedule deleted           | `live_schedule`  |
+| `live.event.ingested`             | Event ingested             | `live_event`     |
+| `live.event.batch_ingested`       | Batch ingest complete      | `live_session`   |
+| `live.gifter_profile.viewed`      | Gifter profile detail read | `gifter_profile` |
+| `live.gifter_rollup.processed`    | Gifter rollup job complete | `live_session`   |
+| `live.timeline.viewed`            | Session timeline read      | `live_session`   |
+| `live.replay.viewed`              | Session replay read        | `live_session`   |
+| `live.trigger_analysis.generated` | Trigger analysis generated | `live_session`   |
+| `live.trigger_analysis.viewed`    | Trigger analysis read      | `live_session`   |
 
 ---
 
