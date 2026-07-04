@@ -10,6 +10,7 @@ import type {
   LiveSessionListQuery,
   SessionGifterListQuery,
   SessionLiveEventListQuery,
+  SessionTimelineQuery,
   UpdateCreatorLiveScheduleInput,
   UpdateLiveSessionInput,
   UpdateLiveSessionStatusInput,
@@ -25,6 +26,7 @@ import {
   LiveSessionListQuerySchema,
   SessionGifterListQuerySchema,
   SessionLiveEventListQuerySchema,
+  SessionTimelineQuerySchema,
   UpdateCreatorLiveScheduleSchema,
   UpdateLiveSessionSchema,
   UpdateLiveSessionStatusSchema,
@@ -39,6 +41,7 @@ import { LiveIntelligenceService } from './live-intelligence.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
 import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
+import { LiveIntelligenceTimelineService } from './live-intelligence-timeline.service';
 
 @ApiTags('live-intelligence')
 @ApiBearerAuth('access-token')
@@ -49,6 +52,7 @@ export class LiveIntelligenceController {
     private readonly liveIntelligenceEventsService: LiveIntelligenceEventsService,
     private readonly liveIntelligenceGiftersService: LiveIntelligenceGiftersService,
     private readonly liveIntelligenceGifterRollupsService: LiveIntelligenceGifterRollupsService,
+    private readonly liveIntelligenceTimelineService: LiveIntelligenceTimelineService,
   ) {}
 
   @Get('sessions')
@@ -137,6 +141,40 @@ export class LiveIntelligenceController {
     @Param('sessionId') sessionId: string,
   ) {
     return this.liveIntelligenceGifterRollupsService.processGifterRollups(user, sessionId);
+  }
+
+  @Get('sessions/:sessionId/timeline')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Get chronological timeline for a live session' })
+  @ApiResponse({ status: 200, description: 'Paginated session timeline' })
+  @ApiResponse({ status: 404, description: 'Live session not found' })
+  getSessionTimeline(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+    @Query(new ZodValidationPipe(SessionTimelineQuerySchema)) query: SessionTimelineQuery,
+  ) {
+    return this.liveIntelligenceTimelineService.getSessionTimeline(user, sessionId, query);
+  }
+
+  @Get('sessions/:sessionId/replay')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Get replay segments grouped by timeline offsets' })
+  @ApiResponse({ status: 200, description: 'Session replay segments' })
+  @ApiResponse({ status: 404, description: 'Live session not found' })
+  getSessionReplay(@CurrentUser() user: AccessTokenPayload, @Param('sessionId') sessionId: string) {
+    return this.liveIntelligenceTimelineService.getSessionReplay(user, sessionId);
+  }
+
+  @Get('sessions/:sessionId/highlights')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Get deterministic session highlights from timeline data' })
+  @ApiResponse({ status: 200, description: 'Session highlight moments' })
+  @ApiResponse({ status: 404, description: 'Live session not found' })
+  getSessionHighlights(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.liveIntelligenceTimelineService.getSessionHighlights(user, sessionId);
   }
 
   @Get('sessions/:sessionId')

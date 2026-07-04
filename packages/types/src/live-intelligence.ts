@@ -456,3 +456,85 @@ export const ProcessGifterRollupsResponseSchema = z.object({
 });
 
 export type ProcessGifterRollupsResponse = z.infer<typeof ProcessGifterRollupsResponseSchema>;
+
+export const SessionTimelineQuerySchema = z.object({
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(500).default(100),
+  eventType: LiveEventTypeSchema.optional(),
+  actorId: z.string().min(1).optional(),
+  fromOffsetMs: z.coerce.number().int().nonnegative().optional(),
+  toOffsetMs: z.coerce.number().int().nonnegative().optional(),
+});
+
+export type SessionTimelineQuery = z.infer<typeof SessionTimelineQuerySchema>;
+
+export const SessionTimelineResponseSchema = z.object({
+  liveSessionId: z.string(),
+  items: z.array(LiveEventSchema),
+  nextCursor: z.string().nullable(),
+});
+
+export type SessionTimelineResponse = z.infer<typeof SessionTimelineResponseSchema>;
+
+export const LiveReplayActivitySchema = z.object({
+  joins: z.number().int().nonnegative(),
+  leaves: z.number().int().nonnegative(),
+});
+
+export const LiveReplayGiftActivitySchema = z.object({
+  giftCount: z.number().int().nonnegative(),
+  giftValue: z.number().nonnegative(),
+});
+
+export const LiveReplaySegmentSchema = z.object({
+  startOffsetMs: z.number().int().nonnegative(),
+  endOffsetMs: z.number().int().nonnegative(),
+  eventCount: z.number().int().nonnegative(),
+  dominantEventType: LiveEventTypeSchema.nullable(),
+  viewerActivity: LiveReplayActivitySchema,
+  giftActivity: LiveReplayGiftActivitySchema,
+  events: z.array(LiveEventSchema),
+});
+
+export type LiveReplaySegment = z.infer<typeof LiveReplaySegmentSchema>;
+
+export const SessionReplayResponseSchema = z.object({
+  liveSessionId: z.string(),
+  segmentDurationMs: z.number().int().positive(),
+  segments: z.array(LiveReplaySegmentSchema),
+});
+
+export type SessionReplayResponse = z.infer<typeof SessionReplayResponseSchema>;
+
+export const LiveSessionHighlightTypeSchema = z.enum([
+  'GIFT_SPIKE',
+  'PK_STARTED',
+  'PK_ENDED',
+  'SONG_STARTED',
+  'SONG_ENDED',
+  'PERFORMANCE_MOMENT',
+  'VIEWER_SPIKE',
+  'HIGH_VALUE_GIFT',
+  'SESSION_STARTED',
+  'SESSION_ENDED',
+]);
+
+export type LiveSessionHighlightType = z.infer<typeof LiveSessionHighlightTypeSchema>;
+
+export const LiveSessionHighlightSchema = z.object({
+  type: LiveSessionHighlightTypeSchema,
+  label: z.string(),
+  occurredAt: isoDateTimeSchema,
+  offsetMs: z.number().int().nonnegative().nullable(),
+  eventIds: z.array(z.string()),
+  metadata: metadataSchema,
+});
+
+export type LiveSessionHighlight = z.infer<typeof LiveSessionHighlightSchema>;
+
+export const SessionHighlightsResponseSchema = z.object({
+  liveSessionId: z.string(),
+  items: z.array(LiveSessionHighlightSchema),
+});
+
+export type SessionHighlightsResponse = z.infer<typeof SessionHighlightsResponseSchema>;

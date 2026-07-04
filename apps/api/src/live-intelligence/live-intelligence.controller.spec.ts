@@ -9,6 +9,7 @@ import { LiveIntelligenceService } from './live-intelligence.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
 import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
+import { LiveIntelligenceTimelineService } from './live-intelligence-timeline.service';
 
 describe('LiveIntelligenceController authorization', () => {
   let permissionsGuard: PermissionsGuard;
@@ -57,6 +58,14 @@ describe('LiveIntelligenceController authorization', () => {
           provide: LiveIntelligenceGifterRollupsService,
           useValue: {
             processGifterRollups: jest.fn(),
+          },
+        },
+        {
+          provide: LiveIntelligenceTimelineService,
+          useValue: {
+            getSessionTimeline: jest.fn(),
+            getSessionReplay: jest.fn(),
+            getSessionHighlights: jest.fn(),
           },
         },
       ],
@@ -177,6 +186,22 @@ describe('LiveIntelligenceController authorization', () => {
 
     expect(() =>
       permissionsGuard.canActivate(createContext('processGifterRollups', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to read session timeline with crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(permissionsGuard.canActivate(createContext('getSessionTimeline', recruiterUser))).toBe(
+      true,
+    );
+  });
+
+  it('denies viewers reading session replay without crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('getSessionReplay', viewerUser)),
     ).toThrow(ForbiddenException);
   });
 });
