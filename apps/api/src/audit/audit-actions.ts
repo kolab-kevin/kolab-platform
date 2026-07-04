@@ -80,6 +80,8 @@ export const AUDIT_ACTION = {
   LIVE_INTELLIGENCE_SNAPSHOT_VIEWED: 'live.intelligence_snapshot.viewed',
   CREATOR_INTELLIGENCE_PROFILE_GENERATED: 'creator.intelligence_profile.generated',
   CREATOR_INTELLIGENCE_PROFILE_VIEWED: 'creator.intelligence_profile.viewed',
+  CREATOR_LIVE_TRENDS_GENERATED: 'creator.live_trends.generated',
+  CREATOR_LIVE_TRENDS_VIEWED: 'creator.live_trends.viewed',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {

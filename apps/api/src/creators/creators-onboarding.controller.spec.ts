@@ -5,6 +5,7 @@ import { Test } from '@nestjs/testing';
 
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { LiveIntelligenceCreatorProfileService } from '../live-intelligence/live-intelligence-creator-profile.service';
+import { LiveIntelligenceLiveTrendsService } from '../live-intelligence/live-intelligence-live-trends.service';
 import { CreatorsController } from './creators.controller';
 import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
@@ -54,6 +55,13 @@ describe('CreatorsController onboarding authorization', () => {
           useValue: {
             generateCreatorIntelligence: jest.fn(),
             getCreatorIntelligence: jest.fn(),
+          },
+        },
+        {
+          provide: LiveIntelligenceLiveTrendsService,
+          useValue: {
+            generateCreatorLiveTrends: jest.fn(),
+            getCreatorLiveTrends: jest.fn(),
           },
         },
       ],

@@ -24,6 +24,7 @@ import { RequirePermissions } from '../common/decorators/auth.decorators';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { LiveIntelligenceCreatorProfileService } from '../live-intelligence/live-intelligence-creator-profile.service';
+import { LiveIntelligenceLiveTrendsService } from '../live-intelligence/live-intelligence-live-trends.service';
 import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
 import { CreatorsOnboardingService } from './creators-onboarding.service';
@@ -37,6 +38,7 @@ export class CreatorsController {
     private readonly creatorsOnboardingService: CreatorsOnboardingService,
     private readonly creatorsComplianceService: CreatorsComplianceService,
     private readonly liveIntelligenceCreatorProfileService: LiveIntelligenceCreatorProfileService,
+    private readonly liveIntelligenceLiveTrendsService: LiveIntelligenceLiveTrendsService,
   ) {}
 
   @Get()
@@ -195,6 +197,30 @@ export class CreatorsController {
   @ApiResponse({ status: 404, description: 'Creator or intelligence profile not found' })
   getCreatorIntelligence(@CurrentUser() user: AccessTokenPayload, @Param('id') creatorId: string) {
     return this.liveIntelligenceCreatorProfileService.getCreatorIntelligence(user, creatorId);
+  }
+
+  @Post(':id/trends/live')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Generate creator live trend snapshot' })
+  @ApiResponse({
+    status: 201,
+    description: 'Creator live trend snapshot generated and stored on creator metadata',
+  })
+  @ApiResponse({ status: 404, description: 'Creator not found' })
+  generateCreatorLiveTrends(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') creatorId: string,
+  ) {
+    return this.liveIntelligenceLiveTrendsService.generateCreatorLiveTrends(user, creatorId);
+  }
+
+  @Get(':id/trends/live')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Read stored creator live trend snapshot' })
+  @ApiResponse({ status: 200, description: 'Stored creator live trend snapshot' })
+  @ApiResponse({ status: 404, description: 'Creator or live trend snapshot not found' })
+  getCreatorLiveTrends(@CurrentUser() user: AccessTokenPayload, @Param('id') creatorId: string) {
+    return this.liveIntelligenceLiveTrendsService.getCreatorLiveTrends(user, creatorId);
   }
 
   @Get(':id')
