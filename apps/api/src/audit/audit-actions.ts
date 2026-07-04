@@ -56,6 +56,12 @@ export const AUDIT_ACTION = {
   CAMPAIGN_CREATOR_DELIVERABLE_CREATED: 'campaign.creator_deliverable.created',
   CAMPAIGN_CREATOR_DELIVERABLE_UPDATED: 'campaign.creator_deliverable.updated',
   CAMPAIGN_CREATOR_DELIVERABLE_STATUS_CHANGED: 'campaign.creator_deliverable.status_changed',
+  LIVE_SESSION_CREATED: 'live.session.created',
+  LIVE_SESSION_UPDATED: 'live.session.updated',
+  LIVE_SESSION_STATUS_CHANGED: 'live.session.status_changed',
+  LIVE_SCHEDULE_CREATED: 'live.schedule.created',
+  LIVE_SCHEDULE_UPDATED: 'live.schedule.updated',
+  LIVE_SCHEDULE_DELETED: 'live.schedule.deleted',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {
@@ -75,4 +81,6 @@ export const AUDIT_TARGET_TYPE = {
   CAMPAIGN_APPLICATION: 'campaign_application',
   CAMPAIGN_CREATOR_ASSIGNMENT: 'campaign_creator_assignment',
   CAMPAIGN_CREATOR_DELIVERABLE: 'campaign_creator_deliverable',
+  LIVE_SESSION: 'live_session',
+  LIVE_SCHEDULE: 'live_schedule',
 } as const;

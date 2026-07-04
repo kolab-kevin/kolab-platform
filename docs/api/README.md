@@ -73,4 +73,4 @@ Implemented Release 0.2 modules:
 
 **Release 0.5+ (planning):**
 
-- [Live Intelligence API](./live-intelligence.md)
+- [Live Intelligence API](./live-intelligence.md) — sessions and schedules implemented; ingestion and analytics planned
