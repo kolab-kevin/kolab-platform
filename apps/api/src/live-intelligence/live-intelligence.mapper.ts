@@ -1,8 +1,9 @@
 import type {
   CreatorLiveSchedule as PrismaCreatorLiveSchedule,
+  LiveEvent as PrismaLiveEvent,
   LiveSession as PrismaLiveSession,
 } from '@kolab/database';
-import type { CreatorLiveSchedule, LiveSession } from '@kolab/types';
+import type { CreatorLiveSchedule, LiveEvent, LiveSession } from '@kolab/types';
 
 import { toMetadataRecord } from './live-intelligence.utils';
 
@@ -54,5 +55,24 @@ export function toCreatorLiveSchedule(schedule: PrismaCreatorLiveSchedule): Crea
     metadata: toMetadataRecord(schedule.metadata),
     createdAt: schedule.createdAt.toISOString(),
     updatedAt: schedule.updatedAt.toISOString(),
+  };
+}
+
+export function toLiveEvent(event: PrismaLiveEvent): LiveEvent {
+  return {
+    id: event.id,
+    organizationId: event.organizationId,
+    liveSessionId: event.liveSessionId,
+    creatorProfileId: event.creatorProfileId,
+    eventType: event.eventType as LiveEvent['eventType'],
+    occurredAt: event.occurredAt.toISOString(),
+    offsetMs: event.offsetMs,
+    platform: event.platform as LiveEvent['platform'],
+    platformEventId: event.platformEventId,
+    externalActorId: event.externalActorId,
+    actorDisplayName: event.actorDisplayName,
+    payload: toMetadataRecord(event.payload),
+    metadata: toMetadataRecord(event.metadata),
+    createdAt: event.createdAt.toISOString(),
   };
 }

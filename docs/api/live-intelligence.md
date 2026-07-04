@@ -1,6 +1,6 @@
 # Live Intelligence API
 
-**Status:** Implemented (sessions + schedules foundation)  
+**Status:** Implemented (sessions, schedules, event ingest + timeline read)  
 **Base path:** `/api/live`  
 **Auth:** Bearer JWT with active organization context
 
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Live Intelligence APIs manage live sessions and creator live schedules. Event ingestion, gifter profiles, trigger analytics, and AI summaries are planned for later phases.
+Live Intelligence APIs manage live sessions, creator live schedules, and append-only session event timelines. Gifter profiles, trigger analytics, and AI summaries are planned for later phases.
 
 All routes are organization-scoped. Cross-org resource IDs return `404`.
 
@@ -16,10 +16,10 @@ All routes are organization-scoped. Cross-org resource IDs return `404`.
 
 ## Permissions
 
-| Permission   | Used for                                    |
-| ------------ | ------------------------------------------- |
-| `crm:read`   | List/get sessions and schedules             |
-| `crm:update` | Create/update session status, schedule CRUD |
+| Permission   | Used for                                             |
+| ------------ | ---------------------------------------------------- |
+| `crm:read`   | List/get sessions, schedules, and session timelines  |
+| `crm:update` | Create/update sessions, schedules, and ingest events |
 
 | Role             | Read | Update |
 | ---------------- | ---- | ------ |
@@ -92,6 +92,80 @@ Side effects:
 
 ---
 
+## Live event timeline
+
+Append-only events for a session. No update or delete endpoints.
+
+| Method | Path                                         | Permission   | Description                    |
+| ------ | -------------------------------------------- | ------------ | ------------------------------ |
+| GET    | `/api/live/sessions/:sessionId/events`       | `crm:read`   | List session timeline (cursor) |
+| POST   | `/api/live/sessions/:sessionId/events`       | `crm:update` | Ingest single event            |
+| POST   | `/api/live/sessions/:sessionId/events/batch` | `crm:update` | Ingest up to 100 events        |
+
+### Timeline list query parameters
+
+| Param             | Type   | Description                     |
+| ----------------- | ------ | ------------------------------- |
+| `cursor`          | string | Pagination cursor               |
+| `limit`           | number | Max 500, default 100            |
+| `eventType`       | enum   | Filter by `LiveEventType`       |
+| `externalActorId` | string | Filter by platform actor/gifter |
+
+Results are ordered by `occurredAt`, then `offsetMs`, then `id` ascending for replay alignment.
+
+### Ingest body (single or batch item)
+
+```json
+{
+  "creatorProfileId": "clxyz...",
+  "eventType": "GIFT_RECEIVED",
+  "occurredAt": "2026-07-04T20:05:00.000Z",
+  "offsetMs": 300000,
+  "platformEventId": "tt-gift-abc123",
+  "externalActorId": "gifter-789",
+  "actorDisplayName": "Fan123",
+  "payload": {
+    "giftType": "ROSE",
+    "quantity": 5,
+    "diamondValue": 50
+  },
+  "metadata": {}
+}
+```
+
+### Ingest rules
+
+- Session must belong to the active organization.
+- `creatorProfileId` must match the session's creator.
+- `occurredAt` is required; `offsetMs` is optional and must be `>= 0`.
+- `platform` defaults to the session platform; mismatches require `allowPlatformMismatch: true`.
+- `platformEventId` enables idempotency — duplicates return the existing event with `created: false`.
+- `payload` is required JSON (max 65 KB). Raw audio, video, and base64 media blobs are rejected.
+- Batch requests accept 1–100 events and preserve request order in the response.
+
+### Ingest response (single)
+
+```json
+{
+  "event": { "...": "LiveEvent" },
+  "created": true
+}
+```
+
+### Batch ingest response
+
+```json
+{
+  "items": [{ "event": { "...": "LiveEvent" }, "created": true }],
+  "createdCount": 1,
+  "duplicateCount": 0
+}
+```
+
+> **Privacy:** `CHAT_MESSAGE` and `VOICE_TRANSCRIPT_SEGMENT` payloads may contain sensitive text. Access must be RBAC-controlled with retention and erasure policies — see [Database ERD](../database/live-intelligence-erd.md#privacy-and-sensitive-data).
+
+---
+
 ## Creator live schedules
 
 | Method | Path                              | Permission   | Description     |
@@ -133,54 +207,37 @@ Validation:
 
 ## Planned endpoints (not implemented)
 
-Event timeline schema (`LiveEvent`) is implemented in PostgreSQL. Ingest and read APIs are planned for a later phase.
-
-| Area              | Paths                                            |
-| ----------------- | ------------------------------------------------ |
-| Event ingestion   | `POST /api/live/sessions/:sessionId/events`      |
-| Event timeline    | `GET /api/live/sessions/:sessionId/events`       |
-| Timeline / replay | `GET /api/live/sessions/:sessionId/timeline`     |
-| Gifter profiles   | `GET /api/live/gifters`                          |
-| AI summaries      | `GET /api/live/sessions/:sessionId/summary`      |
-| Real-time coach   | `GET /api/live/sessions/:sessionId/coach/stream` |
-
-### Planned event model (schema implemented)
-
-Append-only `live_events` rows are organization-scoped, linked to `LiveSession`, and denormalize `creatorProfileId` for creator timeline queries. No raw audio or video — `payload` holds event-specific metadata only.
-
-| Field             | Notes                                                                |
-| ----------------- | -------------------------------------------------------------------- |
-| `eventType`       | `LiveEventType` enum (gifts, chat, transcripts, PK, etc.)            |
-| `occurredAt`      | Wall-clock timestamp                                                 |
-| `offsetMs`        | Nullable replay offset from session start                            |
-| `platformEventId` | Nullable idempotency key (unique per org + platform)                 |
-| `externalActorId` | Nullable platform actor/gifter ID                                    |
-| `payload`         | Event-specific JSON (gift type, chat text, transcript segment, etc.) |
-
-> **Privacy:** `CHAT_MESSAGE` and `VOICE_TRANSCRIPT_SEGMENT` payloads may contain sensitive text. Access must be RBAC-controlled with retention and erasure policies — see [Database ERD](../database/live-intelligence-erd.md#privacy-and-sensitive-data).
+| Area            | Paths                                            |
+| --------------- | ------------------------------------------------ |
+| Timeline merge  | `GET /api/live/sessions/:sessionId/timeline`     |
+| Gifter profiles | `GET /api/live/gifters`                          |
+| AI summaries    | `GET /api/live/sessions/:sessionId/summary`      |
+| Real-time coach | `GET /api/live/sessions/:sessionId/coach/stream` |
 
 ---
 
 ## Audit events
 
-| Action                        | When              | Target type     |
-| ----------------------------- | ----------------- | --------------- |
-| `live.session.created`        | Session created   | `live_session`  |
-| `live.session.updated`        | Session updated   | `live_session`  |
-| `live.session.status_changed` | Status transition | `live_session`  |
-| `live.schedule.created`       | Schedule created  | `live_schedule` |
-| `live.schedule.updated`       | Schedule updated  | `live_schedule` |
-| `live.schedule.deleted`       | Schedule deleted  | `live_schedule` |
+| Action                        | When                  | Target type     |
+| ----------------------------- | --------------------- | --------------- |
+| `live.session.created`        | Session created       | `live_session`  |
+| `live.session.updated`        | Session updated       | `live_session`  |
+| `live.session.status_changed` | Status transition     | `live_session`  |
+| `live.schedule.created`       | Schedule created      | `live_schedule` |
+| `live.schedule.updated`       | Schedule updated      | `live_schedule` |
+| `live.schedule.deleted`       | Schedule deleted      | `live_schedule` |
+| `live.event.ingested`         | Event ingested        | `live_event`    |
+| `live.event.batch_ingested`   | Batch ingest complete | `live_session`  |
 
 ---
 
 ## Error handling
 
-| Code  | Condition                               |
-| ----- | --------------------------------------- |
-| `400` | Invalid status transition or validation |
-| `403` | Missing org context or permission       |
-| `404` | Cross-org or missing resource           |
+| Code  | Condition                                                   |
+| ----- | ----------------------------------------------------------- |
+| `400` | Invalid status transition, payload, platform, or batch size |
+| `403` | Missing org context or permission                           |
+| `404` | Cross-org or missing resource                               |
 
 ---
 

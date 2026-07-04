@@ -237,3 +237,68 @@ export const ListLiveEventsResponseSchema = z.object({
 });
 
 export type ListLiveEventsResponse = z.infer<typeof ListLiveEventsResponseSchema>;
+
+export const MAX_LIVE_EVENT_PAYLOAD_BYTES = 65_536;
+
+const payloadSchema = z.record(z.unknown());
+
+export const IngestLiveEventInputSchema = z
+  .object({
+    creatorProfileId: z.string().min(1),
+    eventType: LiveEventTypeSchema,
+    occurredAt: isoDateTimeSchema,
+    offsetMs: z.number().int().nonnegative().nullable().optional(),
+    platform: LivePlatformSchema.optional(),
+    platformEventId: z.string().trim().min(1).max(255).nullable().optional(),
+    externalActorId: z.string().trim().min(1).max(255).nullable().optional(),
+    actorDisplayName: z.string().trim().min(1).max(255).nullable().optional(),
+    payload: payloadSchema,
+    metadata: metadataSchema.optional(),
+    allowPlatformMismatch: z.boolean().optional(),
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    const payloadSize = JSON.stringify(data.payload).length;
+
+    if (payloadSize > MAX_LIVE_EVENT_PAYLOAD_BYTES) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Event payload exceeds maximum size of ${MAX_LIVE_EVENT_PAYLOAD_BYTES} bytes`,
+        path: ['payload'],
+      });
+    }
+  });
+
+export type IngestLiveEventInput = z.infer<typeof IngestLiveEventInputSchema>;
+
+export const BatchIngestLiveEventsSchema = z
+  .object({
+    events: z.array(IngestLiveEventInputSchema).min(1).max(100),
+  })
+  .strict();
+
+export type BatchIngestLiveEventsInput = z.infer<typeof BatchIngestLiveEventsSchema>;
+
+export const IngestLiveEventResponseSchema = z.object({
+  event: LiveEventSchema,
+  created: z.boolean(),
+});
+
+export type IngestLiveEventResponse = z.infer<typeof IngestLiveEventResponseSchema>;
+
+export const BatchIngestLiveEventsResponseSchema = z.object({
+  items: z.array(IngestLiveEventResponseSchema),
+  createdCount: z.number().int().nonnegative(),
+  duplicateCount: z.number().int().nonnegative(),
+});
+
+export type BatchIngestLiveEventsResponse = z.infer<typeof BatchIngestLiveEventsResponseSchema>;
+
+export const SessionLiveEventListQuerySchema = z.object({
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(500).default(100),
+  eventType: LiveEventTypeSchema.optional(),
+  externalActorId: z.string().min(1).optional(),
+});
+
+export type SessionLiveEventListQuery = z.infer<typeof SessionLiveEventListQuerySchema>;

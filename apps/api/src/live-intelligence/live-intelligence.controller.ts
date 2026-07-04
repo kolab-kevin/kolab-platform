@@ -1,18 +1,24 @@
 import type { AccessTokenPayload } from '@kolab/auth';
 import type {
+  BatchIngestLiveEventsInput,
   CreateCreatorLiveScheduleInput,
   CreateLiveSessionInput,
   CreatorLiveScheduleListQuery,
+  IngestLiveEventInput,
   LiveSessionListQuery,
+  SessionLiveEventListQuery,
   UpdateCreatorLiveScheduleInput,
   UpdateLiveSessionInput,
   UpdateLiveSessionStatusInput,
 } from '@kolab/types';
 import {
+  BatchIngestLiveEventsSchema,
   CreateCreatorLiveScheduleSchema,
   CreateLiveSessionSchema,
   CreatorLiveScheduleListQuerySchema,
+  IngestLiveEventInputSchema,
   LiveSessionListQuerySchema,
+  SessionLiveEventListQuerySchema,
   UpdateCreatorLiveScheduleSchema,
   UpdateLiveSessionSchema,
   UpdateLiveSessionStatusSchema,
@@ -24,12 +30,16 @@ import { RequirePermissions } from '../common/decorators/auth.decorators';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { LiveIntelligenceService } from './live-intelligence.service';
+import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
 
 @ApiTags('live-intelligence')
 @ApiBearerAuth('access-token')
 @Controller('live')
 export class LiveIntelligenceController {
-  constructor(private readonly liveIntelligenceService: LiveIntelligenceService) {}
+  constructor(
+    private readonly liveIntelligenceService: LiveIntelligenceService,
+    private readonly liveIntelligenceEventsService: LiveIntelligenceEventsService,
+  ) {}
 
   @Get('sessions')
   @RequirePermissions('crm:read')
@@ -52,6 +62,46 @@ export class LiveIntelligenceController {
     @Body(new ZodValidationPipe(CreateLiveSessionSchema)) body: CreateLiveSessionInput,
   ) {
     return this.liveIntelligenceService.createSession(user, body);
+  }
+
+  @Get('sessions/:sessionId/events')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'List append-only events for a live session timeline' })
+  @ApiResponse({ status: 200, description: 'Paginated session event timeline' })
+  @ApiResponse({ status: 404, description: 'Live session not found' })
+  listSessionEvents(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+    @Query(new ZodValidationPipe(SessionLiveEventListQuerySchema))
+    query: SessionLiveEventListQuery,
+  ) {
+    return this.liveIntelligenceEventsService.listSessionEvents(user, sessionId, query);
+  }
+
+  @Post('sessions/:sessionId/events/batch')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Ingest up to 100 live events for a session' })
+  @ApiResponse({ status: 201, description: 'Batch ingest result with created/duplicate counts' })
+  @ApiResponse({ status: 404, description: 'Live session not found' })
+  ingestEventBatch(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+    @Body(new ZodValidationPipe(BatchIngestLiveEventsSchema)) body: BatchIngestLiveEventsInput,
+  ) {
+    return this.liveIntelligenceEventsService.ingestEventBatch(user, sessionId, body);
+  }
+
+  @Post('sessions/:sessionId/events')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Ingest a single append-only live event' })
+  @ApiResponse({ status: 201, description: 'Ingest result with created/idempotent flag' })
+  @ApiResponse({ status: 404, description: 'Live session not found' })
+  ingestEvent(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+    @Body(new ZodValidationPipe(IngestLiveEventInputSchema)) body: IngestLiveEventInput,
+  ) {
+    return this.liveIntelligenceEventsService.ingestEvent(user, sessionId, body);
   }
 
   @Get('sessions/:sessionId')

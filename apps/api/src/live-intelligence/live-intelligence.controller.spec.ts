@@ -6,6 +6,7 @@ import { Test } from '@nestjs/testing';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { LiveIntelligenceController } from './live-intelligence.controller';
 import { LiveIntelligenceService } from './live-intelligence.service';
+import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
 
 describe('LiveIntelligenceController authorization', () => {
   let permissionsGuard: PermissionsGuard;
@@ -31,6 +32,14 @@ describe('LiveIntelligenceController authorization', () => {
             createSchedule: jest.fn(),
             updateSchedule: jest.fn(),
             deleteSchedule: jest.fn(),
+          },
+        },
+        {
+          provide: LiveIntelligenceEventsService,
+          useValue: {
+            ingestEvent: jest.fn(),
+            ingestEventBatch: jest.fn(),
+            listSessionEvents: jest.fn(),
           },
         },
       ],
@@ -102,6 +111,22 @@ describe('LiveIntelligenceController authorization', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
 
     expect(() => permissionsGuard.canActivate(createContext('deleteSchedule', viewerUser))).toThrow(
+      ForbiddenException,
+    );
+  });
+
+  it('allows recruiters to read session events with crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(permissionsGuard.canActivate(createContext('listSessionEvents', recruiterUser))).toBe(
+      true,
+    );
+  });
+
+  it('denies viewers ingesting events without crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() => permissionsGuard.canActivate(createContext('ingestEvent', viewerUser))).toThrow(
       ForbiddenException,
     );
   });
