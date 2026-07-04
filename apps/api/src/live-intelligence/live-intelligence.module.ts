@@ -4,6 +4,7 @@ import { AuditModule } from '../audit/audit.module';
 import { LiveIntelligenceController } from './live-intelligence.controller';
 import { LiveIntelligenceService } from './live-intelligence.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
+import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
 
 @Module({
@@ -13,7 +14,13 @@ import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.serv
     LiveIntelligenceService,
     LiveIntelligenceEventsService,
     LiveIntelligenceGiftersService,
+    LiveIntelligenceGifterRollupsService,
   ],
-  exports: [LiveIntelligenceService, LiveIntelligenceEventsService, LiveIntelligenceGiftersService],
+  exports: [
+    LiveIntelligenceService,
+    LiveIntelligenceEventsService,
+    LiveIntelligenceGiftersService,
+    LiveIntelligenceGifterRollupsService,
+  ],
 })
 export class LiveIntelligenceModule {}

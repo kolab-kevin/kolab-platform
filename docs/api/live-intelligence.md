@@ -224,6 +224,41 @@ Each item pairs the gifter profile with that session's rollup stats:
 
 > **Privacy:** Gifter profiles contain platform IDs and display names. Treat as PII with RBAC, retention limits, and erasure support. API responses strip chat/transcript-like metadata keys and never expose message bodies — see [Database ERD](../database/live-intelligence-erd.md#gifter-privacy-and-compliance).
 
+### Gifter rollup processing
+
+| Method | Path                                            | Permission   | Description                                |
+| ------ | ----------------------------------------------- | ------------ | ------------------------------------------ |
+| POST   | `/api/live/sessions/:sessionId/rollups/gifters` | `crm:update` | Process session events into gifter rollups |
+
+Processes `GIFT_RECEIVED`, `CHAT_MESSAGE`, `VIEWER_JOINED`, and `VIEWER_LEFT` events only. Updates `GifterProfile`, `GifterSessionStats`, and session-level gift totals. Idempotent via a checkpoint of processed event IDs stored on the session metadata (`metadata.gifterRollup.processedEventIds`).
+
+```json
+{
+  "liveSessionId": "clxyz...",
+  "processedEventCount": 12,
+  "skippedEventCount": 3,
+  "profilesUpdated": 5,
+  "sessionStatsUpdated": 5,
+  "checkpoint": {
+    "processedEventIds": ["evt-1", "evt-2"],
+    "lastProcessedAt": "2026-07-04T20:30:00.000Z"
+  }
+}
+```
+
+Spending tier v1 thresholds (by profile `totalGiftValue`):
+
+| Tier      | Gift value    |
+| --------- | ------------- |
+| `UNKNOWN` | no gifts      |
+| `LOW`     | &lt; 100      |
+| `MEDIUM`  | 100–999       |
+| `HIGH`    | 1,000–9,999   |
+| `WHALE`   | 10,000–49,999 |
+| `VIP`     | 50,000+       |
+
+Rollup processing emits audit event `live.gifter_rollup.processed`. Chat message bodies are never copied into profile or stats rows — only `chatMessageCount` is incremented.
+
 ---
 
 ## Creator live schedules
@@ -277,17 +312,18 @@ Validation:
 
 ## Audit events
 
-| Action                        | When                       | Target type      |
-| ----------------------------- | -------------------------- | ---------------- |
-| `live.session.created`        | Session created            | `live_session`   |
-| `live.session.updated`        | Session updated            | `live_session`   |
-| `live.session.status_changed` | Status transition          | `live_session`   |
-| `live.schedule.created`       | Schedule created           | `live_schedule`  |
-| `live.schedule.updated`       | Schedule updated           | `live_schedule`  |
-| `live.schedule.deleted`       | Schedule deleted           | `live_schedule`  |
-| `live.event.ingested`         | Event ingested             | `live_event`     |
-| `live.event.batch_ingested`   | Batch ingest complete      | `live_session`   |
-| `live.gifter_profile.viewed`  | Gifter profile detail read | `gifter_profile` |
+| Action                         | When                       | Target type      |
+| ------------------------------ | -------------------------- | ---------------- |
+| `live.session.created`         | Session created            | `live_session`   |
+| `live.session.updated`         | Session updated            | `live_session`   |
+| `live.session.status_changed`  | Status transition          | `live_session`   |
+| `live.schedule.created`        | Schedule created           | `live_schedule`  |
+| `live.schedule.updated`        | Schedule updated           | `live_schedule`  |
+| `live.schedule.deleted`        | Schedule deleted           | `live_schedule`  |
+| `live.event.ingested`          | Event ingested             | `live_event`     |
+| `live.event.batch_ingested`    | Batch ingest complete      | `live_session`   |
+| `live.gifter_profile.viewed`   | Gifter profile detail read | `gifter_profile` |
+| `live.gifter_rollup.processed` | Gifter rollup job complete | `live_session`   |
 
 ---
 

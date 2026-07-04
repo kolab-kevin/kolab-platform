@@ -442,3 +442,17 @@ export const ListGifterSessionStatsResponseSchema = z.object({
 });
 
 export type ListGifterSessionStatsResponse = z.infer<typeof ListGifterSessionStatsResponseSchema>;
+
+export const ProcessGifterRollupsResponseSchema = z.object({
+  liveSessionId: z.string(),
+  processedEventCount: z.number().int().nonnegative(),
+  skippedEventCount: z.number().int().nonnegative(),
+  profilesUpdated: z.number().int().nonnegative(),
+  sessionStatsUpdated: z.number().int().nonnegative(),
+  checkpoint: z.object({
+    processedEventIds: z.array(z.string()),
+    lastProcessedAt: isoDateTimeSchema.nullable(),
+  }),
+});
+
+export type ProcessGifterRollupsResponse = z.infer<typeof ProcessGifterRollupsResponseSchema>;

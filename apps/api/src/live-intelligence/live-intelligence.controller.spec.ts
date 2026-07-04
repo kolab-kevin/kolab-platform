@@ -7,6 +7,7 @@ import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { LiveIntelligenceController } from './live-intelligence.controller';
 import { LiveIntelligenceService } from './live-intelligence.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
+import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
 
 describe('LiveIntelligenceController authorization', () => {
@@ -50,6 +51,12 @@ describe('LiveIntelligenceController authorization', () => {
             getGifterProfile: jest.fn(),
             listGifterSessions: jest.fn(),
             listSessionGifters: jest.fn(),
+          },
+        },
+        {
+          provide: LiveIntelligenceGifterRollupsService,
+          useValue: {
+            processGifterRollups: jest.fn(),
           },
         },
       ],
@@ -154,6 +161,22 @@ describe('LiveIntelligenceController authorization', () => {
 
     expect(() =>
       permissionsGuard.canActivate(createContext('getGifterProfile', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to process gifter rollups with crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(permissionsGuard.canActivate(createContext('processGifterRollups', recruiterUser))).toBe(
+      true,
+    );
+  });
+
+  it('denies viewers processing gifter rollups without crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('processGifterRollups', viewerUser)),
     ).toThrow(ForbiddenException);
   });
 });
