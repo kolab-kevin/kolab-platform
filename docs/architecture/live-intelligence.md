@@ -242,6 +242,22 @@ The snapshot is designed as structured input for future AI Coach features and ag
 
 ---
 
+## Creator intelligence profile (implemented)
+
+`POST /api/creators/:creatorId/intelligence` builds a long-term creator profile from up to 20 recent live sessions:
+
+1. Creator profile metadata
+2. Live session rollups
+3. Session intelligence snapshots (`LiveSession.metadata.intelligenceSnapshot`)
+4. Gifter rollups across analyzed sessions
+5. Trigger analysis, recommendations, and coach alerts when available
+
+Results are stored on `CreatorProfile.metadata.intelligenceProfile`. The profile is deterministic v1 — no external AI calls, no raw chat/transcript output, and all insights use correlational language.
+
+Regenerating replaces the previous profile. GET returns `404` when no profile exists. This complements session-level intelligence snapshots for agency dashboards and future AI Coach personalization.
+
+---
+
 ## Agency-level analytics
 
 Read models (materialized views or nightly rollups):

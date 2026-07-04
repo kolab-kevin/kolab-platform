@@ -45,41 +45,43 @@ All routes are scoped to the JWT `organizationId`. Users must have an active org
 
 ## Endpoints
 
-| Method | Path                                               | Permission         | Description                        |
-| ------ | -------------------------------------------------- | ------------------ | ---------------------------------- |
-| GET    | `/api/creators`                                    | `crm:read`         | List creators (filter, cursor)     |
-| GET    | `/api/creators/:id`                                | `crm:read`         | Get creator detail                 |
-| PATCH  | `/api/creators/:id`                                | `crm:update`       | Update creator profile fields      |
-| GET    | `/api/creators/:id/platform-accounts`              | `crm:read`         | List creator platform accounts     |
-| POST   | `/api/creators/:id/platform-accounts`              | `crm:update`       | Add a creator platform account     |
-| PATCH  | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update`       | Update a creator platform account  |
-| DELETE | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update`       | Remove a creator platform account  |
-| GET    | `/api/creators/:id/skills`                         | `crm:read`         | Get creator skills profile         |
-| PATCH  | `/api/creators/:id/skills`                         | `crm:update`       | Update creator skills profile      |
-| GET    | `/api/creators/:id/availability`                   | `crm:read`         | Get creator availability           |
-| PATCH  | `/api/creators/:id/availability`                   | `crm:update`       | Update creator availability        |
-| GET    | `/api/creators/:id/onboarding`                     | `documents:read`   | Get creator onboarding checklist   |
-| GET    | `/api/creators/:id/compliance`                     | `documents:read`   | Get consolidated compliance bundle |
-| GET    | `/api/creators/:id/documents`                      | `documents:read`   | List creator documents             |
-| GET    | `/api/creators/:id/documents/:documentId`          | `documents:read`   | Get creator document detail        |
-| POST   | `/api/creators/:id/documents`                      | `documents:write`  | Create creator document            |
-| PATCH  | `/api/creators/:id/documents/:documentId`          | `documents:write`  | Update creator document metadata   |
-| POST   | `/api/creators/:id/documents/:documentId/versions` | `documents:write`  | Register uploaded document version |
-| POST   | `/api/creators/:id/documents/:documentId/review`   | `documents:review` | Review creator document            |
-| POST   | `/api/creators/:id/documents/:documentId/download` | `documents:read`   | Presigned document download URL    |
-| GET    | `/api/creators/:id/contracts`                      | `documents:read`   | List creator contracts             |
-| GET    | `/api/creators/:id/contracts/:contractId`          | `documents:read`   | Get creator contract detail        |
-| POST   | `/api/creators/:id/contracts`                      | `documents:write`  | Create creator contract            |
-| PATCH  | `/api/creators/:id/contracts/:contractId`          | `documents:write`  | Update creator contract metadata   |
-| POST   | `/api/creators/:id/contracts/:contractId/versions` | `documents:write`  | Register uploaded contract version |
-| POST   | `/api/creators/:id/contracts/:contractId/status`   | `documents:write`  | Update creator contract status     |
-| POST   | `/api/creators/:id/contracts/:contractId/sign`     | `documents:write`  | Manually sign creator contract     |
-| POST   | `/api/creators/:id/contracts/:contractId/download` | `documents:read`   | Presigned contract download URL    |
-| GET    | `/api/creators/documents/expiring`                 | `documents:read`   | Report expiring/expired documents  |
-| GET    | `/api/creators/documents/missing`                  | `documents:read`   | Report missing required documents  |
-| GET    | `/api/creators/contracts/expiring`                 | `documents:read`   | Report expiring/expired contracts  |
-| POST   | `/api/creators/documents/notifications/preview`    | `documents:read`   | Preview expiration notifications   |
-| POST   | `/api/recruitment/leads/:id/convert`               | `crm:update`       | Convert lead to creator            |
+| Method | Path                                               | Permission         | Description                              |
+| ------ | -------------------------------------------------- | ------------------ | ---------------------------------------- |
+| GET    | `/api/creators`                                    | `crm:read`         | List creators (filter, cursor)           |
+| GET    | `/api/creators/:id`                                | `crm:read`         | Get creator detail                       |
+| PATCH  | `/api/creators/:id`                                | `crm:update`       | Update creator profile fields            |
+| GET    | `/api/creators/:id/platform-accounts`              | `crm:read`         | List creator platform accounts           |
+| POST   | `/api/creators/:id/platform-accounts`              | `crm:update`       | Add a creator platform account           |
+| PATCH  | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update`       | Update a creator platform account        |
+| DELETE | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update`       | Remove a creator platform account        |
+| GET    | `/api/creators/:id/skills`                         | `crm:read`         | Get creator skills profile               |
+| PATCH  | `/api/creators/:id/skills`                         | `crm:update`       | Update creator skills profile            |
+| GET    | `/api/creators/:id/availability`                   | `crm:read`         | Get creator availability                 |
+| PATCH  | `/api/creators/:id/availability`                   | `crm:update`       | Update creator availability              |
+| POST   | `/api/creators/:id/intelligence`                   | `crm:update`       | Generate creator intelligence profile    |
+| GET    | `/api/creators/:id/intelligence`                   | `crm:read`         | Read stored creator intelligence profile |
+| GET    | `/api/creators/:id/onboarding`                     | `documents:read`   | Get creator onboarding checklist         |
+| GET    | `/api/creators/:id/compliance`                     | `documents:read`   | Get consolidated compliance bundle       |
+| GET    | `/api/creators/:id/documents`                      | `documents:read`   | List creator documents                   |
+| GET    | `/api/creators/:id/documents/:documentId`          | `documents:read`   | Get creator document detail              |
+| POST   | `/api/creators/:id/documents`                      | `documents:write`  | Create creator document                  |
+| PATCH  | `/api/creators/:id/documents/:documentId`          | `documents:write`  | Update creator document metadata         |
+| POST   | `/api/creators/:id/documents/:documentId/versions` | `documents:write`  | Register uploaded document version       |
+| POST   | `/api/creators/:id/documents/:documentId/review`   | `documents:review` | Review creator document                  |
+| POST   | `/api/creators/:id/documents/:documentId/download` | `documents:read`   | Presigned document download URL          |
+| GET    | `/api/creators/:id/contracts`                      | `documents:read`   | List creator contracts                   |
+| GET    | `/api/creators/:id/contracts/:contractId`          | `documents:read`   | Get creator contract detail              |
+| POST   | `/api/creators/:id/contracts`                      | `documents:write`  | Create creator contract                  |
+| PATCH  | `/api/creators/:id/contracts/:contractId`          | `documents:write`  | Update creator contract metadata         |
+| POST   | `/api/creators/:id/contracts/:contractId/versions` | `documents:write`  | Register uploaded contract version       |
+| POST   | `/api/creators/:id/contracts/:contractId/status`   | `documents:write`  | Update creator contract status           |
+| POST   | `/api/creators/:id/contracts/:contractId/sign`     | `documents:write`  | Manually sign creator contract           |
+| POST   | `/api/creators/:id/contracts/:contractId/download` | `documents:read`   | Presigned contract download URL          |
+| GET    | `/api/creators/documents/expiring`                 | `documents:read`   | Report expiring/expired documents        |
+| GET    | `/api/creators/documents/missing`                  | `documents:read`   | Report missing required documents        |
+| GET    | `/api/creators/contracts/expiring`                 | `documents:read`   | Report expiring/expired contracts        |
+| POST   | `/api/creators/documents/notifications/preview`    | `documents:read`   | Preview expiration notifications         |
+| POST   | `/api/recruitment/leads/:id/convert`               | `crm:update`       | Convert lead to creator                  |
 
 ---
 
@@ -588,6 +590,65 @@ Updates availability schedule. At least one field is required.
 
 ---
 
+## Creator intelligence profile
+
+Deterministic long-term intelligence profile aggregated from recent live sessions, session intelligence snapshots, gifter rollups, trigger analysis, recommendations, and coach alerts. No external AI calls and no raw chat/transcript output. Signals are correlational, not causal.
+
+| Method | Path                             | Permission   | Description                                   |
+| ------ | -------------------------------- | ------------ | --------------------------------------------- |
+| POST   | `/api/creators/:id/intelligence` | `crm:update` | Generate/replace creator intelligence profile |
+| GET    | `/api/creators/:id/intelligence` | `crm:read`   | Read stored creator intelligence profile      |
+
+Stored on `CreatorProfile.metadata.intelligenceProfile`. Regenerating replaces the previous profile. GET returns `404` when no profile exists.
+
+Analyzes up to the 20 most recent live sessions for the creator in the active organization.
+
+### Profile fields
+
+- Dimension scores (0–100): `creatorHealthScore`, `revenueTrendScore`, `engagementTrendScore`, `gifterRetentionScore`, `consistencyScore`, `campaignReadinessScore`, `overallScore`
+- Context: `creatorProfileId`, `generatedAt`, `sessionsAnalyzed`, `dateRange`
+- Narrative arrays: `riskSignals[]`, `coachingPriorities[]`, `recommendedNextActions[]`, `dataQualityWarnings[]`
+- Structured signals: `strongestTriggerTypes[]`, `weakestTriggerTypes[]`, `topGifters[]`, `bestLivePatterns[]`
+
+Missing session snapshots or live history produce `dataQualityWarnings` rather than failing generation.
+
+### Profile response (200)
+
+```json
+{
+  "creatorProfileId": "creator_abc123",
+  "generatedAt": "2026-07-04T21:00:00.000Z",
+  "sessionsAnalyzed": 12,
+  "dateRange": {
+    "from": "2026-06-01T18:00:00.000Z",
+    "to": "2026-07-04T20:30:00.000Z"
+  },
+  "creatorHealthScore": 82,
+  "revenueTrendScore": 74,
+  "engagementTrendScore": 68,
+  "gifterRetentionScore": 71,
+  "consistencyScore": 79,
+  "campaignReadinessScore": 65,
+  "overallScore": 73,
+  "strongestTriggerTypes": [
+    { "triggerType": "PRODUCT_DEMO", "count": 8, "averageGiftValue": 42.5 }
+  ],
+  "weakestTriggerTypes": [],
+  "topGifters": [],
+  "bestLivePatterns": [],
+  "riskSignals": [],
+  "coachingPriorities": [],
+  "recommendedNextActions": [],
+  "dataQualityWarnings": []
+}
+```
+
+**Errors:** `404` if the creator does not exist in the active organization or no intelligence profile has been generated.
+
+See also: [Live Intelligence API](./live-intelligence.md#creator-intelligence-profile).
+
+---
+
 ## Idempotency (conversion)
 
 Calling conversion again on an already converted lead returns the existing creator with `alreadyConverted: true`. No duplicate user, membership, profile, or platform account rows are created. Audit events are not re-recorded.
@@ -596,16 +657,18 @@ Calling conversion again on an already converted lead returns the existing creat
 
 ## Audit events
 
-| Action                             | When                         | Target type                |
-| ---------------------------------- | ---------------------------- | -------------------------- |
-| `creator.created`                  | First successful conversion  | `creator`                  |
-| `creator.updated`                  | Creator profile updated      | `creator`                  |
-| `creator.platform_account.created` | Platform account created     | `creator_platform_account` |
-| `creator.platform_account.updated` | Platform account updated     | `creator_platform_account` |
-| `creator.platform_account.deleted` | Platform account removed     | `creator_platform_account` |
-| `creator.skills_updated`           | Creator skills updated       | `creator`                  |
-| `creator.availability_updated`     | Creator availability updated | `creator`                  |
-| `lead.converted`                   | First successful conversion  | `lead`                     |
+| Action                                   | When                                   | Target type                |
+| ---------------------------------------- | -------------------------------------- | -------------------------- |
+| `creator.created`                        | First successful conversion            | `creator`                  |
+| `creator.updated`                        | Creator profile updated                | `creator`                  |
+| `creator.platform_account.created`       | Platform account created               | `creator_platform_account` |
+| `creator.platform_account.updated`       | Platform account updated               | `creator_platform_account` |
+| `creator.platform_account.deleted`       | Platform account removed               | `creator_platform_account` |
+| `creator.skills_updated`                 | Creator skills updated                 | `creator`                  |
+| `creator.availability_updated`           | Creator availability updated           | `creator`                  |
+| `creator.intelligence_profile.generated` | Creator intelligence profile generated | `creator`                  |
+| `creator.intelligence_profile.viewed`    | Creator intelligence profile read      | `creator`                  |
+| `lead.converted`                         | First successful conversion            | `lead`                     |
 
 ---
 

@@ -23,6 +23,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { RequirePermissions } from '../common/decorators/auth.decorators';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { LiveIntelligenceCreatorProfileService } from '../live-intelligence/live-intelligence-creator-profile.service';
 import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
 import { CreatorsOnboardingService } from './creators-onboarding.service';
@@ -35,6 +36,7 @@ export class CreatorsController {
     private readonly creatorsService: CreatorsService,
     private readonly creatorsOnboardingService: CreatorsOnboardingService,
     private readonly creatorsComplianceService: CreatorsComplianceService,
+    private readonly liveIntelligenceCreatorProfileService: LiveIntelligenceCreatorProfileService,
   ) {}
 
   @Get()
@@ -169,6 +171,30 @@ export class CreatorsController {
     @Query(new ZodValidationPipe(CreatorComplianceQuerySchema)) query: CreatorComplianceQuery,
   ) {
     return this.creatorsComplianceService.getCreatorCompliance(user, creatorId, query);
+  }
+
+  @Post(':id/intelligence')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Generate consolidated creator intelligence profile' })
+  @ApiResponse({
+    status: 201,
+    description: 'Creator intelligence profile generated and stored on creator metadata',
+  })
+  @ApiResponse({ status: 404, description: 'Creator not found' })
+  generateCreatorIntelligence(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') creatorId: string,
+  ) {
+    return this.liveIntelligenceCreatorProfileService.generateCreatorIntelligence(user, creatorId);
+  }
+
+  @Get(':id/intelligence')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Read stored creator intelligence profile' })
+  @ApiResponse({ status: 200, description: 'Stored creator intelligence profile' })
+  @ApiResponse({ status: 404, description: 'Creator or intelligence profile not found' })
+  getCreatorIntelligence(@CurrentUser() user: AccessTokenPayload, @Param('id') creatorId: string) {
+    return this.liveIntelligenceCreatorProfileService.getCreatorIntelligence(user, creatorId);
   }
 
   @Get(':id')

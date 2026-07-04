@@ -78,6 +78,8 @@ export const AUDIT_ACTION = {
   LIVE_COACH_ALERTS_VIEWED: 'live.coach_alerts.viewed',
   LIVE_INTELLIGENCE_SNAPSHOT_GENERATED: 'live.intelligence_snapshot.generated',
   LIVE_INTELLIGENCE_SNAPSHOT_VIEWED: 'live.intelligence_snapshot.viewed',
+  CREATOR_INTELLIGENCE_PROFILE_GENERATED: 'creator.intelligence_profile.generated',
+  CREATOR_INTELLIGENCE_PROFILE_VIEWED: 'creator.intelligence_profile.viewed',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {
