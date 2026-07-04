@@ -49,6 +49,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { CampaignsService } from './campaigns.service';
 import { CampaignsAssignmentsService } from './campaigns-assignments.service';
+import { CampaignsCreatorMatchingService } from './campaigns-creator-matching.service';
 
 @ApiTags('campaigns')
 @ApiBearerAuth('access-token')
@@ -57,6 +58,7 @@ export class CampaignsController {
   constructor(
     private readonly campaignsService: CampaignsService,
     private readonly campaignsAssignmentsService: CampaignsAssignmentsService,
+    private readonly campaignsCreatorMatchingService: CampaignsCreatorMatchingService,
   ) {}
 
   @Get()
@@ -349,6 +351,33 @@ export class CampaignsController {
     body: UpdateCampaignDeliverableStatusInput,
   ) {
     return this.campaignsService.updateDeliverableStatus(user, campaignId, deliverableId, body);
+  }
+
+  @Post(':campaignId/matches')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Generate deterministic creator match recommendations for a campaign' })
+  @ApiResponse({
+    status: 201,
+    description: 'Campaign creator matches snapshot generated and stored on campaign metadata',
+  })
+  @ApiResponse({ status: 404, description: 'Campaign not found' })
+  generateCampaignCreatorMatches(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('campaignId') campaignId: string,
+  ) {
+    return this.campaignsCreatorMatchingService.generateCampaignCreatorMatches(user, campaignId);
+  }
+
+  @Get(':campaignId/matches')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Read stored campaign creator match recommendations' })
+  @ApiResponse({ status: 200, description: 'Stored campaign creator matches snapshot' })
+  @ApiResponse({ status: 404, description: 'Campaign or matches snapshot not found' })
+  getCampaignCreatorMatches(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('campaignId') campaignId: string,
+  ) {
+    return this.campaignsCreatorMatchingService.getCampaignCreatorMatches(user, campaignId);
   }
 
   @Get(':campaignId')

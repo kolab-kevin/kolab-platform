@@ -39,31 +39,33 @@ All routes require active `OrganizationMembership`. Campaigns are scoped to JWT 
 
 ## Endpoints
 
-| Method | Path                                                                                             | Permission   | Description                       |
-| ------ | ------------------------------------------------------------------------------------------------ | ------------ | --------------------------------- |
-| GET    | `/api/campaigns`                                                                                 | `crm:read`   | List campaigns (filter, cursor)   |
-| POST   | `/api/campaigns`                                                                                 | `crm:update` | Create campaign (`DRAFT`)         |
-| GET    | `/api/campaigns/:campaignId`                                                                     | `crm:read`   | Get campaign detail               |
-| PATCH  | `/api/campaigns/:campaignId`                                                                     | `crm:update` | Update campaign fields            |
-| POST   | `/api/campaigns/:campaignId/status`                                                              | `crm:update` | Update campaign status            |
-| GET    | `/api/campaigns/:campaignId/deliverables`                                                        | `crm:read`   | List campaign deliverables        |
-| POST   | `/api/campaigns/:campaignId/deliverables`                                                        | `crm:update` | Create deliverable (`DRAFT`)      |
-| PATCH  | `/api/campaigns/:campaignId/deliverables/:deliverableId`                                         | `crm:update` | Update deliverable fields         |
-| POST   | `/api/campaigns/:campaignId/deliverables/:deliverableId/status`                                  | `crm:update` | Update deliverable status         |
-| GET    | `/api/campaigns/:campaignId/applications`                                                        | `crm:read`   | List campaign applications        |
-| POST   | `/api/campaigns/:campaignId/applications/invite`                                                 | `crm:update` | Invite creator (`INVITED`)        |
-| POST   | `/api/campaigns/:campaignId/applications/apply`                                                  | `crm:update` | Creator applies (`APPLIED`)       |
-| POST   | `/api/campaigns/:campaignId/applications/:applicationId/accept`                                  | `crm:update` | Accept application                |
-| POST   | `/api/campaigns/:campaignId/applications/:applicationId/reject`                                  | `crm:update` | Reject application                |
-| POST   | `/api/campaigns/:campaignId/applications/:applicationId/withdraw`                                | `crm:update` | Withdraw application              |
-| GET    | `/api/campaigns/:campaignId/assignments`                                                         | `crm:read`   | List creator assignments          |
-| POST   | `/api/campaigns/:campaignId/assignments`                                                         | `crm:update` | Create creator assignment         |
-| GET    | `/api/campaigns/:campaignId/assignments/:assignmentId`                                           | `crm:read`   | Get assignment detail             |
-| POST   | `/api/campaigns/:campaignId/assignments/:assignmentId/status`                                    | `crm:update` | Update assignment status          |
-| GET    | `/api/campaigns/:campaignId/assignments/:assignmentId/deliverables`                              | `crm:read`   | List creator deliverables         |
-| POST   | `/api/campaigns/:campaignId/assignments/:assignmentId/deliverables`                              | `crm:update` | Create creator deliverable        |
-| PATCH  | `/api/campaigns/:campaignId/assignments/:assignmentId/deliverables/:creatorDeliverableId`        | `crm:update` | Update creator deliverable        |
-| POST   | `/api/campaigns/:campaignId/assignments/:assignmentId/deliverables/:creatorDeliverableId/status` | `crm:update` | Update creator deliverable status |
+| Method | Path                                                                                             | Permission   | Description                               |
+| ------ | ------------------------------------------------------------------------------------------------ | ------------ | ----------------------------------------- |
+| GET    | `/api/campaigns`                                                                                 | `crm:read`   | List campaigns (filter, cursor)           |
+| POST   | `/api/campaigns`                                                                                 | `crm:update` | Create campaign (`DRAFT`)                 |
+| GET    | `/api/campaigns/:campaignId`                                                                     | `crm:read`   | Get campaign detail                       |
+| PATCH  | `/api/campaigns/:campaignId`                                                                     | `crm:update` | Update campaign fields                    |
+| POST   | `/api/campaigns/:campaignId/status`                                                              | `crm:update` | Update campaign status                    |
+| GET    | `/api/campaigns/:campaignId/deliverables`                                                        | `crm:read`   | List campaign deliverables                |
+| POST   | `/api/campaigns/:campaignId/deliverables`                                                        | `crm:update` | Create deliverable (`DRAFT`)              |
+| PATCH  | `/api/campaigns/:campaignId/deliverables/:deliverableId`                                         | `crm:update` | Update deliverable fields                 |
+| POST   | `/api/campaigns/:campaignId/deliverables/:deliverableId/status`                                  | `crm:update` | Update deliverable status                 |
+| GET    | `/api/campaigns/:campaignId/applications`                                                        | `crm:read`   | List campaign applications                |
+| POST   | `/api/campaigns/:campaignId/applications/invite`                                                 | `crm:update` | Invite creator (`INVITED`)                |
+| POST   | `/api/campaigns/:campaignId/applications/apply`                                                  | `crm:update` | Creator applies (`APPLIED`)               |
+| POST   | `/api/campaigns/:campaignId/applications/:applicationId/accept`                                  | `crm:update` | Accept application                        |
+| POST   | `/api/campaigns/:campaignId/applications/:applicationId/reject`                                  | `crm:update` | Reject application                        |
+| POST   | `/api/campaigns/:campaignId/applications/:applicationId/withdraw`                                | `crm:update` | Withdraw application                      |
+| GET    | `/api/campaigns/:campaignId/assignments`                                                         | `crm:read`   | List creator assignments                  |
+| POST   | `/api/campaigns/:campaignId/assignments`                                                         | `crm:update` | Create creator assignment                 |
+| GET    | `/api/campaigns/:campaignId/assignments/:assignmentId`                                           | `crm:read`   | Get assignment detail                     |
+| POST   | `/api/campaigns/:campaignId/assignments/:assignmentId/status`                                    | `crm:update` | Update assignment status                  |
+| GET    | `/api/campaigns/:campaignId/assignments/:assignmentId/deliverables`                              | `crm:read`   | List creator deliverables                 |
+| POST   | `/api/campaigns/:campaignId/assignments/:assignmentId/deliverables`                              | `crm:update` | Create creator deliverable                |
+| PATCH  | `/api/campaigns/:campaignId/assignments/:assignmentId/deliverables/:creatorDeliverableId`        | `crm:update` | Update creator deliverable                |
+| POST   | `/api/campaigns/:campaignId/assignments/:assignmentId/deliverables/:creatorDeliverableId/status` | `crm:update` | Update creator deliverable status         |
+| POST   | `/api/campaigns/:campaignId/matches`                                                             | `crm:update` | Generate creator match recommendations    |
+| GET    | `/api/campaigns/:campaignId/matches`                                                             | `crm:read`   | Read stored creator match recommendations |
 
 ---
 
@@ -260,6 +262,75 @@ Creator deliverables cannot be added to cancelled or completed assignments. Appr
 
 ---
 
+## Creator matching
+
+Deterministic creator match recommendations for a campaign. Uses creator performance scores, skills, availability, compliance, campaign type, platform accounts, and live trend direction. No external AI calls and no automatic assignments. Signals are correlational, not causal.
+
+| Method | Path                                 | Permission   | Description                             |
+| ------ | ------------------------------------ | ------------ | --------------------------------------- |
+| POST   | `/api/campaigns/:campaignId/matches` | `crm:update` | Generate/replace creator match snapshot |
+| GET    | `/api/campaigns/:campaignId/matches` | `crm:read`   | Read stored creator match snapshot      |
+
+Stored on `Campaign.metadata.creatorMatches`. Regenerating replaces the previous snapshot. GET returns `404` when no snapshot exists.
+
+### Candidate rules
+
+- Includes only `ACTIVE` creators in the organization
+- Excludes creators with active assignments on the campaign (`ASSIGNED`, `ACCEPTED`, `IN_PROGRESS`)
+- Strongly penalizes non-compliant creators
+- Does not create assignments automatically
+
+### Match snapshot fields
+
+- `campaignId`, `generatedAt`, `totalCandidates`, `matches[]`
+- Each match: `creatorProfileId`, `displayName`, `score` (0–100), `recommendationBand`, `reasons[]`, `risks[]`, `missingData[]`, `relevantPlatforms[]`, `relevantSkills[]`, `performanceScoreSummary`
+
+### Recommendation bands
+
+| Band              | Typical condition                    |
+| ----------------- | ------------------------------------ |
+| `STRONG_MATCH`    | Score ≥ 80 and compliance is healthy |
+| `GOOD_MATCH`      | Score 65–79                          |
+| `POSSIBLE_MATCH`  | Score 50–64                          |
+| `WEAK_MATCH`      | Score 35–49                          |
+| `NOT_RECOMMENDED` | Score < 35 or non-compliant creator  |
+
+Campaign requirements may be supplied in `requirements` or `brief` metadata using keys such as `platforms`, `countries`, `languages`, `skills`, `categories`, and `contentTypes`.
+
+### Match snapshot response (200)
+
+```json
+{
+  "campaignId": "campaign_abc123",
+  "generatedAt": "2026-07-04T21:00:00.000Z",
+  "totalCandidates": 12,
+  "matches": [
+    {
+      "creatorProfileId": "creator_abc123",
+      "displayName": "Jane Creator",
+      "score": 84,
+      "recommendationBand": "STRONG_MATCH",
+      "reasons": [
+        "Stored performance score of 82 may correlate with campaign readiness.",
+        "Platform overlap detected: TIKTOK."
+      ],
+      "risks": [],
+      "missingData": [],
+      "relevantPlatforms": ["TIKTOK"],
+      "relevantSkills": ["makeup"],
+      "performanceScoreSummary": {
+        "overallScore": 82,
+        "scoreBand": "GOOD"
+      }
+    }
+  ]
+}
+```
+
+**Errors:** `404` if the campaign does not exist in the active organization or no match snapshot has been generated.
+
+---
+
 ## Audit events
 
 | Action                                        | When                               | Target type                    |
@@ -280,6 +351,8 @@ Creator deliverables cannot be added to cancelled or completed assignments. Appr
 | `campaign.creator_deliverable.created`        | Creator deliverable created        | `campaign_creator_deliverable` |
 | `campaign.creator_deliverable.updated`        | Creator deliverable updated        | `campaign_creator_deliverable` |
 | `campaign.creator_deliverable.status_changed` | Creator deliverable status changed | `campaign_creator_deliverable` |
+| `campaign.creator_matches.generated`          | Creator match snapshot generated   | `campaign`                     |
+| `campaign.creator_matches.viewed`             | Creator match snapshot read        | `campaign`                     |
 
 ---
 
