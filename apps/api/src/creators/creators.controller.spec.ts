@@ -3,6 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 
 import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { LiveIntelligenceCreatorProfileService } from '../live-intelligence/live-intelligence-creator-profile.service';
 import { CreatorsController } from './creators.controller';
 import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
@@ -46,6 +47,13 @@ describe('CreatorsController authorization', () => {
           provide: CreatorsComplianceService,
           useValue: {
             getCreatorCompliance: jest.fn(),
+          },
+        },
+        {
+          provide: LiveIntelligenceCreatorProfileService,
+          useValue: {
+            generateCreatorIntelligence: jest.fn(),
+            getCreatorIntelligence: jest.fn(),
           },
         },
       ],
@@ -149,6 +157,38 @@ describe('CreatorsController authorization', () => {
 
     expect(() =>
       permissionsGuard.canActivate(createContext('updateCreatorAvailability', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to generate creator intelligence with crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(
+      permissionsGuard.canActivate(createContext('generateCreatorIntelligence', recruiterUser)),
+    ).toBe(true);
+  });
+
+  it('allows recruiters to read creator intelligence with crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(
+      permissionsGuard.canActivate(createContext('getCreatorIntelligence', recruiterUser)),
+    ).toBe(true);
+  });
+
+  it('denies viewers from generating creator intelligence', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('generateCreatorIntelligence', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('denies viewers from reading creator intelligence', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('getCreatorIntelligence', viewerUser)),
     ).toThrow(ForbiddenException);
   });
 });

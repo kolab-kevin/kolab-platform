@@ -566,6 +566,35 @@ Audit events: `live.intelligence_snapshot.generated`, `live.intelligence_snapsho
 
 ---
 
+## Creator intelligence profile
+
+Deterministic creator-level intelligence profile built from recent live sessions, session intelligence snapshots, gifter rollups, trigger analysis, recommendations, and coach alerts. Implemented on the Creators API; see [Creators API — Creator intelligence profile](./creators.md#creator-intelligence-profile).
+
+| Method | Path                                    | Permission   | Description                                   |
+| ------ | --------------------------------------- | ------------ | --------------------------------------------- |
+| POST   | `/api/creators/:creatorId/intelligence` | `crm:update` | Generate/replace creator intelligence profile |
+| GET    | `/api/creators/:creatorId/intelligence` | `crm:read`   | Read stored creator intelligence profile      |
+
+Stored on `CreatorProfile.metadata.intelligenceProfile`. Regenerating replaces the previous profile. GET returns `404` when no profile exists.
+
+### Creator profile scoring heuristics
+
+| Score                    | Heuristic                                                                     |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| `creatorHealthScore`     | Average session intelligence health scores (fallback heuristics when missing) |
+| `revenueTrendScore`      | Recent vs older session gift revenue comparison                               |
+| `engagementTrendScore`   | Average engagement from snapshots or session rollups                          |
+| `gifterRetentionScore`   | Returning gifters plus WHALE/VIP concentration                                |
+| `consistencyScore`       | Average consistency from snapshots or ENDED session ratio                     |
+| `campaignReadinessScore` | Campaign-linked sessions plus snapshot readiness signals                      |
+| `overallScore`           | Average of the six dimension scores                                           |
+
+Missing upstream snapshots produce `dataQualityWarnings` rather than failing generation.
+
+Audit events: `creator.intelligence_profile.generated`, `creator.intelligence_profile.viewed`.
+
+---
+
 ## Creator live schedules
 
 | Method | Path                              | Permission   | Description     |

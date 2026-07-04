@@ -4,6 +4,7 @@ import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 
 import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { LiveIntelligenceCreatorProfileService } from '../live-intelligence/live-intelligence-creator-profile.service';
 import { CreatorsController } from './creators.controller';
 import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
@@ -46,6 +47,13 @@ describe('CreatorsController compliance authorization', () => {
           provide: CreatorsComplianceService,
           useValue: {
             getCreatorCompliance: jest.fn(),
+          },
+        },
+        {
+          provide: LiveIntelligenceCreatorProfileService,
+          useValue: {
+            generateCreatorIntelligence: jest.fn(),
+            getCreatorIntelligence: jest.fn(),
           },
         },
       ],

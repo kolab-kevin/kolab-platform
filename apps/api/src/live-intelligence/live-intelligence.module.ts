@@ -4,6 +4,7 @@ import { AuditModule } from '../audit/audit.module';
 import { LiveIntelligenceController } from './live-intelligence.controller';
 import { LiveIntelligenceService } from './live-intelligence.service';
 import { LiveIntelligenceCoachAlertsService } from './live-intelligence-coach-alerts.service';
+import { LiveIntelligenceCreatorProfileService } from './live-intelligence-creator-profile.service';
 import { LiveIntelligenceEngineService } from './live-intelligence-engine.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
 import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
@@ -27,6 +28,7 @@ import { LiveIntelligenceTriggerAnalysisService } from './live-intelligence-trig
     LiveIntelligenceRecommendationsService,
     LiveIntelligenceCoachAlertsService,
     LiveIntelligenceEngineService,
+    LiveIntelligenceCreatorProfileService,
   ],
   exports: [
     LiveIntelligenceService,
@@ -39,6 +41,7 @@ import { LiveIntelligenceTriggerAnalysisService } from './live-intelligence-trig
     LiveIntelligenceRecommendationsService,
     LiveIntelligenceCoachAlertsService,
     LiveIntelligenceEngineService,
+    LiveIntelligenceCreatorProfileService,
   ],
 })
 export class LiveIntelligenceModule {}

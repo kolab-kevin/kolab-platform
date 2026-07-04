@@ -815,3 +815,62 @@ export const SessionIntelligenceSnapshotSchema = z.object({
 });
 
 export type SessionIntelligenceSnapshot = z.infer<typeof SessionIntelligenceSnapshotSchema>;
+
+export const CreatorIntelligenceDateRangeSchema = z.object({
+  from: isoDateTimeSchema.nullable(),
+  to: isoDateTimeSchema.nullable(),
+});
+
+export type CreatorIntelligenceDateRange = z.infer<typeof CreatorIntelligenceDateRangeSchema>;
+
+export const CreatorIntelligenceTopGifterSchema = z.object({
+  gifterProfileId: z.string(),
+  externalGifterId: z.string(),
+  displayName: z.string().nullable(),
+  giftCount: z.number().int().nonnegative(),
+  giftValue: z.number().nonnegative(),
+  spendingTier: GifterSpendingTierSchema.nullable(),
+  sessionCount: z.number().int().nonnegative(),
+});
+
+export type CreatorIntelligenceTopGifter = z.infer<typeof CreatorIntelligenceTopGifterSchema>;
+
+export const CreatorIntelligenceTriggerTypeSchema = z.object({
+  triggerType: z.string(),
+  count: z.number().int().nonnegative(),
+  averageGiftValue: z.number().nonnegative().nullable(),
+});
+
+export type CreatorIntelligenceTriggerType = z.infer<typeof CreatorIntelligenceTriggerTypeSchema>;
+
+export const CreatorIntelligenceLivePatternSchema = z.object({
+  patternType: z.string(),
+  label: z.string(),
+  sessionCount: z.number().int().nonnegative(),
+});
+
+export type CreatorIntelligenceLivePattern = z.infer<typeof CreatorIntelligenceLivePatternSchema>;
+
+export const CreatorIntelligenceProfileSchema = z.object({
+  creatorProfileId: z.string(),
+  generatedAt: isoDateTimeSchema,
+  sessionsAnalyzed: z.number().int().nonnegative(),
+  dateRange: CreatorIntelligenceDateRangeSchema,
+  creatorHealthScore: z.number().int().min(0).max(100),
+  revenueTrendScore: z.number().int().min(0).max(100),
+  engagementTrendScore: z.number().int().min(0).max(100),
+  gifterRetentionScore: z.number().int().min(0).max(100),
+  consistencyScore: z.number().int().min(0).max(100),
+  campaignReadinessScore: z.number().int().min(0).max(100),
+  overallScore: z.number().int().min(0).max(100),
+  strongestTriggerTypes: z.array(CreatorIntelligenceTriggerTypeSchema),
+  weakestTriggerTypes: z.array(CreatorIntelligenceTriggerTypeSchema),
+  topGifters: z.array(CreatorIntelligenceTopGifterSchema),
+  bestLivePatterns: z.array(CreatorIntelligenceLivePatternSchema),
+  riskSignals: z.array(z.string()),
+  coachingPriorities: z.array(z.string()),
+  recommendedNextActions: z.array(z.string()),
+  dataQualityWarnings: z.array(z.string()),
+});
+
+export type CreatorIntelligenceProfile = z.infer<typeof CreatorIntelligenceProfileSchema>;

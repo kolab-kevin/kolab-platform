@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { AuditModule } from '../audit/audit.module';
+import { LiveIntelligenceModule } from '../live-intelligence/live-intelligence.module';
 import { CreatorsController } from './creators.controller';
 import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
@@ -14,7 +15,7 @@ import { CreatorsReportingController } from './creators-reporting.controller';
 import { CreatorsReportingService } from './creators-reporting.service';
 
 @Module({
-  imports: [AuditModule],
+  imports: [AuditModule, LiveIntelligenceModule],
   controllers: [
     CreatorsReportingController,
     CreatorsDocumentsController,
