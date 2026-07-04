@@ -45,47 +45,53 @@ All routes are scoped to the JWT `organizationId`. Users must have an active org
 
 ## Endpoints
 
-| Method | Path                                               | Permission         | Description                              |
-| ------ | -------------------------------------------------- | ------------------ | ---------------------------------------- |
-| GET    | `/api/creators`                                    | `crm:read`         | List creators (filter, cursor)           |
-| GET    | `/api/creators/:id`                                | `crm:read`         | Get creator detail                       |
-| PATCH  | `/api/creators/:id`                                | `crm:update`       | Update creator profile fields            |
-| GET    | `/api/creators/:id/platform-accounts`              | `crm:read`         | List creator platform accounts           |
-| POST   | `/api/creators/:id/platform-accounts`              | `crm:update`       | Add a creator platform account           |
-| PATCH  | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update`       | Update a creator platform account        |
-| DELETE | `/api/creators/:id/platform-accounts/:accountId`   | `crm:update`       | Remove a creator platform account        |
-| GET    | `/api/creators/:id/skills`                         | `crm:read`         | Get creator skills profile               |
-| PATCH  | `/api/creators/:id/skills`                         | `crm:update`       | Update creator skills profile            |
-| GET    | `/api/creators/:id/availability`                   | `crm:read`         | Get creator availability                 |
-| PATCH  | `/api/creators/:id/availability`                   | `crm:update`       | Update creator availability              |
-| POST   | `/api/creators/:id/intelligence`                   | `crm:update`       | Generate creator intelligence profile    |
-| GET    | `/api/creators/:id/intelligence`                   | `crm:read`         | Read stored creator intelligence profile |
-| POST   | `/api/creators/:id/trends/live`                    | `crm:update`       | Generate creator live trend snapshot     |
-| GET    | `/api/creators/:id/trends/live`                    | `crm:read`         | Read stored creator live trend snapshot  |
-| POST   | `/api/creators/:id/performance-score`              | `crm:update`       | Generate creator performance score       |
-| GET    | `/api/creators/:id/performance-score`              | `crm:read`         | Read stored creator performance score    |
-| GET    | `/api/creators/:id/onboarding`                     | `documents:read`   | Get creator onboarding checklist         |
-| GET    | `/api/creators/:id/compliance`                     | `documents:read`   | Get consolidated compliance bundle       |
-| GET    | `/api/creators/:id/documents`                      | `documents:read`   | List creator documents                   |
-| GET    | `/api/creators/:id/documents/:documentId`          | `documents:read`   | Get creator document detail              |
-| POST   | `/api/creators/:id/documents`                      | `documents:write`  | Create creator document                  |
-| PATCH  | `/api/creators/:id/documents/:documentId`          | `documents:write`  | Update creator document metadata         |
-| POST   | `/api/creators/:id/documents/:documentId/versions` | `documents:write`  | Register uploaded document version       |
-| POST   | `/api/creators/:id/documents/:documentId/review`   | `documents:review` | Review creator document                  |
-| POST   | `/api/creators/:id/documents/:documentId/download` | `documents:read`   | Presigned document download URL          |
-| GET    | `/api/creators/:id/contracts`                      | `documents:read`   | List creator contracts                   |
-| GET    | `/api/creators/:id/contracts/:contractId`          | `documents:read`   | Get creator contract detail              |
-| POST   | `/api/creators/:id/contracts`                      | `documents:write`  | Create creator contract                  |
-| PATCH  | `/api/creators/:id/contracts/:contractId`          | `documents:write`  | Update creator contract metadata         |
-| POST   | `/api/creators/:id/contracts/:contractId/versions` | `documents:write`  | Register uploaded contract version       |
-| POST   | `/api/creators/:id/contracts/:contractId/status`   | `documents:write`  | Update creator contract status           |
-| POST   | `/api/creators/:id/contracts/:contractId/sign`     | `documents:write`  | Manually sign creator contract           |
-| POST   | `/api/creators/:id/contracts/:contractId/download` | `documents:read`   | Presigned contract download URL          |
-| GET    | `/api/creators/documents/expiring`                 | `documents:read`   | Report expiring/expired documents        |
-| GET    | `/api/creators/documents/missing`                  | `documents:read`   | Report missing required documents        |
-| GET    | `/api/creators/contracts/expiring`                 | `documents:read`   | Report expiring/expired contracts        |
-| POST   | `/api/creators/documents/notifications/preview`    | `documents:read`   | Preview expiration notifications         |
-| POST   | `/api/recruitment/leads/:id/convert`               | `crm:update`       | Convert lead to creator                  |
+| Method | Path                                                   | Permission         | Description                              |
+| ------ | ------------------------------------------------------ | ------------------ | ---------------------------------------- |
+| GET    | `/api/creators`                                        | `crm:read`         | List creators (filter, cursor)           |
+| GET    | `/api/creators/:id`                                    | `crm:read`         | Get creator detail                       |
+| PATCH  | `/api/creators/:id`                                    | `crm:update`       | Update creator profile fields            |
+| GET    | `/api/creators/:id/platform-accounts`                  | `crm:read`         | List creator platform accounts           |
+| POST   | `/api/creators/:id/platform-accounts`                  | `crm:update`       | Add a creator platform account           |
+| PATCH  | `/api/creators/:id/platform-accounts/:accountId`       | `crm:update`       | Update a creator platform account        |
+| DELETE | `/api/creators/:id/platform-accounts/:accountId`       | `crm:update`       | Remove a creator platform account        |
+| GET    | `/api/creators/:id/skills`                             | `crm:read`         | Get creator skills profile               |
+| PATCH  | `/api/creators/:id/skills`                             | `crm:update`       | Update creator skills profile            |
+| GET    | `/api/creators/:id/availability`                       | `crm:read`         | Get creator availability                 |
+| PATCH  | `/api/creators/:id/availability`                       | `crm:update`       | Update creator availability              |
+| POST   | `/api/creators/:id/intelligence`                       | `crm:update`       | Generate creator intelligence profile    |
+| GET    | `/api/creators/:id/intelligence`                       | `crm:read`         | Read stored creator intelligence profile |
+| POST   | `/api/creators/:id/trends/live`                        | `crm:update`       | Generate creator live trend snapshot     |
+| GET    | `/api/creators/:id/trends/live`                        | `crm:read`         | Read stored creator live trend snapshot  |
+| POST   | `/api/creators/:id/performance-score`                  | `crm:update`       | Generate creator performance score       |
+| GET    | `/api/creators/:id/performance-score`                  | `crm:read`         | Read stored creator performance score    |
+| GET    | `/api/creators/:id/goals`                              | `crm:read`         | List creator goals                       |
+| GET    | `/api/creators/:id/goals/:goalId`                      | `crm:read`         | Get creator goal detail                  |
+| POST   | `/api/creators/:id/goals`                              | `crm:update`       | Create a creator goal                    |
+| PATCH  | `/api/creators/:id/goals/:goalId`                      | `crm:update`       | Update a creator goal                    |
+| POST   | `/api/creators/:id/goals/:goalId/status`               | `crm:update`       | Update creator goal status               |
+| POST   | `/api/creators/:id/goals/:goalId/progress/recalculate` | `crm:update`       | Recalculate creator goal progress        |
+| GET    | `/api/creators/:id/onboarding`                         | `documents:read`   | Get creator onboarding checklist         |
+| GET    | `/api/creators/:id/compliance`                         | `documents:read`   | Get consolidated compliance bundle       |
+| GET    | `/api/creators/:id/documents`                          | `documents:read`   | List creator documents                   |
+| GET    | `/api/creators/:id/documents/:documentId`              | `documents:read`   | Get creator document detail              |
+| POST   | `/api/creators/:id/documents`                          | `documents:write`  | Create creator document                  |
+| PATCH  | `/api/creators/:id/documents/:documentId`              | `documents:write`  | Update creator document metadata         |
+| POST   | `/api/creators/:id/documents/:documentId/versions`     | `documents:write`  | Register uploaded document version       |
+| POST   | `/api/creators/:id/documents/:documentId/review`       | `documents:review` | Review creator document                  |
+| POST   | `/api/creators/:id/documents/:documentId/download`     | `documents:read`   | Presigned document download URL          |
+| GET    | `/api/creators/:id/contracts`                          | `documents:read`   | List creator contracts                   |
+| GET    | `/api/creators/:id/contracts/:contractId`              | `documents:read`   | Get creator contract detail              |
+| POST   | `/api/creators/:id/contracts`                          | `documents:write`  | Create creator contract                  |
+| PATCH  | `/api/creators/:id/contracts/:contractId`              | `documents:write`  | Update creator contract metadata         |
+| POST   | `/api/creators/:id/contracts/:contractId/versions`     | `documents:write`  | Register uploaded contract version       |
+| POST   | `/api/creators/:id/contracts/:contractId/status`       | `documents:write`  | Update creator contract status           |
+| POST   | `/api/creators/:id/contracts/:contractId/sign`         | `documents:write`  | Manually sign creator contract           |
+| POST   | `/api/creators/:id/contracts/:contractId/download`     | `documents:read`   | Presigned contract download URL          |
+| GET    | `/api/creators/documents/expiring`                     | `documents:read`   | Report expiring/expired documents        |
+| GET    | `/api/creators/documents/missing`                      | `documents:read`   | Report missing required documents        |
+| GET    | `/api/creators/contracts/expiring`                     | `documents:read`   | Report expiring/expired contracts        |
+| POST   | `/api/creators/documents/notifications/preview`        | `documents:read`   | Preview expiration notifications         |
+| POST   | `/api/recruitment/leads/:id/convert`                   | `crm:update`       | Convert lead to creator                  |
 
 ---
 
@@ -835,6 +841,10 @@ Calling conversion again on an already converted lead returns the existing creat
 | `creator.live_trends.viewed`             | Creator live trend snapshot read       | `creator`                  |
 | `creator.performance_score.generated`    | Creator performance score generated    | `creator`                  |
 | `creator.performance_score.viewed`       | Creator performance score read         | `creator`                  |
+| `creator.goal.created`                   | Creator goal created                   | `creator_goal`             |
+| `creator.goal.updated`                   | Creator goal updated                   | `creator_goal`             |
+| `creator.goal.status_changed`            | Creator goal status changed            | `creator_goal`             |
+| `creator.goal.progress_recalculated`     | Creator goal progress recalculated     | `creator_goal`             |
 | `lead.converted`                         | First successful conversion            | `lead`                     |
 
 ---
@@ -864,9 +874,103 @@ Every query and mutation is scoped to `organizationId` from the JWT. Creators in
 
 ---
 
+## Creator goals
+
+Creator goals track deterministic progress against targets for a creator within a defined period. Goals are stored in `CreatorGoal` with recalculation snapshots in `CreatorGoalProgress`.
+
+Supported goal types:
+
+- `LIVE_HOURS`, `LIVE_DAYS`, `DIAMONDS`, `GIFT_VALUE`
+- `CAMPAIGN_DELIVERABLES`, `PERFORMANCE_SCORE`, `COMPLIANCE`
+- `WHALE_RETENTION`, `REPEAT_GIFTERS`, `CONSISTENCY_SCORE`
+
+Goal statuses: `ACTIVE`, `COMPLETED`, `MISSED`, `CANCELLED`, `ARCHIVED`.
+
+### GET `/api/creators/:id/goals`
+
+Lists goals for the creator in the active organization.
+
+Query parameters:
+
+| Param      | Type   | Description                 |
+| ---------- | ------ | --------------------------- |
+| `cursor`   | string | Pagination cursor (goal id) |
+| `limit`    | number | Max 100, default 20         |
+| `status`   | enum   | Filter by goal status       |
+| `goalType` | enum   | Filter by goal type         |
+
+### POST `/api/creators/:id/goals`
+
+Creates an `ACTIVE` goal.
+
+Request body:
+
+```json
+{
+  "goalType": "LIVE_HOURS",
+  "title": "June live hours",
+  "targetValue": 20,
+  "periodStart": "2026-06-01T00:00:00.000Z",
+  "periodEnd": "2026-06-30T23:59:59.000Z",
+  "metadata": {}
+}
+```
+
+### PATCH `/api/creators/:id/goals/:goalId`
+
+Updates editable fields on goals that are not `ARCHIVED` or `CANCELLED`.
+
+### POST `/api/creators/:id/goals/:goalId/status`
+
+Updates goal status using allowed transitions:
+
+- `ACTIVE` → `COMPLETED`, `MISSED`, `CANCELLED`, `ARCHIVED`
+- `COMPLETED`, `MISSED`, `CANCELLED` → `ARCHIVED`
+
+Request body:
+
+```json
+{
+  "status": "CANCELLED"
+}
+```
+
+### POST `/api/creators/:id/goals/:goalId/progress/recalculate`
+
+Recalculates `currentValue` from existing live, campaign, compliance, and performance data. Creates a `CreatorGoalProgress` snapshot and may auto-transition `ACTIVE` goals to `COMPLETED` or `MISSED`.
+
+Response:
+
+```json
+{
+  "goal": {
+    "id": "goal_abc123",
+    "goalType": "LIVE_HOURS",
+    "status": "ACTIVE",
+    "targetValue": "20.00",
+    "currentValue": "12.50",
+    "periodStart": "2026-06-01T00:00:00.000Z",
+    "periodEnd": "2026-06-30T23:59:59.000Z"
+  },
+  "progress": {
+    "id": "progress_xyz789",
+    "progressPercent": 63,
+    "calculationSummary": {
+      "source": "live_sessions",
+      "sessionsCounted": 8
+    }
+  }
+}
+```
+
+Shared types: `packages/types/src/creator-goals.ts`
+
+---
+
 ## Related docs
 
 - [Creator Documents & Contracts API](./creator-documents-contracts.md)
 - [Storage API](./storage.md)
 - [Recruitment CRM API](./recruitment.md)
 - Shared types: `packages/types/src/creator.ts`
+- Shared types: `packages/types/src/creator-goals.ts`

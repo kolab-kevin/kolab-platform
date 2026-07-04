@@ -6,6 +6,7 @@ export * from './campaigns';
 export * from './creator';
 export * from './creator-compliance';
 export * from './creator-documents-contracts';
+export * from './creator-goals';
 export * from './creator-onboarding';
 export * from './invitation';
 export * from './live-intelligence';

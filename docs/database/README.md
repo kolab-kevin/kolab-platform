@@ -66,4 +66,6 @@ Legacy `User.role` and `User.platforms` remain until Phase D cleanup.
 
 **Release 0.5 foundation (implemented):** Live Intelligence schema — [Live Intelligence ERD](./live-intelligence-erd.md) (`LiveSession`, `CreatorLiveSchedule`, `LiveEvent`, `GifterProfile`, `GifterSessionStats`).
 
+**Creator Goals foundation (implemented):** Deterministic creator goal tracking — [Creator Goals ERD](./creator-goals-erd.md) (`CreatorGoal`, `CreatorGoalProgress`).
+
 **Credits (planning):** KOLAB Credits ledger — see [Token economy architecture](../architecture/token-economy.md).

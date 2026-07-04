@@ -86,6 +86,10 @@ export const AUDIT_ACTION = {
   CREATOR_LIVE_TRENDS_VIEWED: 'creator.live_trends.viewed',
   CREATOR_PERFORMANCE_SCORE_GENERATED: 'creator.performance_score.generated',
   CREATOR_PERFORMANCE_SCORE_VIEWED: 'creator.performance_score.viewed',
+  CREATOR_GOAL_CREATED: 'creator.goal.created',
+  CREATOR_GOAL_UPDATED: 'creator.goal.updated',
+  CREATOR_GOAL_STATUS_CHANGED: 'creator.goal.status_changed',
+  CREATOR_GOAL_PROGRESS_RECALCULATED: 'creator.goal.progress_recalculated',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {
@@ -109,4 +113,5 @@ export const AUDIT_TARGET_TYPE = {
   LIVE_SCHEDULE: 'live_schedule',
   LIVE_EVENT: 'live_event',
   GIFTER_PROFILE: 'gifter_profile',
+  CREATOR_GOAL: 'creator_goal',
 } as const;
