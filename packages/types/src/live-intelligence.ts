@@ -674,3 +674,43 @@ export const LiveSessionSummaryResponseSchema = z.object({
 });
 
 export type LiveSessionSummaryResponse = z.infer<typeof LiveSessionSummaryResponseSchema>;
+
+export const LiveRecommendationTypeSchema = z.enum([
+  'TRY_MUSIC',
+  'START_PK',
+  'END_PK',
+  'ENGAGE_TOP_GIFTER',
+  'WELCOME_NEW_VIEWERS',
+  'THANK_TOP_SUPPORTERS',
+  'TAKE_SHORT_BREAK',
+  'IMPROVE_CONSISTENCY',
+  'RUN_CAMPAIGN_PROMOTION',
+  'FOLLOW_UP_WITH_WHALES',
+]);
+
+export type LiveRecommendationType = z.infer<typeof LiveRecommendationTypeSchema>;
+
+export const LiveRecommendationPrioritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH']);
+
+export type LiveRecommendationPriority = z.infer<typeof LiveRecommendationPrioritySchema>;
+
+export const LiveRecommendationItemSchema = z.object({
+  id: z.string(),
+  recommendationType: LiveRecommendationTypeSchema,
+  priority: LiveRecommendationPrioritySchema,
+  confidenceScore: z.number().min(0).max(1),
+  title: z.string(),
+  description: z.string(),
+  supportingEvidence: z.array(z.string()),
+  generatedAt: isoDateTimeSchema,
+});
+
+export type LiveRecommendationItem = z.infer<typeof LiveRecommendationItemSchema>;
+
+export const SessionRecommendationsResponseSchema = z.object({
+  sessionId: z.string(),
+  generatedAt: isoDateTimeSchema,
+  recommendations: z.array(LiveRecommendationItemSchema),
+});
+
+export type SessionRecommendationsResponse = z.infer<typeof SessionRecommendationsResponseSchema>;
