@@ -62,6 +62,8 @@ export const AUDIT_ACTION = {
   LIVE_SCHEDULE_CREATED: 'live.schedule.created',
   LIVE_SCHEDULE_UPDATED: 'live.schedule.updated',
   LIVE_SCHEDULE_DELETED: 'live.schedule.deleted',
+  LIVE_EVENT_INGESTED: 'live.event.ingested',
+  LIVE_EVENT_BATCH_INGESTED: 'live.event.batch_ingested',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {
@@ -83,4 +85,5 @@ export const AUDIT_TARGET_TYPE = {
   CAMPAIGN_CREATOR_DELIVERABLE: 'campaign_creator_deliverable',
   LIVE_SESSION: 'live_session',
   LIVE_SCHEDULE: 'live_schedule',
+  LIVE_EVENT: 'live_event',
 } as const;
