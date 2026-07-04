@@ -196,6 +196,7 @@ model User {
   invitedCampaignApplications CampaignApplication[]  @relation("CampaignApplicationInviter")
   reviewedCampaignApplications CampaignApplication[] @relation("CampaignApplicationReviewer")
   assignedCampaignCreatorAssignments CampaignCreatorAssignment[] @relation("CampaignCreatorAssignmentAssigner")
+  createdCreatorGoals             CreatorGoal[]                @relation("CreatorGoalCreator")
 
   @@map("users")
 }
@@ -251,6 +252,8 @@ model Organization {
   liveEvents               LiveEvent[]
   gifterProfiles           GifterProfile[]
   gifterSessionStats       GifterSessionStats[]
+  creatorGoals             CreatorGoal[]
+  creatorGoalProgress      CreatorGoalProgress[]
 
   @@index([status])
   @@map("organizations")
@@ -551,6 +554,7 @@ model CreatorProfile {
   liveEvents               LiveEvent[]
   gifterProfilesAsFavorite GifterProfile[] @relation("GifterProfileFavoriteCreator")
   gifterSessionStats       GifterSessionStats[]
+  creatorGoals             CreatorGoal[]
 
   @@unique([organizationId, userId])
   @@index([organizationId])
@@ -1136,4 +1140,75 @@ model GifterSessionStats {
   @@index([creatorProfileId])
   @@index([gifterProfileId])
   @@map("gifter_session_stats")
+}
+
+enum CreatorGoalType {
+  LIVE_HOURS
+  LIVE_DAYS
+  DIAMONDS
+  GIFT_VALUE
+  CAMPAIGN_DELIVERABLES
+  PERFORMANCE_SCORE
+  COMPLIANCE
+  WHALE_RETENTION
+  REPEAT_GIFTERS
+  CONSISTENCY_SCORE
+}
+
+enum CreatorGoalStatus {
+  ACTIVE
+  COMPLETED
+  MISSED
+  CANCELLED
+  ARCHIVED
+}
+
+model CreatorGoal {
+  id               String            @id @default(cuid())
+  organizationId   String            @map("organization_id")
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creatorProfileId String            @map("creator_profile_id")
+  creatorProfile   CreatorProfile    @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  goalType         CreatorGoalType   @map("goal_type")
+  status           CreatorGoalStatus @default(ACTIVE)
+  title            String?
+  targetValue      Decimal           @map("target_value") @db.Decimal(14, 2)
+  currentValue     Decimal           @default(0) @map("current_value") @db.Decimal(14, 2)
+  periodStart      DateTime          @map("period_start")
+  periodEnd        DateTime          @map("period_end")
+  metadata         Json              @default("{}")
+  createdByUserId  String?           @map("created_by_user_id")
+  createdByUser    User?             @relation("CreatorGoalCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  progressSnapshots CreatorGoalProgress[]
+
+  @@index([organizationId])
+  @@index([organizationId, creatorProfileId])
+  @@index([organizationId, status])
+  @@index([creatorProfileId])
+  @@index([creatorProfileId, status])
+  @@index([creatorProfileId, goalType])
+  @@map("creator_goals")
+}
+
+model CreatorGoalProgress {
+  id                 String        @id @default(cuid())
+  organizationId     String        @map("organization_id")
+  organization       Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creatorGoalId      String        @map("creator_goal_id")
+  creatorGoal        CreatorGoal   @relation(fields: [creatorGoalId], references: [id], onDelete: Cascade)
+  currentValue       Decimal       @map("current_value") @db.Decimal(14, 2)
+  targetValue        Decimal       @map("target_value") @db.Decimal(14, 2)
+  progressPercent    Int           @map("progress_percent")
+  calculationSummary Json          @default("{}") @map("calculation_summary")
+  recalculatedAt     DateTime      @default(now()) @map("recalculated_at")
+  metadata           Json          @default("{}")
+  createdAt          DateTime      @default(now()) @map("created_at")
+
+  @@index([organizationId])
+  @@index([creatorGoalId])
+  @@index([creatorGoalId, recalculatedAt])
+  @@map("creator_goal_progress")
 }

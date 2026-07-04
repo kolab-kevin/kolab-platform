@@ -1,17 +1,25 @@
 import type { AccessTokenPayload } from '@kolab/auth';
 import type {
+  CreateCreatorGoalInput,
   CreateCreatorPlatformAccountInput,
   CreatorComplianceQuery,
+  CreatorGoalListQuery,
   CreatorListQuery,
+  UpdateCreatorGoalInput,
+  UpdateCreatorGoalStatusInput,
   UpdateCreatorInput,
   UpdateCreatorPlatformAccountInput,
   UpdateCreatorSkillsInput,
   UpdateCreatorStructuredAvailabilityInput,
 } from '@kolab/types';
 import {
+  CreateCreatorGoalSchema,
   CreateCreatorPlatformAccountSchema,
   CreatorComplianceQuerySchema,
+  CreatorGoalListQuerySchema,
   CreatorListQuerySchema,
+  UpdateCreatorGoalSchema,
+  UpdateCreatorGoalStatusSchema,
   UpdateCreatorPlatformAccountSchema,
   UpdateCreatorSchema,
   UpdateCreatorSkillsSchema,
@@ -27,6 +35,7 @@ import { LiveIntelligenceCreatorProfileService } from '../live-intelligence/live
 import { LiveIntelligenceLiveTrendsService } from '../live-intelligence/live-intelligence-live-trends.service';
 import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
+import { CreatorsGoalsService } from './creators-goals.service';
 import { CreatorsOnboardingService } from './creators-onboarding.service';
 import { CreatorsPerformanceScoreService } from './creators-performance-score.service';
 
@@ -41,6 +50,7 @@ export class CreatorsController {
     private readonly liveIntelligenceCreatorProfileService: LiveIntelligenceCreatorProfileService,
     private readonly liveIntelligenceLiveTrendsService: LiveIntelligenceLiveTrendsService,
     private readonly creatorsPerformanceScoreService: CreatorsPerformanceScoreService,
+    private readonly creatorsGoalsService: CreatorsGoalsService,
   ) {}
 
   @Get()
@@ -250,6 +260,87 @@ export class CreatorsController {
     @Param('id') creatorId: string,
   ) {
     return this.creatorsPerformanceScoreService.getCreatorPerformanceScore(user, creatorId);
+  }
+
+  @Get(':id/goals')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'List creator goals' })
+  @ApiResponse({ status: 200, description: 'Paginated creator goals' })
+  @ApiResponse({ status: 404, description: 'Creator not found' })
+  listCreatorGoals(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') creatorId: string,
+    @Query(new ZodValidationPipe(CreatorGoalListQuerySchema)) query: CreatorGoalListQuery,
+  ) {
+    return this.creatorsGoalsService.listCreatorGoals(user, creatorId, query);
+  }
+
+  @Get(':id/goals/:goalId')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Get creator goal detail' })
+  @ApiResponse({ status: 200, description: 'Creator goal detail' })
+  @ApiResponse({ status: 404, description: 'Creator or goal not found' })
+  getCreatorGoal(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') creatorId: string,
+    @Param('goalId') goalId: string,
+  ) {
+    return this.creatorsGoalsService.getCreatorGoal(user, creatorId, goalId);
+  }
+
+  @Post(':id/goals')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Create a creator goal' })
+  @ApiResponse({ status: 201, description: 'Creator goal created' })
+  @ApiResponse({ status: 404, description: 'Creator not found' })
+  createCreatorGoal(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') creatorId: string,
+    @Body(new ZodValidationPipe(CreateCreatorGoalSchema)) body: CreateCreatorGoalInput,
+  ) {
+    return this.creatorsGoalsService.createCreatorGoal(user, creatorId, body);
+  }
+
+  @Patch(':id/goals/:goalId')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Update a creator goal' })
+  @ApiResponse({ status: 200, description: 'Creator goal updated' })
+  @ApiResponse({ status: 404, description: 'Creator or goal not found' })
+  updateCreatorGoal(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') creatorId: string,
+    @Param('goalId') goalId: string,
+    @Body(new ZodValidationPipe(UpdateCreatorGoalSchema)) body: UpdateCreatorGoalInput,
+  ) {
+    return this.creatorsGoalsService.updateCreatorGoal(user, creatorId, goalId, body);
+  }
+
+  @Post(':id/goals/:goalId/status')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Update creator goal status' })
+  @ApiResponse({ status: 200, description: 'Creator goal status updated' })
+  @ApiResponse({ status: 404, description: 'Creator or goal not found' })
+  updateCreatorGoalStatus(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') creatorId: string,
+    @Param('goalId') goalId: string,
+    @Body(new ZodValidationPipe(UpdateCreatorGoalStatusSchema))
+    body: UpdateCreatorGoalStatusInput,
+  ) {
+    return this.creatorsGoalsService.updateCreatorGoalStatus(user, creatorId, goalId, body);
+  }
+
+  @Post(':id/goals/:goalId/progress/recalculate')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Recalculate creator goal progress from existing data' })
+  @ApiResponse({ status: 201, description: 'Creator goal progress recalculated' })
+  @ApiResponse({ status: 404, description: 'Creator or goal not found' })
+  recalculateCreatorGoalProgress(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('id') creatorId: string,
+    @Param('goalId') goalId: string,
+  ) {
+    return this.creatorsGoalsService.recalculateCreatorGoalProgress(user, creatorId, goalId);
   }
 
   @Get(':id')

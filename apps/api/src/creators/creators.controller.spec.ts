@@ -8,6 +8,7 @@ import { LiveIntelligenceLiveTrendsService } from '../live-intelligence/live-int
 import { CreatorsController } from './creators.controller';
 import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
+import { CreatorsGoalsService } from './creators-goals.service';
 import { CreatorsOnboardingService } from './creators-onboarding.service';
 import { CreatorsPerformanceScoreService } from './creators-performance-score.service';
 
@@ -70,6 +71,17 @@ describe('CreatorsController authorization', () => {
           useValue: {
             generateCreatorPerformanceScore: jest.fn(),
             getCreatorPerformanceScore: jest.fn(),
+          },
+        },
+        {
+          provide: CreatorsGoalsService,
+          useValue: {
+            listCreatorGoals: jest.fn(),
+            getCreatorGoal: jest.fn(),
+            createCreatorGoal: jest.fn(),
+            updateCreatorGoal: jest.fn(),
+            updateCreatorGoalStatus: jest.fn(),
+            recalculateCreatorGoalProgress: jest.fn(),
           },
         },
       ],
@@ -269,6 +281,38 @@ describe('CreatorsController authorization', () => {
 
     expect(() =>
       permissionsGuard.canActivate(createContext('getCreatorPerformanceScore', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to list creator goals with crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(permissionsGuard.canActivate(createContext('listCreatorGoals', recruiterUser))).toBe(
+      true,
+    );
+  });
+
+  it('denies viewers from listing creator goals', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('listCreatorGoals', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to create creator goals with crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(permissionsGuard.canActivate(createContext('createCreatorGoal', recruiterUser))).toBe(
+      true,
+    );
+  });
+
+  it('denies viewers from recalculating creator goal progress', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('recalculateCreatorGoalProgress', viewerUser)),
     ).toThrow(ForbiddenException);
   });
 });
