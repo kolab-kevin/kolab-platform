@@ -1,8 +1,8 @@
 # Live Intelligence Data Model
 
-**Status:** Partial — live session foundation implemented  
-**Branch:** `feature/live-session-schema`  
-**Migration:** `20250703150000_live_session_schema`  
+**Status:** Partial — session, schedule, and event timeline schema implemented  
+**Branch:** `feature/live-event-schema`  
+**Migrations:** `20250703150000_live_session_schema`, `20250703160000_live_event_schema`  
 **Prisma:** `packages/database/prisma/schema.prisma`
 
 ---
@@ -11,10 +11,10 @@
 
 Live Intelligence adds organization-scoped live session tracking, append-only event streams, gifter behavioral profiles, and derived trigger analysis. All tables include `organizationId` and cascade-delete with the parent organization unless noted.
 
-**Implemented in this milestone:** `LiveSession`, `CreatorLiveSchedule`, and related enums.  
-**Not yet implemented:** event timeline, gifter profiles, trigger analysis, summaries, or coach alerts.
+**Implemented in this milestone:** `LiveSession`, `CreatorLiveSchedule`, `LiveEvent`, and related enums.  
+**Not yet implemented:** gifter profiles, trigger analysis, summaries, coach alerts, or ingest API.
 
-Raw video/audio is **not** stored in v1. Transcripts will be text segments with timestamps only (future `live_events` table).
+Raw video/audio is **not** stored. Transcript and chat content live in `live_events.payload` as text metadata only — see [Privacy and sensitive data](#privacy-and-sensitive-data).
 
 ---
 
@@ -26,15 +26,31 @@ Solid relationships exist in Prisma today; dashed entities are planned for later
 erDiagram
   Organization ||--o{ LiveSession : has
   Organization ||--o{ CreatorLiveSchedule : has
+  Organization ||--o{ LiveEvent : has
   Organization ||..o{ GifterProfile : "planned"
   CreatorProfile ||--o{ LiveSession : hosts
   CreatorProfile ||--o{ CreatorLiveSchedule : schedules
+  CreatorProfile ||--o{ LiveEvent : "denormalized host"
   Campaign ||--o{ LiveSession : optional
-  LiveSession ||..o{ LiveEvent : "planned"
+  LiveSession ||--o{ LiveEvent : timeline
   LiveSession ||..o{ LiveSessionSummary : "planned"
   LiveSession ||..o{ TriggerAnalysis : "planned"
   GifterProfile ||..o{ GifterProfileSnapshot : "planned"
-  LiveEvent }o..o| GifterProfile : "planned"
+
+  LiveEvent {
+    string id PK
+    string organizationId FK
+    string liveSessionId FK
+    string creatorProfileId FK
+    enum eventType
+    datetime occurredAt
+    int offsetMs
+    enum platform
+    string platformEventId
+    string externalActorId
+    json payload
+    datetime createdAt
+  }
 
   LiveSession {
     string id PK
@@ -76,9 +92,12 @@ erDiagram
 | `Organization`   | `CreatorLiveSchedule` | `organization_id`    | CASCADE   |
 | `CreatorProfile` | `LiveSession`         | `creator_profile_id` | CASCADE   |
 | `CreatorProfile` | `CreatorLiveSchedule` | `creator_profile_id` | CASCADE   |
+| `Organization`   | `LiveEvent`           | `organization_id`    | CASCADE   |
+| `LiveSession`    | `LiveEvent`           | `live_session_id`    | CASCADE   |
+| `CreatorProfile` | `LiveEvent`           | `creator_profile_id` | CASCADE   |
 | `Campaign`       | `LiveSession`         | `campaign_id`        | SET NULL  |
 
-All child rows duplicate `organization_id` for tenant-scoped queries, consistent with campaigns and CRM models.
+`LiveEvent.creator_profile_id` is denormalized from the parent session for fast creator-scoped timeline queries without joining `live_sessions`.
 
 ---
 
@@ -92,11 +111,11 @@ All child rows duplicate `organization_id` for tenant-scoped queries, consistent
 
 `SCHEDULED`, `LIVE`, `ENDED`, `CANCELLED`
 
+### `LiveEventType` (implemented)
+
+`SESSION_STARTED`, `SESSION_ENDED`, `CHAT_MESSAGE`, `GIFT_RECEIVED`, `VOICE_TRANSCRIPT_SEGMENT`, `PERFORMANCE_MOMENT`, `SONG_STARTED`, `SONG_ENDED`, `DANCE_MOMENT`, `PK_STARTED`, `PK_ENDED`, `COHOST_JOINED`, `COHOST_LEFT`, `VIEWER_JOINED`, `VIEWER_LEFT`, `MODERATOR_ACTION`, `SYSTEM_EVENT`, `OTHER`
+
 ### Planned enums (not in Prisma yet)
-
-#### `LiveEventType`
-
-`SESSION_STARTED`, `SESSION_ENDED`, `CHAT_MESSAGE`, `GIFT_RECEIVED`, `VIEWER_JOINED`, `VIEWER_LEFT`, `VOICE_TRANSCRIPT_SEGMENT`, `PERFORMANCE_MOMENT`, `PK_STARTED`, `PK_ENDED`, `CREATOR_ACKNOWLEDGEMENT`, `EMOTIONAL_MOMENT`
 
 #### `PerformanceMomentType`
 
@@ -156,7 +175,7 @@ All child rows duplicate `organization_id` for tenant-scoped queries, consistent
 | `(campaign_id)`                         | Campaign-attributed sessions         |
 | `(platform_session_id)`                 | Platform webhook idempotency lookups |
 
-Session rollups (`total_gifts`, `total_gift_value`, viewer counts) are stored on the session row for fast agency analytics. Individual gift events will land in `live_events` in a later migration.
+Session rollups (`total_gifts`, `total_gift_value`, viewer counts) are stored on the session row for fast agency analytics. Individual gift and chat events are stored in `live_events`.
 
 ---
 
@@ -192,25 +211,44 @@ Schedules are independent of `LiveSession` rows. A future API may materialize `L
 
 ---
 
-## `live_events` (planned)
+## `live_events` (implemented)
 
-Append-only normalized timeline. **No updates** except compliance redaction jobs.
+Append-only normalized timeline. **No `updated_at` column** — rows are insert-only. Compliance redaction may delete or replace rows via dedicated jobs; routine application code must not update event rows.
 
-| Column              | Type            | Notes                  |
-| ------------------- | --------------- | ---------------------- |
-| `id`                | TEXT PK         | `cuid()`               |
-| `organization_id`   | TEXT FK         | Required               |
-| `live_session_id`   | TEXT FK         | Required               |
-| `event_type`        | `LiveEventType` | Required               |
-| `occurred_at`       | TIMESTAMP       | Required               |
-| `platform_event_id` | TEXT            | Nullable; idempotency  |
-| `gifter_profile_id` | TEXT FK         | Nullable (gifts, chat) |
-| `payload`           | JSONB           | Event-specific body    |
-| `created_at`        | TIMESTAMP       | Auto                   |
+| Column               | Type            | Notes                                                   |
+| -------------------- | --------------- | ------------------------------------------------------- |
+| `id`                 | TEXT PK         | `cuid()`                                                |
+| `organization_id`    | TEXT FK         | Required                                                |
+| `live_session_id`    | TEXT FK         | Required                                                |
+| `creator_profile_id` | TEXT FK         | Denormalized from session for creator timeline queries  |
+| `event_type`         | `LiveEventType` | Required                                                |
+| `occurred_at`        | TIMESTAMP       | Wall-clock event time                                   |
+| `offset_ms`          | INT             | Nullable offset from session start for replay alignment |
+| `platform`           | `LivePlatform`  | Source platform                                         |
+| `platform_event_id`  | TEXT            | Nullable; ingest idempotency key                        |
+| `external_actor_id`  | TEXT            | Nullable platform user/gifter ID                        |
+| `actor_display_name` | TEXT            | Nullable; may change on platform                        |
+| `payload`            | JSONB           | Event-specific metadata only (no raw audio/video)       |
+| `metadata`           | JSONB           | Ingest/processing metadata; default `{}`                |
+| `created_at`         | TIMESTAMP       | Insert time                                             |
 
-Unique: `(organization_id, platform_event_id)` where `platform_event_id` IS NOT NULL.
+Unique: `(organization_id, platform, platform_event_id)` when `platform_event_id` is set.
 
-Indexes: `(live_session_id, occurred_at)`, `(organization_id, event_type)`, `(gifter_profile_id)`.
+### Event indexes
+
+| Index                                                | Purpose                               |
+| ---------------------------------------------------- | ------------------------------------- |
+| `(organization_id)`                                  | Tenant-scoped queries                 |
+| `(live_session_id, occurred_at)`                     | Session timeline replay               |
+| `(live_session_id, offset_ms)`                       | Offset-ordered replay                 |
+| `(organization_id, creator_profile_id, occurred_at)` | Creator timeline across sessions      |
+| `(organization_id, external_actor_id)`               | Actor/gifter event lookup             |
+| `(organization_id, event_type)`                      | Filter gifts, chat, transcripts, etc. |
+| `(organization_id, occurred_at)`                     | Time-range analytics                  |
+
+### Privacy and sensitive data
+
+> **Warning:** `CHAT_MESSAGE` and `VOICE_TRANSCRIPT_SEGMENT` events may contain personal or sensitive content in `payload`. Treat these rows as PII: restrict access via org RBAC, apply shorter retention TTLs than aggregate analytics, and support erasure/anonymization workflows. Do not store raw audio or video blobs in `payload` or `metadata`.
 
 ### Example `payload` shapes
 
@@ -346,16 +384,15 @@ Post-live AI batch output.
 
 ## Future expansion
 
-| Phase | Area            | Planned change                                                       |
-| ----- | --------------- | -------------------------------------------------------------------- |
-| 3     | Event ingestion | `live_events` table + idempotent ingest                              |
-| 4     | Gifter profiles | `gifter_profiles` + cross-session rollups                            |
-| 6–7   | AI outputs      | `live_session_summaries`, `trigger_analyses`                         |
-| 8     | Real-time coach | `LiveCoachAlert` table                                               |
-| 9     | Credits         | Link premium AI usage to `CreditLedgerEntry`                         |
-| —     | Campaign ROI    | Join session rollups to `Campaign` budgets                           |
-| —     | Retention TTL   | `retention_expires_at` on sessions/events                            |
-| —     | Idempotency     | Partial unique on `(organization_id, platform, platform_session_id)` |
+| Phase | Area                | Planned change                                           |
+| ----- | ------------------- | -------------------------------------------------------- |
+| 3     | Event ingestion API | REST ingest + idempotent writes to `live_events`         |
+| 4     | Gifter profiles     | `gifter_profiles` linked via `external_actor_id` rollups |
+| 6–7   | AI outputs          | `live_session_summaries`, `trigger_analyses`             |
+| 8     | Real-time coach     | `LiveCoachAlert` table                                   |
+| 9     | Credits             | Link premium AI usage to `CreditLedgerEntry`             |
+| —     | Campaign ROI        | Join session rollups to `Campaign` budgets               |
+| —     | Retention TTL       | Org-configurable purge jobs on `live_events`             |
 
 ---
 

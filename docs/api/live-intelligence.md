@@ -133,13 +133,31 @@ Validation:
 
 ## Planned endpoints (not implemented)
 
+Event timeline schema (`LiveEvent`) is implemented in PostgreSQL. Ingest and read APIs are planned for a later phase.
+
 | Area              | Paths                                            |
 | ----------------- | ------------------------------------------------ |
 | Event ingestion   | `POST /api/live/sessions/:sessionId/events`      |
+| Event timeline    | `GET /api/live/sessions/:sessionId/events`       |
 | Timeline / replay | `GET /api/live/sessions/:sessionId/timeline`     |
 | Gifter profiles   | `GET /api/live/gifters`                          |
 | AI summaries      | `GET /api/live/sessions/:sessionId/summary`      |
 | Real-time coach   | `GET /api/live/sessions/:sessionId/coach/stream` |
+
+### Planned event model (schema implemented)
+
+Append-only `live_events` rows are organization-scoped, linked to `LiveSession`, and denormalize `creatorProfileId` for creator timeline queries. No raw audio or video — `payload` holds event-specific metadata only.
+
+| Field             | Notes                                                                |
+| ----------------- | -------------------------------------------------------------------- |
+| `eventType`       | `LiveEventType` enum (gifts, chat, transcripts, PK, etc.)            |
+| `occurredAt`      | Wall-clock timestamp                                                 |
+| `offsetMs`        | Nullable replay offset from session start                            |
+| `platformEventId` | Nullable idempotency key (unique per org + platform)                 |
+| `externalActorId` | Nullable platform actor/gifter ID                                    |
+| `payload`         | Event-specific JSON (gift type, chat text, transcript segment, etc.) |
+
+> **Privacy:** `CHAT_MESSAGE` and `VOICE_TRANSCRIPT_SEGMENT` payloads may contain sensitive text. Access must be RBAC-controlled with retention and erasure policies — see [Database ERD](../database/live-intelligence-erd.md#privacy-and-sensitive-data).
 
 ---
 
