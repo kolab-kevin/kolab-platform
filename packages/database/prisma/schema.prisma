@@ -249,6 +249,8 @@ model Organization {
   liveSessions             LiveSession[]
   creatorLiveSchedules     CreatorLiveSchedule[]
   liveEvents               LiveEvent[]
+  gifterProfiles           GifterProfile[]
+  gifterSessionStats       GifterSessionStats[]
 
   @@index([status])
   @@map("organizations")
@@ -547,6 +549,8 @@ model CreatorProfile {
   liveSessions             LiveSession[]
   creatorLiveSchedules     CreatorLiveSchedule[]
   liveEvents               LiveEvent[]
+  gifterProfilesAsFavorite GifterProfile[] @relation("GifterProfileFavoriteCreator")
+  gifterSessionStats       GifterSessionStats[]
 
   @@unique([organizationId, userId])
   @@index([organizationId])
@@ -966,7 +970,8 @@ model LiveSession {
   createdAt         DateTime          @default(now()) @map("created_at")
   updatedAt         DateTime          @updatedAt @map("updated_at")
 
-  events LiveEvent[]
+  events             LiveEvent[]
+  gifterSessionStats GifterSessionStats[]
 
   @@index([organizationId])
   @@index([organizationId, creatorProfileId])
@@ -1053,4 +1058,82 @@ model LiveEvent {
   @@index([organizationId, eventType])
   @@index([organizationId, occurredAt])
   @@map("live_events")
+}
+
+enum GifterSpendingTier {
+  UNKNOWN
+  LOW
+  MEDIUM
+  HIGH
+  WHALE
+  VIP
+}
+
+/// Cross-session gifter identity and rollups. No raw chat/transcript text — see triggerProfile/retentionProfile JSON placeholders.
+model GifterProfile {
+  id                       String             @id @default(cuid())
+  organizationId           String             @map("organization_id")
+  organization             Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  platform                 LivePlatform
+  externalGifterId         String             @map("external_gifter_id")
+  displayName              String?            @map("display_name")
+  avatarUrl                String?            @map("avatar_url")
+  spendingTier             GifterSpendingTier @default(UNKNOWN) @map("spending_tier")
+  totalGiftCount           Int                @default(0) @map("total_gift_count")
+  totalGiftValue           Decimal            @default(0) @map("total_gift_value") @db.Decimal(14, 2)
+  totalSessions            Int                @default(0) @map("total_sessions")
+  firstSeenAt              DateTime?          @map("first_seen_at")
+  lastSeenAt               DateTime?          @map("last_seen_at")
+  favoriteCreatorProfileId String?            @map("favorite_creator_profile_id")
+  favoriteCreatorProfile   CreatorProfile?    @relation("GifterProfileFavoriteCreator", fields: [favoriteCreatorProfileId], references: [id], onDelete: SetNull)
+  favoriteGiftType         String?            @map("favorite_gift_type")
+  triggerProfile           Json               @default("{}") @map("trigger_profile")
+  retentionProfile         Json               @default("{}") @map("retention_profile")
+  metadata                 Json               @default("{}")
+  createdAt                DateTime           @default(now()) @map("created_at")
+  updatedAt                DateTime           @updatedAt @map("updated_at")
+
+  sessionStats GifterSessionStats[]
+
+  @@unique([organizationId, platform, externalGifterId])
+  @@index([organizationId])
+  @@index([organizationId, platform])
+  @@index([organizationId, externalGifterId])
+  @@index([organizationId, spendingTier])
+  @@index([organizationId, favoriteCreatorProfileId])
+  @@index([organizationId, lastSeenAt])
+  @@map("gifter_profiles")
+}
+
+/// Per-session gifter activity rollups derived from live events (gift/chat counts only).
+model GifterSessionStats {
+  id               String        @id @default(cuid())
+  organizationId   String        @map("organization_id")
+  organization     Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  gifterProfileId  String        @map("gifter_profile_id")
+  gifterProfile    GifterProfile @relation(fields: [gifterProfileId], references: [id], onDelete: Cascade)
+  liveSessionId    String        @map("live_session_id")
+  liveSession      LiveSession   @relation(fields: [liveSessionId], references: [id], onDelete: Cascade)
+  creatorProfileId String        @map("creator_profile_id")
+  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  giftCount        Int           @default(0) @map("gift_count")
+  giftValue        Decimal       @default(0) @map("gift_value") @db.Decimal(14, 2)
+  firstGiftAt      DateTime?     @map("first_gift_at")
+  lastGiftAt       DateTime?     @map("last_gift_at")
+  firstSeenAt      DateTime?     @map("first_seen_at")
+  lastSeenAt       DateTime?     @map("last_seen_at")
+  chatMessageCount Int           @default(0) @map("chat_message_count")
+  metadata         Json          @default("{}")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  @@unique([gifterProfileId, liveSessionId])
+  @@index([organizationId])
+  @@index([organizationId, gifterProfileId])
+  @@index([organizationId, liveSessionId])
+  @@index([organizationId, creatorProfileId])
+  @@index([liveSessionId])
+  @@index([creatorProfileId])
+  @@index([gifterProfileId])
+  @@map("gifter_session_stats")
 }

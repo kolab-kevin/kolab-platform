@@ -1,8 +1,8 @@
 # Live Intelligence Data Model
 
-**Status:** Partial — session, schedule, and event timeline schema implemented  
-**Branch:** `feature/live-event-schema`  
-**Migrations:** `20250703150000_live_session_schema`, `20250703160000_live_event_schema`  
+**Status:** Partial — sessions, events, and gifter profile schema implemented  
+**Branch:** `feature/gifter-profile-schema`  
+**Migrations:** `20250703150000_live_session_schema`, `20250703160000_live_event_schema`, `20250703170000_gifter_profile_schema`  
 **Prisma:** `packages/database/prisma/schema.prisma`
 
 ---
@@ -11,8 +11,8 @@
 
 Live Intelligence adds organization-scoped live session tracking, append-only event streams, gifter behavioral profiles, and derived trigger analysis. All tables include `organizationId` and cascade-delete with the parent organization unless noted.
 
-**Implemented in this milestone:** `LiveSession`, `CreatorLiveSchedule`, `LiveEvent`, and related enums.  
-**Not yet implemented:** gifter profiles, trigger analysis, summaries, coach alerts, or ingest API.
+**Implemented in this milestone:** `LiveSession`, `CreatorLiveSchedule`, `LiveEvent`, `GifterProfile`, `GifterSessionStats`, and related enums.  
+**Not yet implemented:** gifter profile API, trigger analysis, summaries, coach alerts.
 
 Raw video/audio is **not** stored. Transcript and chat content live in `live_events.payload` as text metadata only — see [Privacy and sensitive data](#privacy-and-sensitive-data).
 
@@ -27,15 +27,42 @@ erDiagram
   Organization ||--o{ LiveSession : has
   Organization ||--o{ CreatorLiveSchedule : has
   Organization ||--o{ LiveEvent : has
-  Organization ||..o{ GifterProfile : "planned"
+  Organization ||--o{ GifterProfile : has
+  Organization ||--o{ GifterSessionStats : has
   CreatorProfile ||--o{ LiveSession : hosts
   CreatorProfile ||--o{ CreatorLiveSchedule : schedules
   CreatorProfile ||--o{ LiveEvent : "denormalized host"
+  CreatorProfile ||--o{ GifterProfile : "favorite creator"
+  CreatorProfile ||--o{ GifterSessionStats : hosts
   Campaign ||--o{ LiveSession : optional
   LiveSession ||--o{ LiveEvent : timeline
+  LiveSession ||--o{ GifterSessionStats : has
+  GifterProfile ||--o{ GifterSessionStats : has
   LiveSession ||..o{ LiveSessionSummary : "planned"
   LiveSession ||..o{ TriggerAnalysis : "planned"
   GifterProfile ||..o{ GifterProfileSnapshot : "planned"
+
+  GifterProfile {
+    string id PK
+    string organizationId FK
+    enum platform
+    string externalGifterId
+    enum spendingTier
+    decimal totalGiftValue
+    json triggerProfile
+    json retentionProfile
+    datetime lastSeenAt
+  }
+
+  GifterSessionStats {
+    string id PK
+    string gifterProfileId FK
+    string liveSessionId FK
+    string creatorProfileId FK
+    int giftCount
+    decimal giftValue
+    int chatMessageCount
+  }
 
   LiveEvent {
     string id PK
@@ -86,16 +113,22 @@ erDiagram
 
 ## Relationships (implemented)
 
-| Parent           | Child                 | FK column            | On delete |
-| ---------------- | --------------------- | -------------------- | --------- |
-| `Organization`   | `LiveSession`         | `organization_id`    | CASCADE   |
-| `Organization`   | `CreatorLiveSchedule` | `organization_id`    | CASCADE   |
-| `CreatorProfile` | `LiveSession`         | `creator_profile_id` | CASCADE   |
-| `CreatorProfile` | `CreatorLiveSchedule` | `creator_profile_id` | CASCADE   |
-| `Organization`   | `LiveEvent`           | `organization_id`    | CASCADE   |
-| `LiveSession`    | `LiveEvent`           | `live_session_id`    | CASCADE   |
-| `CreatorProfile` | `LiveEvent`           | `creator_profile_id` | CASCADE   |
-| `Campaign`       | `LiveSession`         | `campaign_id`        | SET NULL  |
+| Parent           | Child                 | FK column                     | On delete |
+| ---------------- | --------------------- | ----------------------------- | --------- |
+| `Organization`   | `LiveSession`         | `organization_id`             | CASCADE   |
+| `Organization`   | `CreatorLiveSchedule` | `organization_id`             | CASCADE   |
+| `CreatorProfile` | `LiveSession`         | `creator_profile_id`          | CASCADE   |
+| `CreatorProfile` | `CreatorLiveSchedule` | `creator_profile_id`          | CASCADE   |
+| `Organization`   | `LiveEvent`           | `organization_id`             | CASCADE   |
+| `LiveSession`    | `LiveEvent`           | `live_session_id`             | CASCADE   |
+| `CreatorProfile` | `LiveEvent`           | `creator_profile_id`          | CASCADE   |
+| `Organization`   | `GifterProfile`       | `organization_id`             | CASCADE   |
+| `Organization`   | `GifterSessionStats`  | `organization_id`             | CASCADE   |
+| `GifterProfile`  | `GifterSessionStats`  | `gifter_profile_id`           | CASCADE   |
+| `LiveSession`    | `GifterSessionStats`  | `live_session_id`             | CASCADE   |
+| `CreatorProfile` | `GifterSessionStats`  | `creator_profile_id`          | CASCADE   |
+| `CreatorProfile` | `GifterProfile`       | `favorite_creator_profile_id` | SET NULL  |
+| `Campaign`       | `LiveSession`         | `campaign_id`                 | SET NULL  |
 
 `LiveEvent.creator_profile_id` is denormalized from the parent session for fast creator-scoped timeline queries without joining `live_sessions`.
 
@@ -115,15 +148,15 @@ erDiagram
 
 `SESSION_STARTED`, `SESSION_ENDED`, `CHAT_MESSAGE`, `GIFT_RECEIVED`, `VOICE_TRANSCRIPT_SEGMENT`, `PERFORMANCE_MOMENT`, `SONG_STARTED`, `SONG_ENDED`, `DANCE_MOMENT`, `PK_STARTED`, `PK_ENDED`, `COHOST_JOINED`, `COHOST_LEFT`, `VIEWER_JOINED`, `VIEWER_LEFT`, `MODERATOR_ACTION`, `SYSTEM_EVENT`, `OTHER`
 
+### `GifterSpendingTier` (implemented)
+
+`UNKNOWN`, `LOW`, `MEDIUM`, `HIGH`, `WHALE`, `VIP`
+
 ### Planned enums (not in Prisma yet)
 
 #### `PerformanceMomentType`
 
 `SINGING`, `DANCING`, `SONG_START`, `SONG_END`, `OTHER`
-
-#### `SpendingTier`
-
-`WHALE`, `HIGH`, `MEDIUM`, `LOW`, `OCCASIONAL`
 
 #### `TriggerCategory`
 
@@ -288,29 +321,88 @@ Unique: `(organization_id, platform, platform_event_id)` when `platform_event_id
 
 ---
 
-## `gifter_profiles` (planned)
+## `gifter_profiles` (implemented)
 
-| Column                 | Type           | Notes                                     |
-| ---------------------- | -------------- | ----------------------------------------- |
-| `id`                   | TEXT PK        | `cuid()`                                  |
-| `organization_id`      | TEXT FK        | Required                                  |
-| `platform`             | `LivePlatform` | Required                                  |
-| `external_gifter_id`   | TEXT           | Required platform ID                      |
-| `display_name`         | TEXT           | Nullable                                  |
-| `total_gift_value`     | DECIMAL        | Rolling + lifetime (platform units)       |
-| `session_count`        | INT            | Sessions with ≥1 gift                     |
-| `favorite_creators`    | JSONB          | Ranked creator profile IDs                |
-| `favorite_gift_types`  | JSONB          | Ranked gift type codes                    |
-| `gift_timing_patterns` | JSONB          | Histogram / segments                      |
-| `trigger_scores`       | JSONB          | Per TriggerCategory scores + sample sizes |
-| `spending_tier`        | `SpendingTier` | Derived                                   |
-| `retention_score`      | DECIMAL        | Nullable 0–1                              |
-| `metadata`             | JSONB          | Default `{}`                              |
-| `first_seen_at`        | TIMESTAMP      |                                           |
-| `last_seen_at`         | TIMESTAMP      |                                           |
-| `updated_at`           | TIMESTAMP      | Auto                                      |
+Persistent cross-session gifter identity and rollups. **No raw chat or transcript text** — only aggregate counts, tiers, and derived JSON placeholders.
+
+| Column                        | Type                 | Notes                                         |
+| ----------------------------- | -------------------- | --------------------------------------------- |
+| `id`                          | TEXT PK              | `cuid()`                                      |
+| `organization_id`             | TEXT FK              | Required                                      |
+| `platform`                    | `LivePlatform`       | Required                                      |
+| `external_gifter_id`          | TEXT                 | Required platform ID                          |
+| `display_name`                | TEXT                 | Nullable                                      |
+| `avatar_url`                  | TEXT                 | Nullable                                      |
+| `spending_tier`               | `GifterSpendingTier` | Default `UNKNOWN`                             |
+| `total_gift_count`            | INT                  | Default `0`                                   |
+| `total_gift_value`            | DECIMAL(14,2)        | Default `0`; platform gift units              |
+| `total_sessions`              | INT                  | Default `0`                                   |
+| `first_seen_at`               | TIMESTAMP            | Nullable                                      |
+| `last_seen_at`                | TIMESTAMP            | Nullable                                      |
+| `favorite_creator_profile_id` | TEXT FK              | Nullable                                      |
+| `favorite_gift_type`          | TEXT                 | Nullable                                      |
+| `trigger_profile`             | JSONB                | Derived analytics placeholder; not raw events |
+| `retention_profile`           | JSONB                | Derived retention placeholder                 |
+| `metadata`                    | JSONB                | Default `{}`                                  |
+| `created_at`                  | TIMESTAMP            | Auto                                          |
+| `updated_at`                  | TIMESTAMP            | Auto                                          |
 
 Unique: `(organization_id, platform, external_gifter_id)`.
+
+### Gifter profile indexes
+
+| Index                                            | Purpose                      |
+| ------------------------------------------------ | ---------------------------- |
+| `(organization_id)`                              | Tenant listing               |
+| `(organization_id, platform)`                    | Platform-scoped queries      |
+| `(organization_id, external_gifter_id)`          | Lookup by platform gifter ID |
+| `(organization_id, spending_tier)`               | Tier segmentation            |
+| `(organization_id, favorite_creator_profile_id)` | Creator-attributed gifters   |
+| `(organization_id, last_seen_at)`                | Recency sorting              |
+
+### Gifter privacy and compliance
+
+> **Warning:** Gifter profiles store platform identifiers, display names, and spending aggregates derived from live events. They must not store chat message bodies or transcript text — those remain in `live_events` with stricter access controls. Support anonymization of `external_gifter_id` and `display_name` on erasure requests. `trigger_profile` and `retention_profile` are derived analytics placeholders populated by future batch jobs, not authoritative PII stores.
+
+---
+
+## `gifter_session_stats` (implemented)
+
+Per-session rollups for a gifter: gift counts/values and chat message counts only (no message content).
+
+| Column               | Type          | Notes                               |
+| -------------------- | ------------- | ----------------------------------- |
+| `id`                 | TEXT PK       | `cuid()`                            |
+| `organization_id`    | TEXT FK       | Required                            |
+| `gifter_profile_id`  | TEXT FK       | Required                            |
+| `live_session_id`    | TEXT FK       | Required                            |
+| `creator_profile_id` | TEXT FK       | Denormalized from session           |
+| `gift_count`         | INT           | Default `0`                         |
+| `gift_value`         | DECIMAL(14,2) | Default `0`                         |
+| `first_gift_at`      | TIMESTAMP     | Nullable                            |
+| `last_gift_at`       | TIMESTAMP     | Nullable                            |
+| `first_seen_at`      | TIMESTAMP     | Nullable                            |
+| `last_seen_at`       | TIMESTAMP     | Nullable                            |
+| `chat_message_count` | INT           | Default `0`; count only, no content |
+| `metadata`           | JSONB         | Default `{}`                        |
+| `created_at`         | TIMESTAMP     | Auto                                |
+| `updated_at`         | TIMESTAMP     | Auto                                |
+
+Unique: `(gifter_profile_id, live_session_id)`.
+
+### Session stats indexes
+
+| Index                                   | Purpose                        |
+| --------------------------------------- | ------------------------------ |
+| `(organization_id)`                     | Tenant listing                 |
+| `(organization_id, gifter_profile_id)`  | Gifter session history         |
+| `(organization_id, live_session_id)`    | Session gifter board           |
+| `(organization_id, creator_profile_id)` | Creator session gifter rollups |
+| `(live_session_id)`                     | Session-centric lookups        |
+| `(creator_profile_id)`                  | Creator-centric lookups        |
+| `(gifter_profile_id)`                   | Profile-centric lookups        |
+
+Future workers will upsert stats from `live_events` where `external_actor_id` matches `gifter_profiles.external_gifter_id`.
 
 ---
 
@@ -384,15 +476,14 @@ Post-live AI batch output.
 
 ## Future expansion
 
-| Phase | Area                | Planned change                                           |
-| ----- | ------------------- | -------------------------------------------------------- |
-| 3     | Event ingestion API | REST ingest + idempotent writes to `live_events`         |
-| 4     | Gifter profiles     | `gifter_profiles` linked via `external_actor_id` rollups |
-| 6–7   | AI outputs          | `live_session_summaries`, `trigger_analyses`             |
-| 8     | Real-time coach     | `LiveCoachAlert` table                                   |
-| 9     | Credits             | Link premium AI usage to `CreditLedgerEntry`             |
-| —     | Campaign ROI        | Join session rollups to `Campaign` budgets               |
-| —     | Retention TTL       | Org-configurable purge jobs on `live_events`             |
+| Phase | Area               | Planned change                                                          |
+| ----- | ------------------ | ----------------------------------------------------------------------- |
+| 4     | Gifter profile API | REST read/list + rollup workers from `live_events`                      |
+| 6–7   | AI outputs         | `live_session_summaries`, `trigger_analyses` populate `trigger_profile` |
+| 8     | Real-time coach    | `LiveCoachAlert` table                                                  |
+| 9     | Credits            | Link premium AI usage to `CreditLedgerEntry`                            |
+| —     | Campaign ROI       | Join session rollups to `Campaign` budgets                              |
+| —     | Retention TTL      | Org-configurable purge/anonymization jobs                               |
 
 ---
 
