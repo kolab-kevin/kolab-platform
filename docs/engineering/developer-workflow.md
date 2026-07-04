@@ -12,7 +12,11 @@ All commands run from the repository root.
 | ---------------------------------------- | -------------------------------------------------- |
 | `pnpm feature:start <branch-name>`       | Create or checkout a feature branch from `develop` |
 | `pnpm verify:backend`                    | Run backend verification before a PR               |
-| `pnpm feature:finish "<commit message>"` | Verify, commit, push, print PR URL                 |
+| `pnpm feature:finish "<commit message>"` | Verify, commit, push                               |
+| `pnpm pr:create`                         | Create GitHub PR for current branch (via `gh`)     |
+| `pnpm pr:status`                         | Show PR status and CI checks                       |
+| `pnpm pr:open`                           | Open current branch PR in browser                  |
+| `pnpm pr:ready`                          | Confirm checks pass before manual merge            |
 | `pnpm feature:clean <branch-name>`       | Remove merged feature branch locally/remotely      |
 | `pnpm stats:project`                     | Print repository stats                             |
 
@@ -82,13 +86,13 @@ What it does:
 3. `git add .`
 4. `git commit -m "<commit message>"`
 5. `git push`
-6. Print a suggested GitHub PR URL (`develop` → current branch)
 
 Safety:
 
 - Refuses to run on `develop` or `main`
 - Does **not** merge automatically
 - Uses your commit message verbatim — follow [Conventional Commits](./git-standards.md)
+- After push, create the PR with `pnpm pr:create`
 
 Help:
 
@@ -98,7 +102,100 @@ pnpm feature:finish --help
 
 ---
 
-## 4. Clean a merged feature branch
+## 4. Create and monitor pull requests
+
+Requires the [GitHub CLI](https://cli.github.com/) (`gh`) installed and authenticated (`gh auth login`).
+
+### Recommended end-to-end flow
+
+```powershell
+pnpm feature:start live-timeline-replay
+# implement in Cursor
+pnpm feature:finish "feat: add live timeline replay API"
+pnpm pr:create
+pnpm pr:status
+# merge manually in GitHub after review
+pnpm feature:clean live-timeline-replay --delete-remote
+```
+
+### Create a pull request
+
+```powershell
+pnpm pr:create
+```
+
+What it does:
+
+1. Verify `gh` is installed and authenticated
+2. Refuse to run on `develop` or `main`
+3. `git fetch origin`
+4. Derive PR title from the latest commit message
+5. Create PR into `develop` with a generated body
+6. If a PR already exists for the branch, print the existing URL
+
+Safety:
+
+- Does **not** merge automatically
+- Does **not** force-push or delete branches
+- Requires the branch to exist on `origin` (push first with `feature:finish`)
+
+Help:
+
+```powershell
+pnpm pr:create --help
+```
+
+### Check PR status and CI
+
+```powershell
+pnpm pr:status
+```
+
+Runs `gh pr status` and `gh pr checks`. Exits non-zero when checks fail so you can use it before merging.
+
+Help:
+
+```powershell
+pnpm pr:status --help
+```
+
+### Open PR in browser
+
+```powershell
+pnpm pr:open
+```
+
+Runs `gh pr view --web` for the current branch.
+
+Help:
+
+```powershell
+pnpm pr:open --help
+```
+
+### Confirm ready for manual merge
+
+```powershell
+pnpm pr:ready
+```
+
+Runs the same checks as `pnpm pr:status`. When all checks pass, prints:
+
+```text
+Ready to merge manually in GitHub.
+```
+
+Does **not** merge automatically.
+
+Help:
+
+```powershell
+pnpm pr:ready --help
+```
+
+---
+
+## 5. Clean a merged feature branch
 
 ```powershell
 pnpm feature:clean live-timeline-replay
@@ -121,7 +218,7 @@ Safe mode defaults:
 
 ---
 
-## 5. Project stats
+## 6. Project stats
 
 ```powershell
 pnpm stats:project
@@ -147,9 +244,14 @@ Useful for progress snapshots during large feature work.
 | Script           | File                             |
 | ---------------- | -------------------------------- |
 | Shared helpers   | `scripts/lib/workflow-utils.mjs` |
+| PR helpers       | `scripts/lib/pr-utils.mjs`       |
 | `feature:start`  | `scripts/feature-start.mjs`      |
 | `verify:backend` | `scripts/verify-backend.mjs`     |
 | `feature:finish` | `scripts/feature-finish.mjs`     |
+| `pr:create`      | `scripts/pr-create.mjs`          |
+| `pr:status`      | `scripts/pr-status.mjs`          |
+| `pr:open`        | `scripts/pr-open.mjs`            |
+| `pr:ready`       | `scripts/pr-ready.mjs`           |
 | `feature:clean`  | `scripts/feature-clean.mjs`      |
 | `stats:project`  | `scripts/stats-project.mjs`      |
 
@@ -162,8 +264,11 @@ Useful for progress snapshots during large feature work.
 | `develop` branch missing           | Fetch/create `develop` or update the base branch in `scripts/lib/workflow-utils.mjs` |
 | `feature:start` push rejected      | Resolve remote conflicts manually, then rerun                                        |
 | `feature:finish` blocked on verify | Fix the failing step from `pnpm verify:backend` output                               |
+| `gh` not found                     | Install GitHub CLI from [cli.github.com](https://cli.github.com/)                    |
+| `gh auth` failed                   | Run `gh auth login` and retry                                                        |
+| `pr:create` branch not on origin   | Push first: `git push -u origin <branch>` or rerun `pnpm feature:finish`             |
+| `pr:status` checks failed          | Fix CI failures, push fixes, rerun `pnpm pr:status`                                  |
 | `feature:clean` kept local branch  | Branch is not merged into `develop` yet                                              |
-| PR URL not printed                 | Ensure `origin` is a GitHub remote (`git remote -v`)                                 |
 
 ---
 
