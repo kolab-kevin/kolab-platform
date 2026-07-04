@@ -64,6 +64,7 @@ export const AUDIT_ACTION = {
   LIVE_SCHEDULE_DELETED: 'live.schedule.deleted',
   LIVE_EVENT_INGESTED: 'live.event.ingested',
   LIVE_EVENT_BATCH_INGESTED: 'live.event.batch_ingested',
+  LIVE_GIFTER_PROFILE_VIEWED: 'live.gifter_profile.viewed',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {
@@ -86,4 +87,5 @@ export const AUDIT_TARGET_TYPE = {
   LIVE_SESSION: 'live_session',
   LIVE_SCHEDULE: 'live_schedule',
   LIVE_EVENT: 'live_event',
+  GIFTER_PROFILE: 'gifter_profile',
 } as const;

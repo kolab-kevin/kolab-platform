@@ -7,6 +7,7 @@ import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { LiveIntelligenceController } from './live-intelligence.controller';
 import { LiveIntelligenceService } from './live-intelligence.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
+import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
 
 describe('LiveIntelligenceController authorization', () => {
   let permissionsGuard: PermissionsGuard;
@@ -40,6 +41,15 @@ describe('LiveIntelligenceController authorization', () => {
             ingestEvent: jest.fn(),
             ingestEventBatch: jest.fn(),
             listSessionEvents: jest.fn(),
+          },
+        },
+        {
+          provide: LiveIntelligenceGiftersService,
+          useValue: {
+            listGifterProfiles: jest.fn(),
+            getGifterProfile: jest.fn(),
+            listGifterSessions: jest.fn(),
+            listSessionGifters: jest.fn(),
           },
         },
       ],
@@ -129,5 +139,21 @@ describe('LiveIntelligenceController authorization', () => {
     expect(() => permissionsGuard.canActivate(createContext('ingestEvent', viewerUser))).toThrow(
       ForbiddenException,
     );
+  });
+
+  it('allows recruiters to list gifter profiles with crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(permissionsGuard.canActivate(createContext('listGifterProfiles', recruiterUser))).toBe(
+      true,
+    );
+  });
+
+  it('denies viewers reading gifter profiles without crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('getGifterProfile', viewerUser)),
+    ).toThrow(ForbiddenException);
   });
 });

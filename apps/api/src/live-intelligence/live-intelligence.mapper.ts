@@ -1,13 +1,25 @@
 import type {
   CreatorLiveSchedule as PrismaCreatorLiveSchedule,
+  GifterProfile as PrismaGifterProfile,
+  GifterSessionStats as PrismaGifterSessionStats,
   LiveEvent as PrismaLiveEvent,
   LiveSession as PrismaLiveSession,
 } from '@kolab/database';
-import type { CreatorLiveSchedule, LiveEvent, LiveSession } from '@kolab/types';
+import type {
+  CreatorLiveSchedule,
+  FavoriteCreatorSummary,
+  GifterProfile,
+  GifterSessionStats,
+  LiveEvent,
+  LiveSession,
+} from '@kolab/types';
 
 import { toMetadataRecord } from './live-intelligence.utils';
+import { sanitizeAggregateMetadata } from './live-intelligence-gifters.utils';
 
-function decimalToString(value: PrismaLiveSession['totalGiftValue']): string | null {
+function decimalToString(
+  value: PrismaLiveSession['totalGiftValue'] | PrismaGifterProfile['totalGiftValue'],
+): string | null {
   if (value === null || value === undefined) {
     return null;
   }
@@ -74,5 +86,62 @@ export function toLiveEvent(event: PrismaLiveEvent): LiveEvent {
     payload: toMetadataRecord(event.payload),
     metadata: toMetadataRecord(event.metadata),
     createdAt: event.createdAt.toISOString(),
+  };
+}
+
+export function toGifterProfile(profile: PrismaGifterProfile): GifterProfile {
+  return {
+    id: profile.id,
+    organizationId: profile.organizationId,
+    platform: profile.platform as GifterProfile['platform'],
+    externalGifterId: profile.externalGifterId,
+    displayName: profile.displayName,
+    avatarUrl: profile.avatarUrl,
+    spendingTier: profile.spendingTier as GifterProfile['spendingTier'],
+    totalGiftCount: profile.totalGiftCount,
+    totalGiftValue: decimalToString(profile.totalGiftValue) ?? '0',
+    totalSessions: profile.totalSessions,
+    firstSeenAt: profile.firstSeenAt?.toISOString() ?? null,
+    lastSeenAt: profile.lastSeenAt?.toISOString() ?? null,
+    favoriteCreatorProfileId: profile.favoriteCreatorProfileId,
+    favoriteGiftType: profile.favoriteGiftType,
+    triggerProfile: sanitizeAggregateMetadata(profile.triggerProfile),
+    retentionProfile: sanitizeAggregateMetadata(profile.retentionProfile),
+    metadata: sanitizeAggregateMetadata(profile.metadata),
+    createdAt: profile.createdAt.toISOString(),
+    updatedAt: profile.updatedAt.toISOString(),
+  };
+}
+
+export function toGifterSessionStats(stats: PrismaGifterSessionStats): GifterSessionStats {
+  return {
+    id: stats.id,
+    organizationId: stats.organizationId,
+    gifterProfileId: stats.gifterProfileId,
+    liveSessionId: stats.liveSessionId,
+    creatorProfileId: stats.creatorProfileId,
+    giftCount: stats.giftCount,
+    giftValue: decimalToString(stats.giftValue) ?? '0',
+    firstGiftAt: stats.firstGiftAt?.toISOString() ?? null,
+    lastGiftAt: stats.lastGiftAt?.toISOString() ?? null,
+    firstSeenAt: stats.firstSeenAt?.toISOString() ?? null,
+    lastSeenAt: stats.lastSeenAt?.toISOString() ?? null,
+    chatMessageCount: stats.chatMessageCount,
+    metadata: sanitizeAggregateMetadata(stats.metadata),
+    createdAt: stats.createdAt.toISOString(),
+    updatedAt: stats.updatedAt.toISOString(),
+  };
+}
+
+export function toFavoriteCreatorSummary(
+  creatorProfile: { id: string; displayName: string } | null | undefined,
+): FavoriteCreatorSummary {
+  if (!creatorProfile) {
+    return null;
+  }
+
+  return {
+    creatorProfileId: creatorProfile.id,
+    displayName: creatorProfile.displayName,
   };
 }
