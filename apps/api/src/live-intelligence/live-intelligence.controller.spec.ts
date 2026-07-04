@@ -6,6 +6,7 @@ import { Test } from '@nestjs/testing';
 import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { LiveIntelligenceController } from './live-intelligence.controller';
 import { LiveIntelligenceService } from './live-intelligence.service';
+import { LiveIntelligenceCoachAlertsService } from './live-intelligence-coach-alerts.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
 import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
@@ -90,6 +91,13 @@ describe('LiveIntelligenceController authorization', () => {
           useValue: {
             generateSessionRecommendations: jest.fn(),
             getSessionRecommendations: jest.fn(),
+          },
+        },
+        {
+          provide: LiveIntelligenceCoachAlertsService,
+          useValue: {
+            generateSessionCoachAlerts: jest.fn(),
+            getSessionCoachAlerts: jest.fn(),
           },
         },
       ],
@@ -274,6 +282,22 @@ describe('LiveIntelligenceController authorization', () => {
 
     expect(() =>
       permissionsGuard.canActivate(createContext('getSessionRecommendations', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to generate coach alerts with crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(
+      permissionsGuard.canActivate(createContext('generateSessionCoachAlerts', recruiterUser)),
+    ).toBe(true);
+  });
+
+  it('denies viewers reading coach alerts without crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('getSessionCoachAlerts', viewerUser)),
     ).toThrow(ForbiddenException);
   });
 });
