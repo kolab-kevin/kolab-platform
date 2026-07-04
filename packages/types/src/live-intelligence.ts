@@ -589,3 +589,88 @@ export const SessionTriggerAnalysisResponseSchema = z.object({
 });
 
 export type SessionTriggerAnalysisResponse = z.infer<typeof SessionTriggerAnalysisResponseSchema>;
+
+export const LiveSessionSummaryTopMomentSchema = z.object({
+  type: z.string(),
+  label: z.string(),
+  occurredAt: isoDateTimeSchema.nullable(),
+  offsetMs: z.number().int().nonnegative().nullable(),
+  eventIds: z.array(z.string()),
+});
+
+export type LiveSessionSummaryTopMoment = z.infer<typeof LiveSessionSummaryTopMomentSchema>;
+
+export const LiveSessionSummaryTopGiftEventSchema = z.object({
+  eventId: z.string(),
+  occurredAt: isoDateTimeSchema,
+  offsetMs: z.number().int().nonnegative().nullable(),
+  giftType: z.string().nullable(),
+  giftCount: z.number().int().nonnegative(),
+  giftValue: z.number().nonnegative(),
+  externalActorId: z.string().nullable(),
+  actorDisplayName: z.string().nullable(),
+});
+
+export type LiveSessionSummaryTopGiftEvent = z.infer<typeof LiveSessionSummaryTopGiftEventSchema>;
+
+export const LiveSessionSummaryTopGifterSchema = z.object({
+  gifterProfileId: z.string(),
+  externalGifterId: z.string(),
+  displayName: z.string().nullable(),
+  giftCount: z.number().int().nonnegative(),
+  giftValue: z.number().nonnegative(),
+  spendingTier: GifterSpendingTierSchema.nullable(),
+});
+
+export type LiveSessionSummaryTopGifter = z.infer<typeof LiveSessionSummaryTopGifterSchema>;
+
+export const LiveSessionSummaryTriggerSummarySchema = z.object({
+  totalTriggers: z.number().int().nonnegative(),
+  topTriggerTypes: z.array(
+    z.object({
+      triggerType: z.string(),
+      count: z.number().int().nonnegative(),
+    }),
+  ),
+  totalGiftValueAttributed: z.number().nonnegative(),
+  generatedAt: isoDateTimeSchema.nullable(),
+});
+
+export type LiveSessionSummaryTriggerSummary = z.infer<
+  typeof LiveSessionSummaryTriggerSummarySchema
+>;
+
+export const LiveSessionSummaryTimelineHealthSchema = z.object({
+  totalEvents: z.number().int().nonnegative(),
+  eventsWithOffsetMs: z.number().int().nonnegative(),
+  missingOffsetMsCount: z.number().int().nonnegative(),
+  hasSessionStartedEvent: z.boolean(),
+  hasSessionEndedEvent: z.boolean(),
+  gifterRollupProcessed: z.boolean(),
+  triggerAnalysisAvailable: z.boolean(),
+  status: z.enum(['HEALTHY', 'PARTIAL', 'INCOMPLETE']),
+});
+
+export type LiveSessionSummaryTimelineHealth = z.infer<
+  typeof LiveSessionSummaryTimelineHealthSchema
+>;
+
+export const LiveSessionSummaryResponseSchema = z.object({
+  sessionId: z.string(),
+  generatedAt: isoDateTimeSchema,
+  status: LiveSessionStatusSchema,
+  durationSeconds: z.number().int().nonnegative().nullable(),
+  totalViewers: z.number().int().nonnegative().nullable(),
+  peakViewers: z.number().int().nonnegative().nullable(),
+  totalGifts: z.number().int().nonnegative().nullable(),
+  totalGiftValue: giftValueSchema.nullable(),
+  topMoments: z.array(LiveSessionSummaryTopMomentSchema),
+  topGiftEvents: z.array(LiveSessionSummaryTopGiftEventSchema),
+  topGifters: z.array(LiveSessionSummaryTopGifterSchema),
+  triggerSummary: LiveSessionSummaryTriggerSummarySchema.nullable(),
+  timelineHealth: LiveSessionSummaryTimelineHealthSchema,
+  coachingNotes: z.array(z.string()),
+  complianceWarnings: z.array(z.string()),
+});
+
+export type LiveSessionSummaryResponse = z.infer<typeof LiveSessionSummaryResponseSchema>;

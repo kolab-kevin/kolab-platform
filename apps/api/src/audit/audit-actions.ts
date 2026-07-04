@@ -70,6 +70,8 @@ export const AUDIT_ACTION = {
   LIVE_REPLAY_VIEWED: 'live.replay.viewed',
   LIVE_TRIGGER_ANALYSIS_GENERATED: 'live.trigger_analysis.generated',
   LIVE_TRIGGER_ANALYSIS_VIEWED: 'live.trigger_analysis.viewed',
+  LIVE_SESSION_SUMMARY_GENERATED: 'live.session_summary.generated',
+  LIVE_SESSION_SUMMARY_VIEWED: 'live.session_summary.viewed',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {

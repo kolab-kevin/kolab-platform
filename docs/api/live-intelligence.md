@@ -1,6 +1,6 @@
 # Live Intelligence API
 
-**Status:** Implemented (sessions, schedules, events, gifter profiles, rollups, timeline/replay/highlights, trigger analysis)  
+**Status:** Implemented (sessions, schedules, events, gifter profiles, rollups, timeline/replay/highlights, trigger analysis, session summary)  
 **Base path:** `/api/live`  
 **Auth:** Bearer JWT with active organization context
 
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Live Intelligence APIs manage live sessions, creator live schedules, append-only session event timelines, gifter profile analytics, and timeline replay/highlights. Trigger analysis and AI summaries are planned for later phases.
+Live Intelligence APIs manage live sessions, creator live schedules, append-only session event timelines, gifter profile analytics, timeline replay/highlights, deterministic trigger analysis, and post-live session summaries. AI-generated coaching and real-time streams are planned for later phases.
 
 All routes are organization-scoped. Cross-org resource IDs return `404`.
 
@@ -364,6 +364,54 @@ Audit events: `live.trigger_analysis.generated`, `live.trigger_analysis.viewed`.
 
 ---
 
+## Session summary
+
+Deterministic post-live summary built from session rollups, timeline highlights, gifter session stats, and stored trigger analysis. No external AI calls and no raw chat/transcript output.
+
+| Method | Path                                    | Permission   | Description                      |
+| ------ | --------------------------------------- | ------------ | -------------------------------- |
+| POST   | `/api/live/sessions/:sessionId/summary` | `crm:update` | Generate/replace session summary |
+| GET    | `/api/live/sessions/:sessionId/summary` | `crm:read`   | Read stored session summary      |
+
+Summary is stored on `LiveSession.metadata.liveSummary`. Regenerating replaces the previous snapshot. GET returns `404` when no summary exists.
+
+### Summary fields
+
+- Session rollups: `status`, `durationSeconds`, `totalViewers`, `peakViewers`, `totalGifts`, `totalGiftValue`
+- `topMoments` from deterministic timeline highlights
+- `topGiftEvents` aggregate gift rows only (no message bodies)
+- `topGifters` from `GifterSessionStats` when rollups exist
+- `triggerSummary` when `metadata.triggerAnalysis` is present
+- `timelineHealth` completeness signals
+- `coachingNotes` deterministic, non-AI guidance
+- `complianceWarnings` when timeline/rollup/analysis data is incomplete
+
+```json
+{
+  "sessionId": "clxyz...",
+  "generatedAt": "2026-07-04T21:00:00.000Z",
+  "status": "ENDED",
+  "durationSeconds": 3600,
+  "totalViewers": 500,
+  "peakViewers": 120,
+  "totalGifts": 12,
+  "totalGiftValue": "6500.00",
+  "topMoments": [],
+  "topGiftEvents": [],
+  "topGifters": [],
+  "triggerSummary": null,
+  "timelineHealth": { "...": "..." },
+  "coachingNotes": [
+    "Generate trigger analysis after ingest to enrich post-live coaching insights."
+  ],
+  "complianceWarnings": []
+}
+```
+
+Audit events: `live.session_summary.generated`, `live.session_summary.viewed`.
+
+---
+
 ## Creator live schedules
 
 | Method | Path                              | Permission   | Description     |
@@ -405,10 +453,10 @@ Validation:
 
 ## Planned endpoints (not implemented)
 
-| Area            | Paths                                            |
-| --------------- | ------------------------------------------------ |
-| AI summaries    | `GET /api/live/sessions/:sessionId/summary`      |
-| Real-time coach | `GET /api/live/sessions/:sessionId/coach/stream` |
+| Area                   | Paths                                            |
+| ---------------------- | ------------------------------------------------ |
+| Real-time coach        | `GET /api/live/sessions/:sessionId/coach/stream` |
+| AI narrative summaries | Future AI-enhanced summary layer                 |
 
 ---
 
@@ -430,6 +478,8 @@ Validation:
 | `live.replay.viewed`              | Session replay read        | `live_session`   |
 | `live.trigger_analysis.generated` | Trigger analysis generated | `live_session`   |
 | `live.trigger_analysis.viewed`    | Trigger analysis read      | `live_session`   |
+| `live.session_summary.generated`  | Session summary generated  | `live_session`   |
+| `live.session_summary.viewed`     | Session summary read       | `live_session`   |
 
 ---
 

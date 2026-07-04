@@ -41,6 +41,7 @@ import { LiveIntelligenceService } from './live-intelligence.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
 import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
+import { LiveIntelligenceSessionSummaryService } from './live-intelligence-session-summary.service';
 import { LiveIntelligenceTimelineService } from './live-intelligence-timeline.service';
 import { LiveIntelligenceTriggerAnalysisService } from './live-intelligence-trigger-analysis.service';
 
@@ -55,6 +56,7 @@ export class LiveIntelligenceController {
     private readonly liveIntelligenceGifterRollupsService: LiveIntelligenceGifterRollupsService,
     private readonly liveIntelligenceTimelineService: LiveIntelligenceTimelineService,
     private readonly liveIntelligenceTriggerAnalysisService: LiveIntelligenceTriggerAnalysisService,
+    private readonly liveIntelligenceSessionSummaryService: LiveIntelligenceSessionSummaryService,
   ) {}
 
   @Get('sessions')
@@ -207,6 +209,33 @@ export class LiveIntelligenceController {
     @Param('sessionId') sessionId: string,
   ) {
     return this.liveIntelligenceTriggerAnalysisService.getSessionTriggerAnalysis(user, sessionId);
+  }
+
+  @Post('sessions/:sessionId/summary')
+  @RequirePermissions('crm:update')
+  @ApiOperation({ summary: 'Generate deterministic post-live session summary' })
+  @ApiResponse({
+    status: 201,
+    description: 'Session summary generated and stored on session metadata',
+  })
+  @ApiResponse({ status: 404, description: 'Live session not found' })
+  generateSessionSummary(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.liveIntelligenceSessionSummaryService.generateSessionSummary(user, sessionId);
+  }
+
+  @Get('sessions/:sessionId/summary')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Read stored post-live session summary' })
+  @ApiResponse({ status: 200, description: 'Stored session summary' })
+  @ApiResponse({ status: 404, description: 'Live session or summary not found' })
+  getSessionSummary(
+    @CurrentUser() user: AccessTokenPayload,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.liveIntelligenceSessionSummaryService.getSessionSummary(user, sessionId);
   }
 
   @Get('sessions/:sessionId')

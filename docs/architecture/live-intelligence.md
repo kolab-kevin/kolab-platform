@@ -2,7 +2,7 @@
 
 Architecture for KOLAB Live Intelligence and Gifter Analytics.
 
-**Status:** Partially implemented (sessions, events, gifter rollups, timeline/replay, deterministic trigger analysis)
+**Status:** Partially implemented (sessions, events, gifter rollups, timeline/replay, deterministic trigger analysis, deterministic session summary)
 
 ---
 
@@ -177,12 +177,20 @@ Constraints:
 
 ## Post-live summary
 
-Batch job triggered on `SESSION_ENDED`:
+### Deterministic summary (implemented)
 
-1. Load full timeline + transcript + gifter rollups
-2. Generate structured summary: highlights, top triggers, repeat recommendations
-3. Store `LiveSessionSummary` linked to session
-4. Emit audit event; notify creator portal (future)
+`POST /api/live/sessions/:sessionId/summary` builds a structured summary from:
+
+1. Live session rollup fields
+2. Append-only timeline events and deterministic highlights
+3. Gifter session stats (when rollups exist)
+4. Stored `metadata.triggerAnalysis` (when generated)
+
+Results are stored on `LiveSession.metadata.liveSummary`. Outputs include top moments, top gifts, top gifters, trigger summary, timeline health, deterministic coaching notes, and compliance warnings. No raw chat/transcript text is returned.
+
+### AI-enhanced summary (planned)
+
+Future batch/AI layer may add narrative coaching on top of the deterministic summary without replacing the rule-based foundation.
 
 ---
 
