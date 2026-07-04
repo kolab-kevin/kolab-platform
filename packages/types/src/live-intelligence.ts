@@ -363,11 +363,61 @@ export const GifterProfileListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   platform: LivePlatformSchema.optional(),
   spendingTier: GifterSpendingTierSchema.optional(),
-  favoriteCreatorProfileId: z.string().min(1).optional(),
+  creatorProfileId: z.string().min(1).optional(),
   externalGifterId: z.string().min(1).optional(),
+  search: z.string().trim().min(1).max(255).optional(),
+  lastSeenFrom: isoDateTimeSchema.optional(),
+  lastSeenTo: isoDateTimeSchema.optional(),
 });
 
 export type GifterProfileListQuery = z.infer<typeof GifterProfileListQuerySchema>;
+
+export const FavoriteCreatorSummarySchema = z
+  .object({
+    creatorProfileId: z.string(),
+    displayName: z.string(),
+  })
+  .nullable();
+
+export type FavoriteCreatorSummary = z.infer<typeof FavoriteCreatorSummarySchema>;
+
+export const GifterProfileDetailResponseSchema = z.object({
+  profile: GifterProfileSchema,
+  recentSessionStats: z.array(GifterSessionStatsSchema),
+  favoriteCreator: FavoriteCreatorSummarySchema,
+});
+
+export type GifterProfileDetailResponse = z.infer<typeof GifterProfileDetailResponseSchema>;
+
+export const GifterProfileSessionsQuerySchema = z.object({
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export type GifterProfileSessionsQuery = z.infer<typeof GifterProfileSessionsQuerySchema>;
+
+export const SessionGifterListQuerySchema = z.object({
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  spendingTier: GifterSpendingTierSchema.optional(),
+  platform: LivePlatformSchema.optional(),
+});
+
+export type SessionGifterListQuery = z.infer<typeof SessionGifterListQuerySchema>;
+
+export const SessionGifterItemSchema = z.object({
+  profile: GifterProfileSchema,
+  sessionStats: GifterSessionStatsSchema,
+});
+
+export type SessionGifterItem = z.infer<typeof SessionGifterItemSchema>;
+
+export const ListSessionGiftersResponseSchema = z.object({
+  items: z.array(SessionGifterItemSchema),
+  nextCursor: z.string().nullable(),
+});
+
+export type ListSessionGiftersResponse = z.infer<typeof ListSessionGiftersResponseSchema>;
 
 export const ListGifterProfilesResponseSchema = z.object({
   items: z.array(GifterProfileSchema),

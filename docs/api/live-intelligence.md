@@ -1,6 +1,6 @@
 # Live Intelligence API
 
-**Status:** Implemented (sessions, schedules, event ingest + timeline read)  
+**Status:** Implemented (sessions, schedules, events, gifter profile read APIs)  
 **Base path:** `/api/live`  
 **Auth:** Bearer JWT with active organization context
 
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Live Intelligence APIs manage live sessions, creator live schedules, append-only session event timelines, and (schema only) persistent gifter profiles. Gifter profile APIs, trigger analytics, and AI summaries are planned for later phases.
+Live Intelligence APIs manage live sessions, creator live schedules, append-only session event timelines, and read-only gifter profile analytics. Trigger analysis and AI summaries are planned for later phases.
 
 All routes are organization-scoped. Cross-org resource IDs return `404`.
 
@@ -16,10 +16,10 @@ All routes are organization-scoped. Cross-org resource IDs return `404`.
 
 ## Permissions
 
-| Permission   | Used for                                             |
-| ------------ | ---------------------------------------------------- |
-| `crm:read`   | List/get sessions, schedules, and session timelines  |
-| `crm:update` | Create/update sessions, schedules, and ingest events |
+| Permission   | Used for                                                  |
+| ------------ | --------------------------------------------------------- |
+| `crm:read`   | List/get sessions, schedules, events, and gifter profiles |
+| `crm:update` | Create/update sessions, schedules, and ingest events      |
 
 | Role             | Read | Update |
 | ---------------- | ---- | ------ |
@@ -166,6 +166,66 @@ Results are ordered by `occurredAt`, then `offsetMs`, then `id` ascending for re
 
 ---
 
+## Gifter profiles
+
+Read-only APIs for persistent gifter identity and per-session rollups. Responses include **aggregate fields only** — no raw chat or transcript content.
+
+| Method | Path                                    | Permission | Description                              |
+| ------ | --------------------------------------- | ---------- | ---------------------------------------- |
+| GET    | `/api/live/gifters`                     | `crm:read` | List gifter profiles (filter, cursor)    |
+| GET    | `/api/live/gifters/:gifterId`           | `crm:read` | Profile detail with recent session stats |
+| GET    | `/api/live/gifters/:gifterId/sessions`  | `crm:read` | Paginated per-session stats for a gifter |
+| GET    | `/api/live/sessions/:sessionId/gifters` | `crm:read` | Gifters and stats for a live session     |
+
+### Gifter list query parameters
+
+| Param              | Type     | Description                               |
+| ------------------ | -------- | ----------------------------------------- |
+| `cursor`           | string   | Pagination cursor                         |
+| `limit`            | number   | Max 100, default 20                       |
+| `platform`         | enum     | `LivePlatform`                            |
+| `spendingTier`     | enum     | `GifterSpendingTier`                      |
+| `creatorProfileId` | string   | Favorite creator or session participation |
+| `externalGifterId` | string   | Exact platform gifter ID                  |
+| `search`           | string   | Case-insensitive `displayName` search     |
+| `lastSeenFrom`     | datetime | Minimum `lastSeenAt`                      |
+| `lastSeenTo`       | datetime | Maximum `lastSeenAt`                      |
+
+### Gifter detail response
+
+```json
+{
+  "profile": { "...": "GifterProfile" },
+  "recentSessionStats": [{ "...": "GifterSessionStats" }],
+  "favoriteCreator": {
+    "creatorProfileId": "clxyz...",
+    "displayName": "Star Creator"
+  }
+}
+```
+
+Detail access emits audit event `live.gifter_profile.viewed`.
+
+### Session gifters response
+
+Each item pairs the gifter profile with that session's rollup stats:
+
+```json
+{
+  "items": [
+    {
+      "profile": { "...": "GifterProfile" },
+      "sessionStats": { "...": "GifterSessionStats" }
+    }
+  ],
+  "nextCursor": null
+}
+```
+
+> **Privacy:** Gifter profiles contain platform IDs and display names. Treat as PII with RBAC, retention limits, and erasure support. API responses strip chat/transcript-like metadata keys and never expose message bodies — see [Database ERD](../database/live-intelligence-erd.md#gifter-privacy-and-compliance).
+
+---
+
 ## Creator live schedules
 
 | Method | Path                              | Permission   | Description     |
@@ -207,39 +267,27 @@ Validation:
 
 ## Planned endpoints (not implemented)
 
-| Area            | Paths                                                |
-| --------------- | ---------------------------------------------------- |
-| Gifter profiles | `GET /api/live/gifters`, `GET /api/live/gifters/:id` |
-| Session gifters | `GET /api/live/sessions/:sessionId/gifters`          |
-| Timeline merge  | `GET /api/live/sessions/:sessionId/timeline`         |
-| AI summaries    | `GET /api/live/sessions/:sessionId/summary`          |
-| Real-time coach | `GET /api/live/sessions/:sessionId/coach/stream`     |
-
-### Gifter profile model (schema implemented)
-
-Persistent gifter identity keyed by `(organizationId, platform, externalGifterId)`. Per-session rollups live in `gifter_session_stats`. Profiles store aggregate gift metrics and derived JSON placeholders only — **no chat or transcript content**.
-
-| Model                | Purpose                                                                                              |
-| -------------------- | ---------------------------------------------------------------------------------------------------- |
-| `GifterProfile`      | Cross-session identity, spending tier, favorites, `triggerProfile` / `retentionProfile` placeholders |
-| `GifterSessionStats` | Per-session gift counts/values and `chatMessageCount` (count only)                                   |
-
-> **Privacy:** Gifter profiles contain platform IDs and display names. Treat as PII with RBAC, retention limits, and erasure/anonymization support. Do not copy raw chat or transcript text from `live_events` into profile rows — see [Database ERD](../database/live-intelligence-erd.md#gifter-privacy-and-compliance).
+| Area            | Paths                                            |
+| --------------- | ------------------------------------------------ |
+| Timeline merge  | `GET /api/live/sessions/:sessionId/timeline`     |
+| AI summaries    | `GET /api/live/sessions/:sessionId/summary`      |
+| Real-time coach | `GET /api/live/sessions/:sessionId/coach/stream` |
 
 ---
 
 ## Audit events
 
-| Action                        | When                  | Target type     |
-| ----------------------------- | --------------------- | --------------- |
-| `live.session.created`        | Session created       | `live_session`  |
-| `live.session.updated`        | Session updated       | `live_session`  |
-| `live.session.status_changed` | Status transition     | `live_session`  |
-| `live.schedule.created`       | Schedule created      | `live_schedule` |
-| `live.schedule.updated`       | Schedule updated      | `live_schedule` |
-| `live.schedule.deleted`       | Schedule deleted      | `live_schedule` |
-| `live.event.ingested`         | Event ingested        | `live_event`    |
-| `live.event.batch_ingested`   | Batch ingest complete | `live_session`  |
+| Action                        | When                       | Target type      |
+| ----------------------------- | -------------------------- | ---------------- |
+| `live.session.created`        | Session created            | `live_session`   |
+| `live.session.updated`        | Session updated            | `live_session`   |
+| `live.session.status_changed` | Status transition          | `live_session`   |
+| `live.schedule.created`       | Schedule created           | `live_schedule`  |
+| `live.schedule.updated`       | Schedule updated           | `live_schedule`  |
+| `live.schedule.deleted`       | Schedule deleted           | `live_schedule`  |
+| `live.event.ingested`         | Event ingested             | `live_event`     |
+| `live.event.batch_ingested`   | Batch ingest complete      | `live_session`   |
+| `live.gifter_profile.viewed`  | Gifter profile detail read | `gifter_profile` |
 
 ---
 
