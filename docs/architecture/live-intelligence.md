@@ -2,7 +2,7 @@
 
 Architecture for KOLAB Live Intelligence and Gifter Analytics.
 
-**Status:** Partially implemented (sessions, events, gifter read APIs, gifter rollups)
+**Status:** Partially implemented (sessions, events, gifter rollups, timeline/replay, deterministic trigger analysis)
 
 ---
 
@@ -116,7 +116,19 @@ Timeline API merges events by `occurredAt` with stable tie-breaking on `id`.
 
 ## Gift trigger analysis approach
 
-### Detection pipeline (planned)
+### Deterministic analysis (implemented)
+
+`POST /api/live/sessions/:sessionId/analysis/triggers` scans the append-only timeline and stores results in `LiveSession.metadata.triggerAnalysis`. Original `LiveEvent` rows are never mutated.
+
+Rules v1 use fixed 30s offset windows after anchor events (song, dance, performance, PK, creator acknowledgement markers) plus gift spike and high-value gift detection. Each item includes:
+
+- `confidenceScore` (0.0–1.0) from deterministic heuristics
+- `relatedEventIds` / `evidence` linking anchor and gift events
+- Fixed disclaimer: patterns are correlational, not causal
+
+`GET /api/live/sessions/:sessionId/analysis/triggers` reads the stored snapshot. Regenerating replaces the prior analysis (idempotent storage key).
+
+### AI-assisted analysis (planned)
 
 1. **Windowing** — Sliding windows (e.g. 30s, 60s, 120s) before each gift or gift cluster
 2. **Feature extraction** — Recent event types, transcript keywords, performance tags, PK state

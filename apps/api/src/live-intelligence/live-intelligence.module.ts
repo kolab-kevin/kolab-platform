@@ -7,6 +7,7 @@ import { LiveIntelligenceEventsService } from './live-intelligence-events.servic
 import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
 import { LiveIntelligenceTimelineService } from './live-intelligence-timeline.service';
+import { LiveIntelligenceTriggerAnalysisService } from './live-intelligence-trigger-analysis.service';
 
 @Module({
   imports: [AuditModule],
@@ -17,6 +18,7 @@ import { LiveIntelligenceTimelineService } from './live-intelligence-timeline.se
     LiveIntelligenceGiftersService,
     LiveIntelligenceGifterRollupsService,
     LiveIntelligenceTimelineService,
+    LiveIntelligenceTriggerAnalysisService,
   ],
   exports: [
     LiveIntelligenceService,
@@ -24,6 +26,7 @@ import { LiveIntelligenceTimelineService } from './live-intelligence-timeline.se
     LiveIntelligenceGiftersService,
     LiveIntelligenceGifterRollupsService,
     LiveIntelligenceTimelineService,
+    LiveIntelligenceTriggerAnalysisService,
   ],
 })
 export class LiveIntelligenceModule {}

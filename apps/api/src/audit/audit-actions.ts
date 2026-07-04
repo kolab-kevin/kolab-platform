@@ -68,6 +68,8 @@ export const AUDIT_ACTION = {
   LIVE_GIFTER_ROLLUP_PROCESSED: 'live.gifter_rollup.processed',
   LIVE_TIMELINE_VIEWED: 'live.timeline.viewed',
   LIVE_REPLAY_VIEWED: 'live.replay.viewed',
+  LIVE_TRIGGER_ANALYSIS_GENERATED: 'live.trigger_analysis.generated',
+  LIVE_TRIGGER_ANALYSIS_VIEWED: 'live.trigger_analysis.viewed',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {

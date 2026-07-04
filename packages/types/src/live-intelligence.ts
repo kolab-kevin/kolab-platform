@@ -538,3 +538,54 @@ export const SessionHighlightsResponseSchema = z.object({
 });
 
 export type SessionHighlightsResponse = z.infer<typeof SessionHighlightsResponseSchema>;
+
+export const TriggerAnalysisTypeSchema = z.enum([
+  'SONG_STARTED_GIFTS',
+  'DANCE_MOMENT_GIFTS',
+  'PERFORMANCE_MOMENT_GIFTS',
+  'PK_STARTED_GIFTS',
+  'ACTOR_ACKNOWLEDGEMENT_GIFTS',
+  'GIFT_SPIKE',
+  'HIGH_VALUE_GIFT',
+]);
+
+export type TriggerAnalysisType = z.infer<typeof TriggerAnalysisTypeSchema>;
+
+export const TriggerAnalysisItemSchema = z.object({
+  id: z.string(),
+  triggerType: TriggerAnalysisTypeSchema,
+  label: z.string(),
+  windowStartOffsetMs: z.number().int().nonnegative(),
+  windowEndOffsetMs: z.number().int().nonnegative(),
+  relatedEventIds: z.array(z.string()),
+  giftCount: z.number().int().nonnegative(),
+  giftValue: z.number().nonnegative(),
+  viewerDelta: z.number().int().nullable(),
+  confidenceScore: z.number().min(0).max(1),
+  evidence: metadataSchema,
+  disclaimer: z.string(),
+});
+
+export type TriggerAnalysisItem = z.infer<typeof TriggerAnalysisItemSchema>;
+
+export const TriggerAnalysisSummarySchema = z.object({
+  totalTriggers: z.number().int().nonnegative(),
+  topTriggerTypes: z.array(
+    z.object({
+      triggerType: TriggerAnalysisTypeSchema,
+      count: z.number().int().nonnegative(),
+    }),
+  ),
+  totalGiftValueAttributed: z.number().nonnegative(),
+  generatedAt: isoDateTimeSchema,
+});
+
+export type TriggerAnalysisSummary = z.infer<typeof TriggerAnalysisSummarySchema>;
+
+export const SessionTriggerAnalysisResponseSchema = z.object({
+  liveSessionId: z.string(),
+  summary: TriggerAnalysisSummarySchema,
+  items: z.array(TriggerAnalysisItemSchema),
+});
+
+export type SessionTriggerAnalysisResponse = z.infer<typeof SessionTriggerAnalysisResponseSchema>;

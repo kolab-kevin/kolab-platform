@@ -4,15 +4,16 @@ Every pull request to `main` or `develop` must pass all quality gates before mer
 
 ## Gate summary
 
-| Gate              | Local command         | CI job                 | Blocks merge |
-| ----------------- | --------------------- | ---------------------- | ------------ |
-| Backend platform  | `pnpm ci:backend`     | Lint, Test, Build      | Yes          |
-| Security audit    | `pnpm audit:ci`       | Security audit         | Yes          |
-| License check     | `pnpm check:licenses` | Security audit         | Yes          |
-| Cycle check       | `pnpm check:cycles`   | Security audit         | Yes          |
-| Docker build      | —                     | Docker build           | Yes          |
-| Dependency review | —                     | dependency-review (PR) | Yes          |
-| Aggregate gate    | —                     | Quality gate           | Yes          |
+| Gate                            | Local command         | CI job                 | Blocks merge |
+| ------------------------------- | --------------------- | ---------------------- | ------------ |
+| Backend platform                | `pnpm ci:backend`     | Lint, Test, Build      | Yes          |
+| Backend verify (local workflow) | `pnpm verify:backend` | —                      | No           |
+| Security audit                  | `pnpm audit:ci`       | Security audit         | Yes          |
+| License check                   | `pnpm check:licenses` | Security audit         | Yes          |
+| Cycle check                     | `pnpm check:cycles`   | Security audit         | Yes          |
+| Docker build                    | —                     | Docker build           | Yes          |
+| Dependency review               | —                     | dependency-review (PR) | Yes          |
+| Aggregate gate                  | —                     | Quality gate           | Yes          |
 
 Branch protection requires these GitHub check names: **Lint**, **Test**, **Build**, **Docker build**, and **Quality gate**.
 
@@ -43,6 +44,14 @@ Run the backend gate before opening a PR:
 ```bash
 pnpm ci:backend
 ```
+
+For day-to-day feature work on Windows, use the workflow scripts documented in [Developer workflow](./developer-workflow.md):
+
+```bash
+pnpm verify:backend
+```
+
+`pnpm verify:backend` runs the core backend checks used during feature development (Prisma validate/generate, types build, auth/storage/api tests, API lint, docs markdownlint). `pnpm ci:backend` remains the closest local mirror of CI and additionally builds shared packages such as `@kolab/config`.
 
 Run the broader repo validation when touching frontend or shared formatting:
 
@@ -98,7 +107,7 @@ Commit messages are validated by Commitlint via the `commit-msg` hook.
 
 Use the [PR template](../../.github/pull_request_template.md):
 
-- [ ] `pnpm ci:backend` passes locally
+- [ ] `pnpm ci:backend` or `pnpm verify:backend` passes locally
 - [ ] Conventional Commits used
 - [ ] Branch follows naming convention
 - [ ] Documentation updated if needed
@@ -118,6 +127,7 @@ Use the [PR template](../../.github/pull_request_template.md):
 
 ## Related docs
 
+- [Developer workflow](./developer-workflow.md)
 - [Onboarding](./onboarding.md)
 - [Turbo remote cache](./turbo-remote-cache.md)
 - [Security](../security/README.md)
