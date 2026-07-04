@@ -449,3 +449,46 @@ export const UpdateCampaignCreatorDeliverableStatusSchema = z
 export type UpdateCampaignCreatorDeliverableStatusInput = z.infer<
   typeof UpdateCampaignCreatorDeliverableStatusSchema
 >;
+
+export const CampaignCreatorMatchBandSchema = z.enum([
+  'STRONG_MATCH',
+  'GOOD_MATCH',
+  'POSSIBLE_MATCH',
+  'WEAK_MATCH',
+  'NOT_RECOMMENDED',
+]);
+
+export type CampaignCreatorMatchBand = z.infer<typeof CampaignCreatorMatchBandSchema>;
+
+export const CampaignCreatorMatchPerformanceSummarySchema = z.object({
+  overallScore: z.number().int().min(0).max(100),
+  scoreBand: z.string(),
+});
+
+export type CampaignCreatorMatchPerformanceSummary = z.infer<
+  typeof CampaignCreatorMatchPerformanceSummarySchema
+>;
+
+export const CampaignCreatorMatchSchema = z.object({
+  creatorProfileId: z.string(),
+  displayName: z.string().nullable(),
+  score: z.number().int().min(0).max(100),
+  recommendationBand: CampaignCreatorMatchBandSchema,
+  reasons: z.array(z.string()),
+  risks: z.array(z.string()),
+  missingData: z.array(z.string()),
+  relevantPlatforms: z.array(z.string()),
+  relevantSkills: z.array(z.string()),
+  performanceScoreSummary: CampaignCreatorMatchPerformanceSummarySchema.nullable(),
+});
+
+export type CampaignCreatorMatch = z.infer<typeof CampaignCreatorMatchSchema>;
+
+export const CampaignCreatorMatchesSnapshotSchema = z.object({
+  campaignId: z.string(),
+  generatedAt: isoDateTimeSchema,
+  totalCandidates: z.number().int().nonnegative(),
+  matches: z.array(CampaignCreatorMatchSchema),
+});
+
+export type CampaignCreatorMatchesSnapshot = z.infer<typeof CampaignCreatorMatchesSnapshotSchema>;

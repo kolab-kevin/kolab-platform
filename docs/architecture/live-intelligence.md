@@ -294,6 +294,16 @@ Audit events: `creator.performance_score.generated`, `creator.performance_score.
 
 ---
 
+## Campaign creator matching
+
+`POST /api/campaigns/:campaignId/matches` produces deterministic creator recommendations for a campaign using stored creator performance scores, skills, availability, compliance signals, campaign requirements, platform accounts, and live trend direction.
+
+Results are stored on `Campaign.metadata.creatorMatches`. The matcher is deterministic v1 — no external AI calls, no automatic assignments, and all reasons use correlational language. Non-compliant creators are strongly penalized; creators already actively assigned to the campaign are excluded.
+
+Audit events: `campaign.creator_matches.generated`, `campaign.creator_matches.viewed`.
+
+---
+
 ## Agency-level analytics
 
 Read models (materialized views or nightly rollups):

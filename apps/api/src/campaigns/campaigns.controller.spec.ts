@@ -7,6 +7,7 @@ import { PermissionsGuard } from '../common/guards/permissions.guard';
 import { CampaignsController } from './campaigns.controller';
 import { CampaignsService } from './campaigns.service';
 import { CampaignsAssignmentsService } from './campaigns-assignments.service';
+import { CampaignsCreatorMatchingService } from './campaigns-creator-matching.service';
 
 describe('CampaignsController authorization', () => {
   let permissionsGuard: PermissionsGuard;
@@ -50,6 +51,13 @@ describe('CampaignsController authorization', () => {
             createCreatorDeliverable: jest.fn(),
             updateCreatorDeliverable: jest.fn(),
             updateCreatorDeliverableStatus: jest.fn(),
+          },
+        },
+        {
+          provide: CampaignsCreatorMatchingService,
+          useValue: {
+            generateCampaignCreatorMatches: jest.fn(),
+            getCampaignCreatorMatches: jest.fn(),
           },
         },
       ],
@@ -165,5 +173,37 @@ describe('CampaignsController authorization', () => {
     expect(
       permissionsGuard.canActivate(createContext('updateAssignmentStatus', recruiterUser)),
     ).toBe(true);
+  });
+
+  it('allows recruiters to generate campaign creator matches with crm:update', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(
+      permissionsGuard.canActivate(createContext('generateCampaignCreatorMatches', recruiterUser)),
+    ).toBe(true);
+  });
+
+  it('allows recruiters to read campaign creator matches with crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(
+      permissionsGuard.canActivate(createContext('getCampaignCreatorMatches', recruiterUser)),
+    ).toBe(true);
+  });
+
+  it('denies viewers from generating campaign creator matches', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:update']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('generateCampaignCreatorMatches', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('denies viewers from reading campaign creator matches', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('getCampaignCreatorMatches', viewerUser)),
+    ).toThrow(ForbiddenException);
   });
 });

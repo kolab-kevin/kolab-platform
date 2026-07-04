@@ -56,6 +56,8 @@ export const AUDIT_ACTION = {
   CAMPAIGN_CREATOR_DELIVERABLE_CREATED: 'campaign.creator_deliverable.created',
   CAMPAIGN_CREATOR_DELIVERABLE_UPDATED: 'campaign.creator_deliverable.updated',
   CAMPAIGN_CREATOR_DELIVERABLE_STATUS_CHANGED: 'campaign.creator_deliverable.status_changed',
+  CAMPAIGN_CREATOR_MATCHES_GENERATED: 'campaign.creator_matches.generated',
+  CAMPAIGN_CREATOR_MATCHES_VIEWED: 'campaign.creator_matches.viewed',
   LIVE_SESSION_CREATED: 'live.session.created',
   LIVE_SESSION_UPDATED: 'live.session.updated',
   LIVE_SESSION_STATUS_CHANGED: 'live.session.status_changed',
