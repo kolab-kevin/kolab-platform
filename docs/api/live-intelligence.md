@@ -1,6 +1,6 @@
 # Live Intelligence API
 
-**Status:** Implemented (sessions, schedules, events, gifter profile read APIs)  
+**Status:** Implemented (sessions, schedules, events, gifter profiles, rollups, timeline/replay/highlights)  
 **Base path:** `/api/live`  
 **Auth:** Bearer JWT with active organization context
 
@@ -8,7 +8,7 @@
 
 ## Overview
 
-Live Intelligence APIs manage live sessions, creator live schedules, append-only session event timelines, and read-only gifter profile analytics. Trigger analysis and AI summaries are planned for later phases.
+Live Intelligence APIs manage live sessions, creator live schedules, append-only session event timelines, gifter profile analytics, and timeline replay/highlights. Trigger analysis and AI summaries are planned for later phases.
 
 All routes are organization-scoped. Cross-org resource IDs return `404`.
 
@@ -261,6 +261,67 @@ Rollup processing emits audit event `live.gifter_rollup.processed`. Chat message
 
 ---
 
+## Timeline, replay, and highlights
+
+Read-only reconstruction APIs over append-only `LiveEvent` rows. No mutation or editing.
+
+| Method | Path                                       | Permission | Description                         |
+| ------ | ------------------------------------------ | ---------- | ----------------------------------- |
+| GET    | `/api/live/sessions/:sessionId/timeline`   | `crm:read` | Chronological timeline with filters |
+| GET    | `/api/live/sessions/:sessionId/replay`     | `crm:read` | Offset-grouped replay segments      |
+| GET    | `/api/live/sessions/:sessionId/highlights` | `crm:read` | Deterministic highlight moments     |
+
+### Timeline query parameters
+
+| Param          | Type   | Description                        |
+| -------------- | ------ | ---------------------------------- |
+| `cursor`       | string | Pagination cursor                  |
+| `limit`        | number | Max 500, default 100               |
+| `eventType`    | enum   | Filter by `LiveEventType`          |
+| `actorId`      | string | Filter by platform actor/gifter ID |
+| `fromOffsetMs` | number | Minimum `offsetMs`                 |
+| `toOffsetMs`   | number | Maximum `offsetMs`                 |
+
+Timeline results are ordered by `occurredAt`, then `offsetMs`, then `id` ascending. Timeline access emits audit event `live.timeline.viewed`.
+
+### Replay response
+
+Events are grouped into 60-second offset segments without reordering events inside each segment:
+
+```json
+{
+  "liveSessionId": "clxyz...",
+  "segmentDurationMs": 60000,
+  "segments": [
+    {
+      "startOffsetMs": 0,
+      "endOffsetMs": 59999,
+      "eventCount": 12,
+      "dominantEventType": "CHAT_MESSAGE",
+      "viewerActivity": { "joins": 4, "leaves": 1 },
+      "giftActivity": { "giftCount": 3, "giftValue": 450 },
+      "events": [{ "...": "LiveEvent" }]
+    }
+  ]
+}
+```
+
+Replay access emits audit event `live.replay.viewed`.
+
+### Highlights rules (deterministic, no AI)
+
+| Highlight type                      | Rule                                       |
+| ----------------------------------- | ------------------------------------------ |
+| `SESSION_STARTED` / `SESSION_ENDED` | Matching lifecycle events                  |
+| `PK_STARTED` / `PK_ENDED`           | Matching PK events                         |
+| `SONG_STARTED` / `SONG_ENDED`       | Matching song events                       |
+| `PERFORMANCE_MOMENT`                | Matching performance tags                  |
+| `HIGH_VALUE_GIFT`                   | `GIFT_RECEIVED` with value ≥ 1,000         |
+| `GIFT_SPIKE`                        | ≥ 3 gifts within 30s offset window         |
+| `VIEWER_SPIKE`                      | ≥ 10 viewer joins within 60s offset window |
+
+---
+
 ## Creator live schedules
 
 | Method | Path                              | Permission   | Description     |
@@ -304,7 +365,6 @@ Validation:
 
 | Area            | Paths                                            |
 | --------------- | ------------------------------------------------ |
-| Timeline merge  | `GET /api/live/sessions/:sessionId/timeline`     |
 | AI summaries    | `GET /api/live/sessions/:sessionId/summary`      |
 | Real-time coach | `GET /api/live/sessions/:sessionId/coach/stream` |
 
@@ -324,6 +384,8 @@ Validation:
 | `live.event.batch_ingested`    | Batch ingest complete      | `live_session`   |
 | `live.gifter_profile.viewed`   | Gifter profile detail read | `gifter_profile` |
 | `live.gifter_rollup.processed` | Gifter rollup job complete | `live_session`   |
+| `live.timeline.viewed`         | Session timeline read      | `live_session`   |
+| `live.replay.viewed`           | Session replay read        | `live_session`   |
 
 ---
 
