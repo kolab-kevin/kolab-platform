@@ -6,6 +6,7 @@ import { LiveIntelligenceService } from './live-intelligence.service';
 import { LiveIntelligenceEventsService } from './live-intelligence-events.service';
 import { LiveIntelligenceGifterRollupsService } from './live-intelligence-gifter-rollups.service';
 import { LiveIntelligenceGiftersService } from './live-intelligence-gifters.service';
+import { LiveIntelligenceSessionSummaryService } from './live-intelligence-session-summary.service';
 import { LiveIntelligenceTimelineService } from './live-intelligence-timeline.service';
 import { LiveIntelligenceTriggerAnalysisService } from './live-intelligence-trigger-analysis.service';
 
@@ -19,6 +20,7 @@ import { LiveIntelligenceTriggerAnalysisService } from './live-intelligence-trig
     LiveIntelligenceGifterRollupsService,
     LiveIntelligenceTimelineService,
     LiveIntelligenceTriggerAnalysisService,
+    LiveIntelligenceSessionSummaryService,
   ],
   exports: [
     LiveIntelligenceService,
@@ -27,6 +29,7 @@ import { LiveIntelligenceTriggerAnalysisService } from './live-intelligence-trig
     LiveIntelligenceGifterRollupsService,
     LiveIntelligenceTimelineService,
     LiveIntelligenceTriggerAnalysisService,
+    LiveIntelligenceSessionSummaryService,
   ],
 })
 export class LiveIntelligenceModule {}
