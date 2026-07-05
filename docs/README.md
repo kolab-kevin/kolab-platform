@@ -9,9 +9,9 @@ Central index for product, engineering, and operations documentation. For long-t
 | Field                          | Value                                                                                      |
 | ------------------------------ | ------------------------------------------------------------------------------------------ |
 | **Current Version**            | v0.6 — Creator Intelligence                                                                |
-| **Current Milestone**          | Roadmap freeze v1.0 — strategic documentation complete                                     |
+| **Current Milestone**          | v0.7 Creator Studio — architecture approved, implementation starting                       |
 | **Current Product Focus**      | [Creator Studio](./roadmap/master-roadmap.md#creator-studio) (v0.7)                        |
-| **Current Development Branch** | `feature/master-roadmap` → next: Creator Studio implementation                             |
+| **Current Development Branch** | `feature/creator-studio-architecture` → Creator Studio implementation                      |
 | **Platform Maturity**          | See [Platform Maturity Dashboard](./roadmap/master-roadmap.md#platform-maturity-dashboard) |
 
 ### Operational references
@@ -39,6 +39,8 @@ Central index for product, engineering, and operations documentation. For long-t
 | **Business**     | [Risk Register](./business/risk-register.md)                 | Strategic and technical risk tracking                      |
 | **Architecture** | [System Map](./architecture/system-map.md)                   | Platform layers and relationships                          |
 | **Architecture** | [Decision Log](./architecture/decision-log.md)               | Major architectural decisions (ADR)                        |
+| **Architecture** | [Creator Studio](./architecture/creator-studio.md)           | Creator portal frontend architecture                       |
+| **Design**       | [Creator Studio UX](./design/creator-studio-ux.md)           | UX principles and module patterns                          |
 | **Architecture** | [Event Taxonomy](./architecture/event-taxonomy.md)           | Canonical platform event classification                    |
 
 ---
@@ -74,6 +76,7 @@ Central index for product, engineering, and operations documentation. For long-t
 - [Recruitment CRM](./architecture/recruitment-crm.md)
 - [Creator Documents & Contracts](./architecture/creator-documents-contracts.md)
 - [Live Intelligence](./architecture/live-intelligence.md)
+- [Creator Studio](./architecture/creator-studio.md)
 - [Token Economy](./architecture/token-economy.md)
 - [Decision Log](./architecture/decision-log.md)
 - [Event Taxonomy](./architecture/event-taxonomy.md)
@@ -123,7 +126,14 @@ Central index for product, engineering, and operations documentation. For long-t
 - [Recruitment CRM](./product/recruitment-crm.md)
 - [Creator Documents & Contracts](./product/creator-documents-contracts.md)
 - [Live Intelligence](./product/live-intelligence.md)
+- [Creator Studio](./product/creator-studio.md)
 - [Token Economy](./product/token-economy.md)
+
+---
+
+## Design
+
+- [Creator Studio UX](./design/creator-studio-ux.md)
 
 ---
 
@@ -139,6 +149,7 @@ Central index for product, engineering, and operations documentation. For long-t
 ## How to use this hub
 
 1. **Planning a feature** — [Product Principles](./vision/product-principles.md) → [Master Roadmap](./roadmap/master-roadmap.md) → [Developer Workflow](./engineering/developer-workflow.md).
-2. **Understanding the platform** — [System Map](./architecture/system-map.md) → [Architecture overview](./architecture/README.md).
-3. **Shipping API work** — [API index](./api/README.md) → [Backend standards](./engineering/backend-standards.md).
-4. **Strategic reviews** — [Platform Maturity Dashboard](./roadmap/master-roadmap.md#platform-maturity-dashboard) → [Business Model](./business/business-model.md).
+2. **Building Creator Studio** — [Product brief](./product/creator-studio.md) → [Architecture](./architecture/creator-studio.md) → [UX](./design/creator-studio-ux.md).
+3. **Understanding the platform** — [System Map](./architecture/system-map.md) → [Architecture overview](./architecture/README.md).
+4. **Shipping API work** — [API index](./api/README.md) → [Backend standards](./engineering/backend-standards.md).
+5. **Strategic reviews** — [Platform Maturity Dashboard](./roadmap/master-roadmap.md#platform-maturity-dashboard) → [Business Model](./business/business-model.md).

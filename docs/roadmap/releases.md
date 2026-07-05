@@ -103,11 +103,15 @@
 
 **Objectives:** Deliver the primary creator-facing surface backed by existing APIs.
 
-**Major capabilities:** Creator portal UX for dashboard, goals, live schedule, campaigns, compliance, coaching summaries.
+**Major capabilities:** Creator portal UX for dashboard, goals, live schedule, campaigns, compliance, coaching summaries. Web-first in `apps/creator-portal`; desktop wrapper deferred to CS-09 / v0.9.
 
-**Success criteria:** Creators complete daily workflows without admin API; dashboard p95 within SLA; mobile-responsive core flows.
+**Success criteria:** Creators complete daily workflows without admin API; dashboard p95 within SLA; mobile-responsive core flows; no client-side score recomputation.
 
 **Dependencies:** v0.6 Creator Intelligence (dashboard and goals APIs). **Current primary development focus.**
+
+**Documentation:** [Product brief](../product/creator-studio.md) · [Architecture](../architecture/creator-studio.md) · [UX](../design/creator-studio-ux.md)
+
+**Implementation phases:** CS-01 Shell → CS-02 Dashboard → CS-03 Goals/performance → CS-04 Campaigns → CS-05 Coach → CS-06 Live → CS-07 Replay/gifters → CS-08 Settings → CS-09 OBS foundation (after web validation).
 
 ---
 

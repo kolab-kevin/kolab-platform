@@ -70,13 +70,13 @@ flowchart TB
 
 ## Client surfaces
 
-| Surface                     | Role                                   | Maturity                     |
-| --------------------------- | -------------------------------------- | ---------------------------- |
-| **Creator Studio**          | Creator home — goals, dashboard, coach | L3 aggregation ✅ · L4 UI 🚧 |
-| **Manager Portal**          | Agency portfolio and campaign command  | 📋 Planned                   |
-| **Web / Admin**             | Internal ops, configuration, reporting | Shell ✅                     |
-| **Mobile**                  | Creator alerts, lightweight dashboard  | 📋 Planned                   |
-| **Live Studio (OBS Layer)** | Capture + intelligence overlays        | 📋 Planned                   |
+| Surface                     | Role                                   | Maturity           |
+| --------------------------- | -------------------------------------- | ------------------ |
+| **Creator Studio**          | Creator home — goals, dashboard, coach | Web UI 🚧 · API ✅ |
+| **Manager Portal**          | Agency portfolio and campaign command  | 📋 Planned         |
+| **Web / Admin**             | Internal ops, configuration, reporting | Shell ✅           |
+| **Mobile**                  | Creator alerts, lightweight dashboard  | 📋 Planned         |
+| **Live Studio (OBS Layer)** | Capture + intelligence overlays        | 📋 Planned         |
 
 ```mermaid
 flowchart LR
@@ -364,18 +364,53 @@ flowchart LR
 
 ---
 
+## Creator Studio
+
+Creator Studio is the **experience layer** that consumes the creator intelligence stack. It does not own business logic.
+
+```mermaid
+flowchart TB
+  subgraph studio [Creator Studio — apps/creator-portal]
+    WEB[Web App Phase 1]
+    DESK[Desktop Wrapper CS-09]
+    OBS_LINK[Live Studio Deep Link v0.9]
+  end
+  subgraph apis [API consumption]
+    DASH[GET /creators/:id/dashboard]
+    GOALS[Goals endpoints]
+    LIVE[Live intelligence]
+    CAM[Campaigns]
+  end
+  WEB --> DASH
+  WEB --> GOALS
+  WEB --> LIVE
+  WEB --> CAM
+  DESK --> WEB
+  WEB --> OBS_LINK
+```
+
+| Delivery track           | Timing           | Notes                                                              |
+| ------------------------ | ---------------- | ------------------------------------------------------------------ |
+| **Web**                  | v0.7 CS-01–CS-08 | Primary daily workspace                                            |
+| **Desktop wrapper**      | CS-09 / v0.9     | Tauri preferred over Electron unless OBS plugins require otherwise |
+| **OBS / browser source** | v0.9+            | After web workspace proves utility                                 |
+
+**Docs:** [Creator Studio architecture](./creator-studio.md) · [Product brief](../product/creator-studio.md) · [UX](../design/creator-studio-ux.md)
+
+---
+
 ## Future product surfaces
 
-| Surface                | Consumes                                         | Status            |
-| ---------------------- | ------------------------------------------------ | ----------------- |
-| **Creator Studio**     | Dashboard, goals, live activity, coach           | API foundation ✅ |
-| **Manager Portal**     | Portfolio CRM, campaigns, matching, analytics    | 📋 Planned        |
-| **Live Studio**        | Streaming, schedules, live intelligence overlays | 📋 Planned        |
-| **Analytics Platform** | Warehouse exports, BI, brand reports             | 📋 Planned        |
-| **AI Platform**        | Deterministic inputs → agents & automation       | 📋 Planned        |
-| **Marketplace**        | Brand discovery, creator listings                | 🔮 Future         |
-| **Financial Platform** | Payouts, invoicing, revenue share                | 🔮 Future         |
-| **Token Economy**      | Credits ledger, utility tokens                   | 📋 Planned        |
+| Surface                | Consumes                                         | Status               |
+| ---------------------- | ------------------------------------------------ | -------------------- |
+| **Creator Studio**     | Dashboard, goals, live activity, coach           | Web v0.7 🚧 · API ✅ |
+| **Manager Portal**     | Portfolio CRM, campaigns, matching, analytics    | 📋 Planned           |
+| **Live Studio**        | Streaming, schedules, live intelligence overlays | 📋 Planned           |
+| **Analytics Platform** | Warehouse exports, BI, brand reports             | 📋 Planned           |
+| **AI Platform**        | Deterministic inputs → agents & automation       | 📋 Planned           |
+| **Marketplace**        | Brand discovery, creator listings                | 🔮 Future            |
+| **Financial Platform** | Payouts, invoicing, revenue share                | 🔮 Future            |
+| **Token Economy**      | Credits ledger, utility tokens                   | 📋 Planned           |
 
 ---
 
@@ -411,6 +446,7 @@ Local and production-like environments use Docker Compose. See [Deployment](../d
 ## Related documentation
 
 - [Architecture overview](./README.md)
+- [Creator Studio architecture](./creator-studio.md)
 - [Master Roadmap](../roadmap/master-roadmap.md)
 - [Competitive Advantages](../vision/competitive-advantages.md)
 - [Database overview](../database/README.md)

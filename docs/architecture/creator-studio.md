@@ -1,0 +1,356 @@
+# Creator Studio Architecture
+
+**Status:** Approved for v0.7 implementation  
+**Application:** `apps/creator-portal` (Next.js 15 App Router)  
+**Related:** [Product brief](../product/creator-studio.md) · [UX specification](../design/creator-studio-ux.md) · [Creators API](../api/creators.md) · [Frontend standards](../engineering/frontend-standards.md)
+
+---
+
+## Overview
+
+Creator Studio is a **presentation and workflow layer** over existing `@kolab/api` domain services. It aggregates creator intelligence, goals, campaigns, live data, and compliance through typed clients — primarily `GET /api/creators/:id/dashboard` for the home experience and focused endpoints for detail views.
+
+```mermaid
+flowchart LR
+  subgraph creatorPortal [apps/creator-portal]
+    RSC[Server Components]
+    CC[Client Components]
+    SDK[@kolab/sdk]
+  end
+  subgraph api [@kolab/api]
+    DASH[Dashboard aggregation]
+    GOALS[Goals service]
+    LIVE[Live intelligence]
+    CAM[Campaigns]
+    CRM[Creators / compliance]
+  end
+  CC --> SDK
+  RSC --> SDK
+  SDK --> api
+  DASH --> GOALS
+  DASH --> LIVE
+  DASH --> CAM
+  DASH --> CRM
+```
+
+**Engineering boundary:** Creator Studio is product UI, not a new backend domain. Do not add Creator Studio-specific tables or services until a clear backend gap is approved via ADR.
+
+---
+
+## Web-first vs desktop wrapper
+
+| Option            | Role in Kōlab                             | Decision                                                                                        |
+| ----------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Web (Next.js)** | v0.7 Creator Studio daily workspace       | **Ship first** — CS-01 through CS-08                                                            |
+| **Electron**      | Mature OBS plugin ecosystem               | **Deferred** — evaluate only if OBS plugin interop is mandatory for v0.9                        |
+| **Tauri**         | Lightweight desktop shell wrapping web UI | **Preferred candidate** for post-web desktop wrapper — smaller footprint, embeds creator-portal |
+
+**Rationale:** Creators already stream from mobile and desktop browsers. Shipping web Creator Studio validates workflows before packaging cost, auto-update infrastructure, and OBS integration complexity. Desktop wrapper and browser-source overlays enter at **CS-09** only after success criteria in [Product brief](../product/creator-studio.md#success-criteria) are met.
+
+OBS and Live Studio remain a separate surface in [System Map](./system-map.md) — Creator Studio deep-links; it does not embed OBS in Phase 1.
+
+---
+
+## Frontend architecture
+
+| Layer               | Responsibility                                                                |
+| ------------------- | ----------------------------------------------------------------------------- |
+| **App Router**      | Route segments, layouts, loading and error boundaries                         |
+| **`@kolab/ui`**     | Shared primitives, `AuthProvider`, `DashboardShell` patterns                  |
+| **`@kolab/types`**  | Zod schemas and TypeScript DTOs — single shape with API                       |
+| **`@kolab/sdk`**    | Typed HTTP clients — no ad-hoc `fetch` in components                          |
+| **`@kolab/auth`**   | `APP_ALLOWED_ROLES` for creator-portal (`CREATOR` primary)                    |
+| **Feature modules** | `apps/creator-portal/features/<module>/` — colocated components, hooks, pages |
+
+**Server vs client:** Default to Server Components for layouts and static shells. Use Client Components for interactive forms, polling live session status, timeline scrubbers, and auth redirects. See [Frontend standards](../engineering/frontend-standards.md#server-vs-client-components).
+
+**State:** Prefer server-fetched initial data + client refetch on user action. Do not mirror backend aggregates in global client stores unless required for real-time UX (CS-06+).
+
+---
+
+## Auth and session flow
+
+```mermaid
+sequenceDiagram
+  participant U as Creator browser
+  participant CP as creator-portal
+  participant SDK as @kolab/sdk
+  participant API as @kolab/api
+
+  U->>CP: Visit /studio
+  CP->>CP: useAuth — no user?
+  CP->>U: Redirect /login
+  U->>CP: Login form
+  CP->>SDK: AuthClient.login
+  SDK->>API: POST /api/auth/login
+  API-->>SDK: accessToken + refresh cookie
+  SDK-->>CP: AuthProvider session
+  CP->>SDK: GET /api/auth/me
+  API-->>CP: user + activeOrganizationId
+  CP->>SDK: Resolve creatorProfileId for org
+  CP->>U: Render Creator Studio shell
+```
+
+| Rule             | Detail                                                                                                            |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Access token     | Short-lived JWT in memory via `AuthProvider`                                                                      |
+| Refresh          | HttpOnly cookie; `AuthClient.refresh` on 401                                                                      |
+| Organization     | Active org from JWT; creators belong to one primary org per session                                               |
+| Role gate        | `creator-portal` allows `CREATOR` (and configured org roles if agency staff preview is ever added — default deny) |
+| Creator profile  | Map authenticated user → `CreatorProfile` in active org before studio routes render                               |
+| Protected layout | `(studio)/layout.tsx` redirects unauthenticated users; no parallel auth checks                                    |
+
+Audit: dashboard view fires `creator.dashboard.viewed` via API — do not skip by caching dashboard in client-only storage.
+
+---
+
+## API client and data fetching
+
+| Pattern            | Use                                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| **Dashboard home** | `GET /api/creators/:id/dashboard` — primary CS-02 data source                                    |
+| **Detail modules** | Direct endpoints when dashboard section insufficient (goal detail, replay timeline, gifter list) |
+| **Mutations**      | POST/PATCH via sdk clients; invalidate or refetch affected sections                              |
+| **Types**          | Import from `@kolab/types` — e.g. `creator-dashboard.ts`, `creator-goals.ts`                     |
+
+**Do not duplicate backend scoring logic in the frontend.** Performance scores, trend direction, goal progress percentages, and quick-action ranking come from API responses only. Client may format numbers and sort UI lists but must not recompute scores from raw events.
+
+**Do not persist dashboard aggregates client-side** beyond normal HTTP cache — the endpoint is live-generated.
+
+| Module                  | Primary API                                                    |
+| ----------------------- | -------------------------------------------------------------- |
+| Home dashboard          | `GET .../dashboard`                                            |
+| Goals                   | `GET/POST/PATCH .../goals`, `POST .../progress/recalculate`    |
+| Performance             | `GET .../performance-score`                                    |
+| Intelligence            | `GET .../intelligence`                                         |
+| Trends                  | `GET .../trends/live`                                          |
+| Campaigns               | [Campaigns API](../api/campaigns.md)                           |
+| Deliverables            | Campaigns API deliverable routes                               |
+| Live schedule           | [Live Intelligence API](../api/live-intelligence.md) schedules |
+| Go Live / sessions      | Live sessions + status transitions                             |
+| Coach / recommendations | Live session metadata + dashboard `coach` section              |
+| Replay / highlights     | Live timeline and highlights endpoints                         |
+| Gifters                 | `/api/live/gifters`                                            |
+| Compliance              | `GET .../onboarding`, compliance bundle endpoints              |
+
+Extend `@kolab/sdk` with domain clients as routes stabilize — follow [Frontend standards — API communication](../engineering/frontend-standards.md#api-communication).
+
+---
+
+## Route and module structure
+
+Base path: `/studio` (or existing `(dashboard)` group — align with current creator-portal conventions during CS-01).
+
+```text
+apps/creator-portal/
+  app/
+    (auth)/login|register
+    (studio)/
+      layout.tsx              # Auth guard, CreatorStudioShell, nav
+      page.tsx                # Home dashboard
+      goals/                  # CS-03
+      performance/            # CS-03
+      campaigns/              # CS-04
+      deliverables/           # CS-04
+      live/
+        schedule/             # CS-06
+        workspace/            # CS-06 Go Live
+      coach/                  # CS-05
+      intelligence/           # CS-03/05
+      trends/                 # CS-03
+      replay/[sessionId]/     # CS-07
+      gifters/                # CS-07
+      compliance/             # CS-08
+      settings/               # CS-08
+  features/
+    dashboard/
+    goals/
+    campaigns/
+    live/
+    coach/
+    compliance/
+    settings/
+```
+
+Navigation reflects daily workflow order: **Home → Goals → Campaigns → Live → Coach → Performance → Settings**.
+
+---
+
+## Creator Studio modules
+
+### Home dashboard
+
+Aggregated sections from dashboard DTO: overview, today's goals, campaigns, deliverables, live activity, coach, performance, achievements, compliance, quick actions. CS-02 deliverable.
+
+### Goals
+
+List, create, edit, status transitions, manual recalculate. Display progress from API — no local goal math.
+
+### Campaign tasks
+
+Assigned campaigns, pending applications, due dates from dashboard `upcomingCampaigns` and campaigns list API.
+
+### Deliverables
+
+Upcoming, overdue, submission flows via campaigns API. Link from dashboard `deliverables` section.
+
+### Live schedule
+
+`CreatorLiveSchedule` CRUD views — calendar/list. Read-heavy in CS-06; mutations for creators with `crm:update`.
+
+### Go Live workspace
+
+Session create/link, status transitions (`SCHEDULED` → `LIVE` → `ENDED`). Pre-live checklist from compliance + goals quick actions. No OBS embed in CS-06.
+
+### Coach alerts
+
+Read alert summaries from dashboard `coach` and session detail. No raw event payloads.
+
+### Recommendations
+
+Stored session recommendations and intelligence `recommendedNextActions`. Action buttons route to goals, campaigns, or live modules.
+
+### Performance score
+
+Read-only visualization of components, strengths, risks, and `dataQualityWarnings` from stored snapshot. Regenerate triggers POST endpoint — display loading state.
+
+### Intelligence profile
+
+Read-only profile with coaching priorities and risk signals. Regenerate via POST.
+
+### Trends
+
+Live trend metrics and narrative arrays from trend snapshot API.
+
+### Timeline replay
+
+Session picker → timeline replay API. Highlights panel. Scrubber is client UX; event data from API only.
+
+### Gifter insights
+
+Gifter list and detail — aggregate fields only per [Live Intelligence API](../api/live-intelligence.md#gifter-profiles).
+
+### Compliance
+
+Onboarding checklist, document status, compliance bundle from creators and documents APIs.
+
+### Profile / settings
+
+User profile, notification preferences (when available), organization context display, platform accounts read-only.
+
+---
+
+## Manager visibility
+
+Creator Studio routes resolve **one** `creatorProfileId` — the authenticated user's creator record in the active organization. No roster picker, no cross-creator navigation.
+
+Managers viewing creator data use **admin** (interim) and **Manager Portal** (v0.8). API permissions already enforce org scope; UI must not expose other creators' IDs.
+
+---
+
+## OBS and Live Studio future
+
+| Phase       | Capability                                                         |
+| ----------- | ------------------------------------------------------------------ |
+| CS-01–CS-08 | Web-only; optional external OBS with manual session linkage        |
+| CS-09       | Evaluate desktop shell (Tauri preferred); browser-source SDK spike |
+| v0.9        | Live Studio foundation — event bridge to append-only timeline      |
+
+Creator Studio **Go Live** deep-links to Live Studio when installed; otherwise shows platform streaming instructions and session ID for ingest API.
+
+Research: [Master Roadmap — Research](../roadmap/master-roadmap.md#research) (OBS automation, Browser Source SDK).
+
+---
+
+## Engineering boundaries
+
+| Rule                  | Detail                                                                       |
+| --------------------- | ---------------------------------------------------------------------------- |
+| No duplicated scoring | Performance, trends, goals, matching scores — API only                       |
+| Dashboard aggregation | Prefer `GET .../dashboard` for home; avoid N+1 client composition on landing |
+| DTO fidelity          | Render `@kolab/types` shapes; do not invent parallel interfaces              |
+| No new backend domain | UI calls existing modules; gaps require ADR + API proposal first             |
+| Privacy               | Never render raw chat/transcript from timeline APIs in creator UI            |
+| Audit                 | Rely on server-side audit for views and mutations                            |
+
+---
+
+## Implementation phases
+
+### CS-01 — Shell
+
+Auth integration, org context, creator profile resolution, studio layout, empty nav, role guard.
+
+**Exit:** Creator logs in and lands on authenticated shell.
+
+### CS-02 — Dashboard
+
+Implement home page consuming dashboard endpoint; quick actions route to stubs.
+
+**Exit:** All dashboard sections render with loading/error states; audit on view.
+
+### CS-03 — Goals and performance
+
+Goals CRUD UI; performance score and trends read views; intelligence profile read view.
+
+**Exit:** Creator reviews and recalculates goals; views score and trends without client-side math.
+
+### CS-04 — Campaign workspace
+
+Campaign list, assignment detail, deliverable submission flows.
+
+**Exit:** Creator completes deliverable workflow end-to-end in UI.
+
+### CS-05 — Coach and recommendations
+
+Coach alerts and recommendations modules; link quick actions to targets.
+
+**Exit:** Creator navigates from coach signal to relevant module in one click.
+
+### CS-06 — Live workspace
+
+Schedule views; go-live workspace with session lifecycle.
+
+**Exit:** Creator schedules session and transitions to LIVE/ENDED via UI.
+
+### CS-07 — Replay and gifter insights
+
+Timeline replay and highlights; gifter list and detail.
+
+**Exit:** Post-live review available without admin API.
+
+### CS-08 — Profile and settings
+
+Compliance/onboarding UI; profile and settings pages.
+
+**Exit:** Creator finishes onboarding from studio; compliance visible on dashboard match.
+
+### CS-09 — OBS/browser-source foundation
+
+Post-web validation gate. Desktop wrapper spike; browser-source research; deep-link to Live Studio.
+
+**Exit:** Documented go/no-go for v0.9 Live Studio investment.
+
+---
+
+## Security and privacy
+
+| Concern             | Approach                                                                                            |
+| ------------------- | --------------------------------------------------------------------------------------------------- |
+| Tenant isolation    | All sdk calls use org-scoped JWT; never pass arbitrary creator IDs from URL without ownership check |
+| Sensitive documents | Download flows use permission-gated presign endpoints only                                          |
+| Live data           | Aggregate coaching and gifter views; timeline replay RBAC-aligned with API                          |
+| Session storage     | No access tokens in localStorage; follow AuthProvider patterns                                      |
+| CSP / headers       | Align with [Security headers](../security/headers.md)                                               |
+
+See [Product Principles — Privacy first](../vision/product-principles.md#privacy-first).
+
+---
+
+## Related documentation
+
+- [Product brief](../product/creator-studio.md)
+- [UX specification](../design/creator-studio-ux.md)
+- [System Map — Creator Studio](./system-map.md#creator-studio)
+- [Decision Log — Backend first](./decision-log.md#adr-0004-backend-first-development)
+- [Traceability Matrix](../roadmap/traceability.md)
