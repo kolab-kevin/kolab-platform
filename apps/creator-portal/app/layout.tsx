@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'KŌLAB Creator Portal',
-  description: 'KŌLAB Platform — Creator Portal Application',
+  title: 'Kōlab Creator Studio',
+  description: 'Daily workspace for creators — goals, campaigns, live, and coaching',
 };
 
 export default function RootLayout({
@@ -26,9 +26,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-kolab text-kolab-foreground font-sans antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground min-h-screen font-sans antialiased`}
       >
         <AppProviders>{children}</AppProviders>
       </body>
