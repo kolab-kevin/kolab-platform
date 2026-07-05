@@ -90,6 +90,7 @@ export const AUDIT_ACTION = {
   CREATOR_GOAL_UPDATED: 'creator.goal.updated',
   CREATOR_GOAL_STATUS_CHANGED: 'creator.goal.status_changed',
   CREATOR_GOAL_PROGRESS_RECALCULATED: 'creator.goal.progress_recalculated',
+  CREATOR_DASHBOARD_VIEWED: 'creator.dashboard.viewed',
 } as const;
 
 export const AUDIT_TARGET_TYPE = {

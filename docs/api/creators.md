@@ -70,6 +70,7 @@ All routes are scoped to the JWT `organizationId`. Users must have an active org
 | PATCH  | `/api/creators/:id/goals/:goalId`                      | `crm:update`       | Update a creator goal                    |
 | POST   | `/api/creators/:id/goals/:goalId/status`               | `crm:update`       | Update creator goal status               |
 | POST   | `/api/creators/:id/goals/:goalId/progress/recalculate` | `crm:update`       | Recalculate creator goal progress        |
+| GET    | `/api/creators/:id/dashboard`                          | `crm:read`         | Get aggregated creator studio dashboard  |
 | GET    | `/api/creators/:id/onboarding`                         | `documents:read`   | Get creator onboarding checklist         |
 | GET    | `/api/creators/:id/compliance`                         | `documents:read`   | Get consolidated compliance bundle       |
 | GET    | `/api/creators/:id/documents`                          | `documents:read`   | List creator documents                   |
@@ -845,6 +846,7 @@ Calling conversion again on an already converted lead returns the existing creat
 | `creator.goal.updated`                   | Creator goal updated                   | `creator_goal`             |
 | `creator.goal.status_changed`            | Creator goal status changed            | `creator_goal`             |
 | `creator.goal.progress_recalculated`     | Creator goal progress recalculated     | `creator_goal`             |
+| `creator.dashboard.viewed`               | Creator dashboard viewed               | `creator`                  |
 | `lead.converted`                         | First successful conversion            | `lead`                     |
 
 ---
@@ -967,6 +969,109 @@ Shared types: `packages/types/src/creator-goals.ts`
 
 ---
 
+## GET `/api/creators/:id/dashboard`
+
+Returns a live-generated Creator Studio dashboard aggregating existing creator, goal, campaign, live, compliance, and coaching data. Nothing is persisted by this endpoint.
+
+Requires `crm:read`. The creator must belong to the active organization.
+
+### Dashboard sections
+
+| Section             | Source data                                                                    |
+| ------------------- | ------------------------------------------------------------------------------ |
+| `overview`          | Creator profile, stored performance score, intelligence profile, live trends   |
+| `todaysGoals`       | Active creator goals and same-day completions                                  |
+| `upcomingCampaigns` | Active assignments, pending applications, campaign due dates                   |
+| `deliverables`      | Upcoming, overdue, and same-day approved deliverables                          |
+| `liveActivity`      | Latest live session, next scheduled session, revenue, session score            |
+| `coach`             | Stored session recommendations, coach alerts, intelligence coaching priorities |
+| `performance`       | Live trend summary, performance strengths, weakest areas                       |
+| `achievements`      | Recently completed goals and performance milestones                            |
+| `compliance`        | Onboarding completion, compliance status, missing requirements                 |
+| `quickActions`      | Suggested actions ranked by `HIGH`, `MEDIUM`, `LOW` priority                   |
+
+Quick action types:
+
+- `GO_LIVE`
+- `COMPLETE_DELIVERABLE`
+- `REVIEW_CAMPAIGN`
+- `VIEW_RECOMMENDATIONS`
+- `UPDATE_PROFILE`
+- `FINISH_ONBOARDING`
+
+The response excludes raw live chat, transcript payloads, and event bodies. Coach output is limited to recommendation and alert summaries.
+
+### Example response (200)
+
+```json
+{
+  "creatorProfileId": "creator_abc123",
+  "organizationId": "clx...",
+  "generatedAt": "2026-07-04T18:00:00.000Z",
+  "overview": {
+    "creatorProfileId": "creator_abc123",
+    "displayName": "Jane Creator",
+    "profileStatus": "ACTIVE",
+    "performanceScore": 82,
+    "overallIntelligenceScore": 75,
+    "liveTrendDirection": "IMPROVING"
+  },
+  "todaysGoals": {
+    "activeGoals": [],
+    "completedToday": 0,
+    "progressPercentages": []
+  },
+  "upcomingCampaigns": {
+    "assignedCampaigns": [],
+    "pendingApplications": [],
+    "dueDates": []
+  },
+  "deliverables": {
+    "upcoming": [],
+    "overdue": [],
+    "completedToday": 0
+  },
+  "liveActivity": {
+    "latestLiveSession": null,
+    "nextScheduledLive": null,
+    "lastPerformanceScore": null,
+    "sessionDuration": null,
+    "latestRevenue": null
+  },
+  "coach": {
+    "activeRecommendations": [],
+    "activeAlerts": [],
+    "topCoachingPriorities": []
+  },
+  "performance": {
+    "trendSummary": null,
+    "strongestAreas": [],
+    "weakestAreas": []
+  },
+  "achievements": {
+    "recentCompletedGoals": [],
+    "newPerformanceMilestones": []
+  },
+  "compliance": {
+    "onboardingCompletionPercent": 50,
+    "onboardingStatus": "INCOMPLETE",
+    "complianceStatus": "NON_COMPLIANT",
+    "missingRequirements": ["Government ID approved"]
+  },
+  "quickActions": [
+    {
+      "action": "FINISH_ONBOARDING",
+      "priority": "HIGH",
+      "reason": "Required onboarding steps are still incomplete."
+    }
+  ]
+}
+```
+
+Shared types: `packages/types/src/creator-dashboard.ts`
+
+---
+
 ## Related docs
 
 - [Creator Documents & Contracts API](./creator-documents-contracts.md)
@@ -974,3 +1079,4 @@ Shared types: `packages/types/src/creator-goals.ts`
 - [Recruitment CRM API](./recruitment.md)
 - Shared types: `packages/types/src/creator.ts`
 - Shared types: `packages/types/src/creator-goals.ts`
+- Shared types: `packages/types/src/creator-dashboard.ts`

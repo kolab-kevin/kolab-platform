@@ -8,6 +8,7 @@ import { LiveIntelligenceLiveTrendsService } from '../live-intelligence/live-int
 import { CreatorsController } from './creators.controller';
 import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
+import { CreatorsDashboardService } from './creators-dashboard.service';
 import { CreatorsGoalsService } from './creators-goals.service';
 import { CreatorsOnboardingService } from './creators-onboarding.service';
 import { CreatorsPerformanceScoreService } from './creators-performance-score.service';
@@ -82,6 +83,12 @@ describe('CreatorsController authorization', () => {
             updateCreatorGoal: jest.fn(),
             updateCreatorGoalStatus: jest.fn(),
             recalculateCreatorGoalProgress: jest.fn(),
+          },
+        },
+        {
+          provide: CreatorsDashboardService,
+          useValue: {
+            getCreatorDashboard: jest.fn(),
           },
         },
       ],
@@ -313,6 +320,22 @@ describe('CreatorsController authorization', () => {
 
     expect(() =>
       permissionsGuard.canActivate(createContext('recalculateCreatorGoalProgress', viewerUser)),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('allows recruiters to read creator dashboard with crm:read', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(permissionsGuard.canActivate(createContext('getCreatorDashboard', recruiterUser))).toBe(
+      true,
+    );
+  });
+
+  it('denies viewers from reading creator dashboard', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['crm:read']);
+
+    expect(() =>
+      permissionsGuard.canActivate(createContext('getCreatorDashboard', viewerUser)),
     ).toThrow(ForbiddenException);
   });
 });
