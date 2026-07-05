@@ -85,17 +85,17 @@ See [Architecture — OBS and Live Studio future](../architecture/creator-studio
 
 ## Implementation phases
 
-| Phase | ID    | Scope                                               |
-| ----- | ----- | --------------------------------------------------- |
-| 1     | CS-01 | App shell, auth, navigation, org context            |
-| 2     | CS-02 | Home dashboard (aggregated endpoint)                |
-| 3     | CS-03 | Goals and performance surfaces                      |
-| 4     | CS-04 | Campaign workspace and deliverables                 |
-| 5     | CS-05 | Coach alerts and recommendations                    |
-| 6     | CS-06 | Live schedule and go-live workspace                 |
-| 7     | CS-07 | Replay and gifter insights                          |
-| 8     | CS-08 | Profile, settings, compliance                       |
-| 9     | CS-09 | OBS/browser-source foundation (post-web validation) |
+| Phase | ID    | Scope                                               | Status |
+| ----- | ----- | --------------------------------------------------- | ------ |
+| 1     | CS-01 | App shell, auth, navigation, org context            | ✅     |
+| 2     | CS-02 | Home dashboard (aggregated endpoint)                | 🚧     |
+| 3     | CS-03 | Goals and performance surfaces                      | 📋     |
+| 4     | CS-04 | Campaign workspace and deliverables                 | 📋     |
+| 5     | CS-05 | Coach alerts and recommendations                    | 📋     |
+| 6     | CS-06 | Live schedule and go-live workspace                 | 📋     |
+| 7     | CS-07 | Replay and gifter insights                          | 📋     |
+| 8     | CS-08 | Profile, settings, compliance                       | 📋     |
+| 9     | CS-09 | OBS/browser-source foundation (post-web validation) | 📋     |
 
 Full phase detail: [Architecture — Implementation phases](../architecture/creator-studio.md#implementation-phases).
 

@@ -279,9 +279,11 @@ Research: [Master Roadmap — Research](../roadmap/master-roadmap.md#research) (
 
 ### CS-01 — Shell
 
-Auth integration, org context, creator profile resolution, studio layout, empty nav, role guard.
+Auth integration, org context, creator profile resolution, studio layout, navigation, role guard, dashboard mock adapter.
 
-**Exit:** Creator logs in and lands on authenticated shell.
+**Status:** Implemented in `apps/creator-portal` — routes under `/studio/*`, mock dashboard via `NEXT_PUBLIC_USE_MOCK_DASHBOARD=true` (default).
+
+**Exit:** Creator logs in and lands on authenticated shell with dashboard cards. ✅
 
 ### CS-02 — Dashboard
 
