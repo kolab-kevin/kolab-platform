@@ -153,6 +153,25 @@ Live mode uses the existing auth access token from `@kolab/sdk` / `AuthProvider`
 
 Implementation: `services/dashboard-service.ts`, `hooks/use-dashboard.ts`, `components/dashboard/*`.
 
+### Goals and performance data modes (CS-03)
+
+Uses the same `NEXT_PUBLIC_USE_MOCK_DASHBOARD` toggle as CS-02 (`useMockStudioData()` in `lib/env.ts`).
+
+| Module      | Live endpoint                             | Schema                           |
+| ----------- | ----------------------------------------- | -------------------------------- |
+| Goals       | `GET /api/creators/:id/goals`             | `ListCreatorGoalsResponseSchema` |
+| Performance | `GET /api/creators/:id/performance-score` | `CreatorPerformanceScoreSchema`  |
+
+| HTTP status   | Goals behavior              | Performance behavior        |
+| ------------- | --------------------------- | --------------------------- |
+| `401` / `403` | Redirect to `/unauthorized` | Redirect to `/unauthorized` |
+| `404`         | Empty goals list            | Empty state (no score yet)  |
+| Other errors  | Error state with retry      | Error state with retry      |
+
+Progress bars derive display percentages from API `currentValue` / `targetValue` strings only — no goal recalculation. Performance scores, bands, and narratives render API fields as-is.
+
+Implementation: `services/goal-service.ts`, `services/performance-service.ts`, `hooks/use-goals.ts`, `hooks/use-performance.ts`, `types/goal-adapters.ts`, `types/performance-adapters.ts`, `components/goals/*`, `components/performance/*`.
+
 ---
 
 ## Route and module structure
@@ -313,9 +332,11 @@ Implement home page consuming dashboard endpoint; quick actions route to stubs.
 
 ### CS-03 — Goals and performance
 
-Goals CRUD UI; performance score and trends read views; intelligence profile read view.
+Goals workspace (`/studio/goals`) and performance workspace (`/studio/performance`) consuming list goals and performance score endpoints. Display-only rendering — no client-side score or goal recalculation.
 
-**Exit:** Creator reviews and recalculates goals; views score and trends without client-side math.
+**Status:** Implemented — live API integration with mock fallback, typed DTO adapters, grouped goals UI, component scores and narrative sections, auth error routing.
+
+**Exit:** Creator reviews goals and performance score without client-side math. ✅
 
 ### CS-04 — Campaign workspace
 
