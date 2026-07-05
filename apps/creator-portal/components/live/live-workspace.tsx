@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@kolab/ui';
+import Link from 'next/link';
 
 import { InlineLoading } from '@/components/common/global-loading';
 import { WorkspaceError } from '@/components/common/workspace-error';
@@ -52,9 +53,14 @@ export function LiveWorkspace() {
             {source ? ` · ${sourceLabel(source)}` : null}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => void refresh()}>
-          Refresh
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={() => void refresh()}>
+            Refresh
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/studio/live/production">Open Production</Link>
+          </Button>
+        </div>
       </div>
 
       {source === 'empty' ? (

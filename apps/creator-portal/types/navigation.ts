@@ -10,6 +10,7 @@ export const STUDIO_NAV_ITEMS: StudioNavItem[] = [
   { label: 'Campaigns', href: '/studio/campaigns', segment: 'campaigns' },
   { label: 'Deliverables', href: '/studio/deliverables', segment: 'deliverables' },
   { label: 'Live', href: '/studio/live', segment: 'live' },
+  { label: 'Production', href: '/studio/live/production', segment: 'production' },
   { label: 'Coach', href: '/studio/coach', segment: 'coach' },
   { label: 'Performance', href: '/studio/performance', segment: 'performance' },
   { label: 'Intelligence', href: '/studio/intelligence', segment: 'intelligence' },
