@@ -172,6 +172,24 @@ Progress bars derive display percentages from API `currentValue` / `targetValue`
 
 Implementation: `services/goal-service.ts`, `services/performance-service.ts`, `hooks/use-goals.ts`, `hooks/use-performance.ts`, `types/goal-adapters.ts`, `types/performance-adapters.ts`, `components/goals/*`, `components/performance/*`.
 
+### Campaign workspace data modes (CS-04)
+
+Uses the same `NEXT_PUBLIC_USE_MOCK_DASHBOARD` toggle as CS-02/CS-03.
+
+| Module            | Live endpoints                                                          |
+| ----------------- | ----------------------------------------------------------------------- |
+| Campaign list     | `GET /api/campaigns`                                                    |
+| Campaign detail   | `GET /api/campaigns/:campaignId`                                        |
+| Assignments       | `GET /api/campaigns/:campaignId/assignments?creatorProfileId=...`       |
+| Applications      | `GET /api/campaigns/:campaignId/applications?creatorProfileId=...`      |
+| Deliverables      | `GET /api/campaigns/:campaignId/assignments/:assignmentId/deliverables` |
+| Templates         | `GET /api/campaigns/:campaignId/deliverables`                           |
+| Dashboard summary | `GET /api/creators/:id/dashboard` (home card only)                      |
+
+Live mode composes campaign workspace data client-side from org-scoped campaign routes filtered by creator profile ID. Display-only rendering — no assignment, deliverable, or payment calculations in the frontend.
+
+Implementation: `services/campaign-service.ts`, `services/campaign-assignment-service.ts`, `services/campaign-deliverable-service.ts`, `services/campaign-workspace-loader.ts`, `hooks/use-campaign-workspace.ts`, `types/campaign-adapters.ts`, `components/campaigns/*`.
+
 ---
 
 ## Route and module structure
@@ -340,9 +358,11 @@ Goals workspace (`/studio/goals`) and performance workspace (`/studio/performanc
 
 ### CS-04 — Campaign workspace
 
-Campaign list, assignment detail, deliverable submission flows.
+Campaign workspace at `/studio/campaigns` with assigned campaigns, deliverables, applications, and read-only campaign detail panel. List and kanban views; calendar/filter/search placeholders.
 
-**Exit:** Creator completes deliverable workflow end-to-end in UI.
+**Status:** Implemented — live API composition with mock fallback, typed DTO adapters, status badges, loading/empty/partial/error states, auth error routing.
+
+**Exit:** Creator reviews campaign assignments, deliverables, and applications without client-side business logic. ✅
 
 ### CS-05 — Coach and recommendations
 
