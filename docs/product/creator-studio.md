@@ -89,7 +89,7 @@ See [Architecture — OBS and Live Studio future](../architecture/creator-studio
 | ----- | ----- | --------------------------------------------------- | ------ |
 | 1     | CS-01 | App shell, auth, navigation, org context            | ✅     |
 | 2     | CS-02 | Home dashboard (aggregated endpoint)                | ✅     |
-| 3     | CS-03 | Goals and performance surfaces                      | 📋     |
+| 3     | CS-03 | Goals and performance surfaces                      | ✅     |
 | 4     | CS-04 | Campaign workspace and deliverables                 | 📋     |
 | 5     | CS-05 | Coach alerts and recommendations                    | 📋     |
 | 6     | CS-06 | Live schedule and go-live workspace                 | 📋     |
@@ -101,10 +101,16 @@ Full phase detail: [Architecture — Implementation phases](../architecture/crea
 
 ### Dashboard live vs mock mode
 
-| Mode     | Configuration                                   | Behavior                                                     |
-| -------- | ----------------------------------------------- | ------------------------------------------------------------ |
-| **Mock** | `NEXT_PUBLIC_USE_MOCK_DASHBOARD=true` (default) | Typed mock dashboard for local UI work                       |
-| **Live** | `NEXT_PUBLIC_USE_MOCK_DASHBOARD=false`          | `GET /api/creators/:id/dashboard` with JWT from auth session |
+| Mode     | Configuration                                   | Behavior                                              |
+| -------- | ----------------------------------------------- | ----------------------------------------------------- |
+| **Mock** | `NEXT_PUBLIC_USE_MOCK_DASHBOARD=true` (default) | Typed mock data for dashboard, goals, and performance |
+| **Live** | `NEXT_PUBLIC_USE_MOCK_DASHBOARD=false`          | Live API with JWT from auth session                   |
+
+| Surface     | Live endpoint                             |
+| ----------- | ----------------------------------------- |
+| Dashboard   | `GET /api/creators/:id/dashboard`         |
+| Goals       | `GET /api/creators/:id/goals`             |
+| Performance | `GET /api/creators/:id/performance-score` |
 
 Set `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_CREATOR_PROFILE_ID` for live mode until creator identity mapping is implemented.
 

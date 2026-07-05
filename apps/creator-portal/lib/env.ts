@@ -6,8 +6,13 @@ export function getApiBaseUrl(): string {
   );
 }
 
+/** Shared mock toggle for dashboard, goals, and performance studio data. */
 export function useMockDashboard(): boolean {
   return process.env.NEXT_PUBLIC_USE_MOCK_DASHBOARD !== 'false';
+}
+
+export function useMockStudioData(): boolean {
+  return useMockDashboard();
 }
 
 export function getCreatorProfileId(): string {

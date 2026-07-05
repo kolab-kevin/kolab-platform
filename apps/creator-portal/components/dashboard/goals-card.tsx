@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@kolab/ui';
 
+import { ProgressBar } from '@/components/common/progress-bar';
 import type { DashboardTodaysGoals } from '@/types/dashboard';
 
 type GoalsCardProps = {
@@ -27,12 +28,7 @@ export function GoalsCard({ goals }: GoalsCardProps) {
                   <span className="font-medium">{goal.title ?? goal.goalType}</span>
                   <span className="text-muted-foreground">{goal.progressPercent}%</span>
                 </div>
-                <div className="bg-muted h-2 overflow-hidden rounded-full">
-                  <div
-                    className="bg-primary h-full rounded-full transition-all"
-                    style={{ width: `${goal.progressPercent}%` }}
-                  />
-                </div>
+                <ProgressBar percent={goal.progressPercent} />
               </li>
             ))}
           </ul>
