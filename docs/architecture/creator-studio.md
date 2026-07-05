@@ -441,9 +441,30 @@ Implementation: `services/replay-workspace-service.ts`, `services/replay-service
 
 ### CS-08 — Profile and settings
 
-Compliance/onboarding UI; profile and settings pages.
+Profile workspace at `/studio/profile` with creator profile, platform accounts, skills & categories, and read-only compliance panels. Settings workspace at `/studio/settings` with general account info, appearance, notifications placeholder, workspace preferences, and system metadata.
 
-**Exit:** Creator finishes onboarding from studio; compliance visible on dashboard match.
+**Status:** Implemented — live API composition with mock fallback, typed DTO adapters, loading/empty/partial/error states, auth error routing.
+
+**APIs:** `GET /api/creators/:id`, `/platform-accounts`, `/skills`, `/availability`, `/compliance`, and `GET /api/profile`.
+
+**Exit:** Creator finishes onboarding from studio; compliance visible on dashboard match. ✅
+
+### Profile workspace data modes (CS-08)
+
+Uses the same `NEXT_PUBLIC_USE_MOCK_DASHBOARD` toggle as CS-02–CS-07.
+
+| Module            | Live endpoints                            |
+| ----------------- | ----------------------------------------- |
+| Creator profile   | `GET /api/creators/:id`                   |
+| Platform accounts | `GET /api/creators/:id/platform-accounts` |
+| Skills            | `GET /api/creators/:id/skills`            |
+| Availability      | `GET /api/creators/:id/availability`      |
+| Compliance        | `GET /api/creators/:id/compliance`        |
+| Account settings  | `GET /api/profile`                        |
+
+Live mode composes creator profile endpoints plus user profile for settings. Display-only rendering — no profile mutation, compliance calculation, or onboarding logic in the frontend.
+
+Implementation: `services/profile-workspace-service.ts`, `services/profile-service.ts`, `services/settings-service.ts`, `hooks/use-profile-workspace.ts`, `hooks/use-settings-workspace.ts`, `types/profile-adapters.ts`, `components/profile/*`, `components/settings/*`.
 
 ### CS-09 — OBS/browser-source foundation
 

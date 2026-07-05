@@ -1,7 +1,5 @@
-import { ModulePlaceholder } from '@/components/common/module-placeholder';
-import { MODULE_PLACEHOLDERS } from '@/lib/module-placeholders';
+import { ProfileWorkspace } from '@/components/profile/profile-workspace';
 
 export default function ProfilePage() {
-  const module = MODULE_PLACEHOLDERS.profile;
-  return <ModulePlaceholder title={module.title} description={module.description} />;
+  return <ProfileWorkspace />;
 }

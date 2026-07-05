@@ -94,17 +94,17 @@ See [Architecture — OBS and Live Studio future](../architecture/creator-studio
 | 5     | CS-05 | Coach alerts and recommendations                    | ✅     |
 | 6     | CS-06 | Live schedule and go-live workspace                 | ✅     |
 | 7     | CS-07 | Replay and gifter insights                          | ✅     |
-| 8     | CS-08 | Profile, settings, compliance                       | 📋     |
+| 8     | CS-08 | Profile, settings, compliance                       | ✅     |
 | 9     | CS-09 | OBS/browser-source foundation (post-web validation) | 📋     |
 
 Full phase detail: [Architecture — Implementation phases](../architecture/creator-studio.md#implementation-phases).
 
 ### Dashboard live vs mock mode
 
-| Mode     | Configuration                                   | Behavior                                                                                           |
-| -------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| **Mock** | `NEXT_PUBLIC_USE_MOCK_DASHBOARD=true` (default) | Typed mock data for dashboard, goals, performance, campaigns, coach, live, and replay intelligence |
-| **Live** | `NEXT_PUBLIC_USE_MOCK_DASHBOARD=false`          | Live API with JWT from auth session                                                                |
+| Mode     | Configuration                                   | Behavior                                                                                                              |
+| -------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Mock** | `NEXT_PUBLIC_USE_MOCK_DASHBOARD=true` (default) | Typed mock data for dashboard, goals, performance, campaigns, coach, live, replay intelligence, profile, and settings |
+| **Live** | `NEXT_PUBLIC_USE_MOCK_DASHBOARD=false`          | Live API with JWT from auth session                                                                                   |
 
 | Surface     | Live endpoint                                       |
 | ----------- | --------------------------------------------------- |
