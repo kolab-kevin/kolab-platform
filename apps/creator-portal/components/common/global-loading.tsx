@@ -12,10 +12,16 @@ export function GlobalLoading({ label = 'Loading Creator Studio…' }: { label?:
   );
 }
 
-export function InlineLoading({ className }: { className?: string }) {
+export function InlineLoading({
+  className,
+  label = 'Loading…',
+}: {
+  className?: string;
+  label?: string;
+}) {
   return (
     <div className={cn('flex items-center justify-center py-12', className)}>
-      <GlobalLoading label="Loading…" />
+      <GlobalLoading label={label} />
     </div>
   );
 }

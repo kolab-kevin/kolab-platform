@@ -135,6 +135,24 @@ Audit: dashboard view fires `creator.dashboard.viewed` via API — do not skip b
 
 Extend `@kolab/sdk` with domain clients as routes stabilize — follow [Frontend standards — API communication](../engineering/frontend-standards.md#api-communication).
 
+### Dashboard data modes (CS-02)
+
+| Variable                         | Purpose                                                                      |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_USE_MOCK_DASHBOARD` | `true` (default) serves typed mock data; `false` calls live API              |
+| `NEXT_PUBLIC_API_BASE_URL`       | API host (falls back to `NEXT_PUBLIC_API_URL`, then `http://localhost:4000`) |
+| `NEXT_PUBLIC_CREATOR_PROFILE_ID` | Creator profile ID for dashboard requests until user→profile mapping ships   |
+
+Live mode uses the existing auth access token from `@kolab/sdk` / `AuthProvider` (Bearer header + refresh cookie). Responses are validated with `CreatorDashboardResponseSchema` from `@kolab/types`.
+
+| HTTP status   | Client behavior                                      |
+| ------------- | ---------------------------------------------------- |
+| `401` / `403` | Redirect to `/unauthorized`                          |
+| `404`         | Render empty dashboard DTO with informational banner |
+| Other errors  | Error state with retry                               |
+
+Implementation: `services/dashboard-service.ts`, `hooks/use-dashboard.ts`, `components/dashboard/*`.
+
 ---
 
 ## Route and module structure
@@ -289,7 +307,9 @@ Auth integration, org context, creator profile resolution, studio layout, naviga
 
 Implement home page consuming dashboard endpoint; quick actions route to stubs.
 
-**Exit:** All dashboard sections render with loading/error states; audit on view.
+**Status:** Implemented — live API integration with mock fallback, typed DTO rendering, auth error routing.
+
+**Exit:** All dashboard sections render with loading/error states; audit on view. ✅
 
 ### CS-03 — Goals and performance
 
