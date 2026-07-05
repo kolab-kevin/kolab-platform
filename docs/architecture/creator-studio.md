@@ -242,6 +242,7 @@ apps/creator-portal/
       live/
         schedule/             # CS-06
         workspace/            # CS-06 Go Live
+        production/           # CS-09 Production Workspace
       coach/                  # CS-05
       intelligence/           # CS-03/05
       trends/                 # CS-03
@@ -337,11 +338,11 @@ Managers viewing creator data use **admin** (interim) and **Manager Portal** (v0
 
 ## OBS and Live Studio future
 
-| Phase       | Capability                                                         |
-| ----------- | ------------------------------------------------------------------ |
-| CS-01–CS-08 | Web-only; optional external OBS with manual session linkage        |
-| CS-09       | Evaluate desktop shell (Tauri preferred); browser-source SDK spike |
-| v0.9        | Live Studio foundation — event bridge to append-only timeline      |
+| Phase       | Capability                                                           |
+| ----------- | -------------------------------------------------------------------- |
+| CS-01–CS-08 | Web-only; optional external OBS with manual session linkage          |
+| CS-09       | Production workspace UI foundation; OBS/desktop integration deferred |
+| v0.9        | Live Studio foundation — event bridge to append-only timeline        |
 
 Creator Studio **Go Live** deep-links to Live Studio when installed; otherwise shows platform streaming instructions and session ID for ingest API.
 
@@ -468,9 +469,29 @@ Implementation: `services/profile-workspace-service.ts`, `services/profile-servi
 
 ### CS-09 — OBS/browser-source foundation
 
-Post-web validation gate. Desktop wrapper spike; browser-source research; deep-link to Live Studio.
+Production Workspace UI foundation at `/studio/live/production` with dock-style resizable panels for scene management, sources, audio mixer, overlays, stream health, and output controls. Mock provider only — no OBS, RTMP, WebRTC, streaming, or desktop integration.
 
-**Exit:** Documented go/no-go for v0.9 Live Studio investment.
+**Status:** Implemented — mock-only provider layer designed for future desktop/OBS replacement without UI rewrites.
+
+**Exit:** Documented go/no-go for v0.9 Live Studio investment. ✅
+
+### Production workspace data modes (CS-09)
+
+Always mock. No backend calls. Future desktop integration replaces `ProductionWorkspaceProvider` only.
+
+| Panel             | Data source    |
+| ----------------- | -------------- |
+| Production header | Mock provider  |
+| Scene manager     | Mock provider  |
+| Source manager    | Mock provider  |
+| Audio mixer       | Mock provider  |
+| Overlay manager   | Mock provider  |
+| Stream health     | Mock telemetry |
+| Output            | Mock provider  |
+
+Implementation: `services/production-workspace-service.ts`, `services/production-mock.ts`, `hooks/use-production-workspace.ts`, `types/production-adapters.ts`, `components/production/*`.
+
+**Deferred intentionally:** OBS capture, RTMP/WebRTC streaming, Electron/Tauri desktop shell, browser-source SDK, and backend production APIs.
 
 ---
 
