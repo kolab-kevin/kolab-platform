@@ -1,33 +1,38 @@
 'use client';
 
-import { Button } from '@kolab/ui';
+import dynamic from 'next/dynamic';
 
 import { ApplicationsSection } from '@/components/campaigns/applications-section';
-import { CampaignDetailPanel } from '@/components/campaigns/campaign-detail-panel';
-import { CampaignKanbanView } from '@/components/campaigns/campaign-kanban-view';
-import { CampaignListView } from '@/components/campaigns/campaign-list-view';
 import { CampaignViewToolbar } from '@/components/campaigns/campaign-view-toolbar';
 import { DeliverablesSection } from '@/components/campaigns/deliverables-section';
-import { InlineLoading } from '@/components/common/global-loading';
-import { WorkspaceError } from '@/components/common/workspace-error';
+import { EmptyWorkspaceState } from '@/components/common/empty-workspace-state';
+import { LoadingSkeleton } from '@/components/common/workspace-loading';
+import { PartialWorkspaceNotice, WorkspacePage } from '@/components/common/workspace-page';
 import { useCampaignWorkspace } from '@/hooks/use-campaign-workspace';
 
-function sourceLabel(
-  source: NonNullable<ReturnType<typeof useCampaignWorkspace>['source']>,
-): string {
-  switch (source) {
-    case 'mock':
-      return 'Mock data';
-    case 'live':
-      return 'Live API';
-    case 'empty':
-      return 'No campaigns yet';
-    case 'partial':
-      return 'Partial API data';
-    default:
-      return source;
-  }
-}
+const CampaignListView = dynamic(
+  () =>
+    import('@/components/campaigns/campaign-list-view').then((m) => ({
+      default: m.CampaignListView,
+    })),
+  { loading: () => <LoadingSkeleton rows={4} label="Loading campaign list" /> },
+);
+
+const CampaignKanbanView = dynamic(
+  () =>
+    import('@/components/campaigns/campaign-kanban-view').then((m) => ({
+      default: m.CampaignKanbanView,
+    })),
+  { loading: () => <LoadingSkeleton rows={4} label="Loading campaign board" /> },
+);
+
+const CampaignDetailPanel = dynamic(
+  () =>
+    import('@/components/campaigns/campaign-detail-panel').then((m) => ({
+      default: m.CampaignDetailPanel,
+    })),
+  { loading: () => <LoadingSkeleton rows={5} label="Loading campaign details" /> },
+);
 
 export function CampaignWorkspace() {
   const {
@@ -52,51 +57,30 @@ export function CampaignWorkspace() {
     0,
   );
 
-  if (loading) {
-    return <InlineLoading label="Loading campaign workspace…" />;
-  }
-
-  if (error) {
-    return (
-      <WorkspaceError
-        title="Unable to load campaigns"
-        message={error}
-        onRetry={() => void refresh()}
-      />
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Campaigns</h1>
-          <p className="text-muted-foreground text-sm">
-            {totalAssigned} assigned · {totalDeliverables} deliverables · {totalApplications}{' '}
-            applications
-            {source ? ` · ${sourceLabel(source)}` : null}
-          </p>
-        </div>
-        <Button variant="outline" size="sm" onClick={() => void refresh()}>
-          Refresh
-        </Button>
-      </div>
-
-      {source === 'empty' &&
-      totalAssigned === 0 &&
-      totalDeliverables === 0 &&
-      totalApplications === 0 ? (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          No campaign assignments or applications are available yet.
-        </div>
-      ) : null}
-
-      {source === 'partial' ? (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          Some campaign data could not be loaded. Showing available results.
-        </div>
-      ) : null}
-
+    <WorkspacePage
+      title="Campaigns"
+      description={`${totalAssigned} assigned · ${totalDeliverables} deliverables · ${totalApplications} applications`}
+      source={source}
+      loading={loading}
+      loadingLabel="Loading campaign workspace…"
+      error={error}
+      errorTitle="Unable to load campaigns"
+      onRetry={() => void refresh()}
+      emptyNotice={
+        source === 'empty' &&
+        totalAssigned === 0 &&
+        totalDeliverables === 0 &&
+        totalApplications === 0 ? (
+          <EmptyWorkspaceState message="No campaign assignments or applications are available yet." />
+        ) : null
+      }
+      partialNotice={
+        source === 'partial' ? (
+          <PartialWorkspaceNotice message="Some campaign data could not be loaded. Showing available results." />
+        ) : null
+      }
+    >
       <CampaignViewToolbar view={view} onViewChange={setView} />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -129,6 +113,6 @@ export function CampaignWorkspace() {
           onClose={() => selectCampaign(null)}
         />
       </div>
-    </div>
+    </WorkspacePage>
   );
 }

@@ -26,7 +26,7 @@ export function StudioShell({ children }: StudioShellProps) {
         />
         <div className="flex min-h-screen flex-1 flex-col lg:pl-0">
           <StudioTopNav onToggleSidebar={() => setMobileOpen((open) => !open)} />
-          <main className="flex-1 px-4 py-5 lg:px-6 lg:py-6">
+          <main className="studio-scrollbar flex-1 px-4 py-5 lg:px-6 lg:py-6">
             <React.Suspense fallback={<GlobalLoading />}>
               <StudioBreadcrumbs items={breadcrumbs} />
               <div className="mx-auto w-full max-w-7xl">{children}</div>

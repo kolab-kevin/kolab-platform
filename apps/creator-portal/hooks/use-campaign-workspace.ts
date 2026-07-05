@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import * as React from 'react';
 
 import { useOrganization } from '@/contexts/organization-context';
+import { useWorkspaceTabs } from '@/hooks/use-workspace-tabs';
 import {
   type CampaignWorkspaceDataSource,
   fetchCampaignWorkspace,
@@ -22,6 +23,8 @@ type CampaignWorkspaceState = {
   selectCampaign: (campaignId: string | null) => void;
   refresh: () => Promise<void>;
 };
+
+const CAMPAIGN_TABS: CampaignWorkspaceView[] = ['list', 'kanban', 'calendar'];
 
 const EMPTY_DATA: CampaignWorkspaceData = {
   assignedCampaigns: [],
@@ -49,7 +52,11 @@ export function useCampaignWorkspace(): CampaignWorkspaceState {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [source, setSource] = React.useState<CampaignWorkspaceDataSource | null>(null);
-  const [view, setView] = React.useState<CampaignWorkspaceView>('list');
+  const [view, setView] = useWorkspaceTabs<CampaignWorkspaceView>(
+    'campaigns',
+    'list',
+    CAMPAIGN_TABS,
+  );
   const [selectedCampaignId, setSelectedCampaignId] = React.useState<string | null>(null);
 
   const refresh = React.useCallback(async () => {
