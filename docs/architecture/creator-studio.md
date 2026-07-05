@@ -206,6 +206,22 @@ Live mode resolves the latest session ID from dashboard `liveActivity.latestLive
 
 Implementation: `services/coach-service.ts`, `services/recommendation-service.ts`, `services/alert-service.ts`, `services/intelligence-service.ts`, `services/creator-intelligence-service.ts`, `hooks/use-coach-workspace.ts`, `types/coach-adapters.ts`, `components/coach/*`.
 
+### Live workspace data modes (CS-06)
+
+Uses the same `NEXT_PUBLIC_USE_MOCK_DASHBOARD` toggle as CS-02–CS-05.
+
+| Module               | Live endpoints                                     |
+| -------------------- | -------------------------------------------------- |
+| Live session         | `GET /api/live/sessions/:sessionId`                |
+| Timeline             | `GET /api/live/sessions/:sessionId/timeline`       |
+| Session summary      | `GET /api/live/sessions/:sessionId/summary`        |
+| Session intelligence | `GET /api/live/sessions/:sessionId/intelligence`   |
+| Dashboard live seed  | `GET /api/creators/:id/dashboard` (`liveActivity`) |
+
+Live mode resolves the latest session ID from dashboard `liveActivity.latestLiveSession`, then composes session, timeline, summary, and intelligence endpoints. Display-only rendering — no timeline, replay, or analytics recalculation in the frontend.
+
+Implementation: `services/live-workspace-service.ts`, `services/live-session-service.ts`, `services/timeline-service.ts`, `services/session-summary-service.ts`, `hooks/use-live-workspace.ts`, `types/live-adapters.ts`, `components/live/*`.
+
 ---
 
 ## Route and module structure
@@ -390,9 +406,11 @@ Coach workspace at `/studio/coach` combining recommendations, alerts, session in
 
 ### CS-06 — Live workspace
 
-Schedule views; go-live workspace with session lifecycle.
+Live workspace at `/studio/live` with session overview, read-only timeline, session summary, and live intelligence panels. Desktop-first resizable panel layout (UI only).
 
-**Exit:** Creator schedules session and transitions to LIVE/ENDED via UI.
+**Status:** Implemented — live API composition with mock fallback, typed DTO adapters, loading/empty/partial/error states, auth error routing.
+
+**Exit:** Creator reviews live session activity without client-side timeline or analytics logic. ✅
 
 ### CS-07 — Replay and gifter insights
 
