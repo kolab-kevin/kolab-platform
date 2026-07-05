@@ -93,7 +93,7 @@ See [Architecture — OBS and Live Studio future](../architecture/creator-studio
 | 4     | CS-04 | Campaign workspace and deliverables                 | ✅     |
 | 5     | CS-05 | Coach alerts and recommendations                    | ✅     |
 | 6     | CS-06 | Live schedule and go-live workspace                 | ✅     |
-| 7     | CS-07 | Replay and gifter insights                          | 📋     |
+| 7     | CS-07 | Replay and gifter insights                          | ✅     |
 | 8     | CS-08 | Profile, settings, compliance                       | 📋     |
 | 9     | CS-09 | OBS/browser-source foundation (post-web validation) | 📋     |
 
@@ -101,19 +101,20 @@ Full phase detail: [Architecture — Implementation phases](../architecture/crea
 
 ### Dashboard live vs mock mode
 
-| Mode     | Configuration                                   | Behavior                                                                      |
-| -------- | ----------------------------------------------- | ----------------------------------------------------------------------------- |
-| **Mock** | `NEXT_PUBLIC_USE_MOCK_DASHBOARD=true` (default) | Typed mock data for dashboard, goals, performance, campaigns, coach, and live |
-| **Live** | `NEXT_PUBLIC_USE_MOCK_DASHBOARD=false`          | Live API with JWT from auth session                                           |
+| Mode     | Configuration                                   | Behavior                                                                                           |
+| -------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| **Mock** | `NEXT_PUBLIC_USE_MOCK_DASHBOARD=true` (default) | Typed mock data for dashboard, goals, performance, campaigns, coach, live, and replay intelligence |
+| **Live** | `NEXT_PUBLIC_USE_MOCK_DASHBOARD=false`          | Live API with JWT from auth session                                                                |
 
-| Surface     | Live endpoint                                 |
-| ----------- | --------------------------------------------- |
-| Dashboard   | `GET /api/creators/:id/dashboard`             |
-| Goals       | `GET /api/creators/:id/goals`                 |
-| Performance | `GET /api/creators/:id/performance-score`     |
-| Campaigns   | Campaigns API (`/api/campaigns/*`)            |
-| Coach       | Live Intelligence + creator intelligence      |
-| Live        | Live session, timeline, summary, intelligence |
+| Surface     | Live endpoint                                       |
+| ----------- | --------------------------------------------------- |
+| Dashboard   | `GET /api/creators/:id/dashboard`                   |
+| Goals       | `GET /api/creators/:id/goals`                       |
+| Performance | `GET /api/creators/:id/performance-score`           |
+| Campaigns   | Campaigns API (`/api/campaigns/*`)                  |
+| Coach       | Live Intelligence + creator intelligence            |
+| Live        | Live session, timeline, summary, intelligence       |
+| Replay      | Replay, highlights, triggers, gifters, intelligence |
 
 Set `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_CREATOR_PROFILE_ID` for live mode until creator identity mapping is implemented.
 

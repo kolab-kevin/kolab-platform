@@ -1,7 +1,5 @@
-import { ModulePlaceholder } from '@/components/common/module-placeholder';
-import { MODULE_PLACEHOLDERS } from '@/lib/module-placeholders';
+import { ReplayWorkspace } from '@/components/replay/replay-workspace';
 
 export default function IntelligencePage() {
-  const module = MODULE_PLACEHOLDERS.intelligence;
-  return <ModulePlaceholder title={module.title} description={module.description} />;
+  return <ReplayWorkspace />;
 }
