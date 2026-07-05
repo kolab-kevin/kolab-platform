@@ -414,9 +414,30 @@ Live workspace at `/studio/live` with session overview, read-only timeline, sess
 
 ### CS-07 — Replay and gifter insights
 
-Timeline replay and highlights; gifter list and detail.
+Replay & Gifter Intelligence workspace at `/studio/intelligence` with replay timeline (navigation only, no video), grouped highlights, trigger analysis, gifter intelligence, and session signals panels. Desktop-first responsive layout.
 
-**Exit:** Post-live review available without admin API.
+**Status:** Implemented — live API composition with mock fallback, typed DTO adapters, loading/empty/partial/error states, auth error routing.
+
+**APIs:** `GET /api/live/sessions/:sessionId/replay`, `/highlights`, `/gifters`, `/analysis/triggers`, `/intelligence`.
+
+**Exit:** Post-live review available without admin API. ✅
+
+### Replay workspace data modes (CS-07)
+
+Uses the same `NEXT_PUBLIC_USE_MOCK_DASHBOARD` toggle as CS-02–CS-06.
+
+| Module            | Live endpoints                                        |
+| ----------------- | ----------------------------------------------------- |
+| Replay timeline   | `GET /api/live/sessions/:sessionId/replay`            |
+| Highlights        | `GET /api/live/sessions/:sessionId/highlights`        |
+| Trigger analysis  | `GET /api/live/sessions/:sessionId/analysis/triggers` |
+| Gifter list       | `GET /api/live/sessions/:sessionId/gifters`           |
+| Session signals   | `GET /api/live/sessions/:sessionId/intelligence`      |
+| Dashboard session | `GET /api/creators/:id/dashboard` (`liveActivity`)    |
+
+Live mode resolves the latest session ID from dashboard `liveActivity.latestLiveSession`, then composes replay, highlights, trigger, gifter, and intelligence endpoints. Display-only rendering — no replay generation, timeline logic, trigger analysis, or gifter rollup recalculation in the frontend.
+
+Implementation: `services/replay-workspace-service.ts`, `services/replay-service.ts`, `services/highlight-service.ts`, `services/trigger-analysis-service.ts`, `services/gifter-service.ts`, `hooks/use-replay-workspace.ts`, `types/replay-adapters.ts`, `components/replay/*`.
 
 ### CS-08 — Profile and settings
 
