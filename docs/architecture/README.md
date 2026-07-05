@@ -2,6 +2,8 @@
 
 Enterprise monorepo powering multiple business verticals from a single foundation.
 
+See the [System Map](./system-map.md) and [Master Roadmap](../roadmap/master-roadmap.md) for strategic architecture and delivery status.
+
 ## Platform Pillars
 
 | Vertical                  | App surfaces          | Backend                   |
