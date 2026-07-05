@@ -5,6 +5,7 @@ export * from './auth';
 export * from './campaigns';
 export * from './creator';
 export * from './creator-compliance';
+export * from './creator-dashboard';
 export * from './creator-documents-contracts';
 export * from './creator-goals';
 export * from './creator-onboarding';

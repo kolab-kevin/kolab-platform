@@ -35,6 +35,7 @@ import { LiveIntelligenceCreatorProfileService } from '../live-intelligence/live
 import { LiveIntelligenceLiveTrendsService } from '../live-intelligence/live-intelligence-live-trends.service';
 import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
+import { CreatorsDashboardService } from './creators-dashboard.service';
 import { CreatorsGoalsService } from './creators-goals.service';
 import { CreatorsOnboardingService } from './creators-onboarding.service';
 import { CreatorsPerformanceScoreService } from './creators-performance-score.service';
@@ -51,6 +52,7 @@ export class CreatorsController {
     private readonly liveIntelligenceLiveTrendsService: LiveIntelligenceLiveTrendsService,
     private readonly creatorsPerformanceScoreService: CreatorsPerformanceScoreService,
     private readonly creatorsGoalsService: CreatorsGoalsService,
+    private readonly creatorsDashboardService: CreatorsDashboardService,
   ) {}
 
   @Get()
@@ -341,6 +343,15 @@ export class CreatorsController {
     @Param('goalId') goalId: string,
   ) {
     return this.creatorsGoalsService.recalculateCreatorGoalProgress(user, creatorId, goalId);
+  }
+
+  @Get(':id/dashboard')
+  @RequirePermissions('crm:read')
+  @ApiOperation({ summary: 'Get aggregated creator studio dashboard' })
+  @ApiResponse({ status: 200, description: 'Creator dashboard aggregation' })
+  @ApiResponse({ status: 404, description: 'Creator not found' })
+  getCreatorDashboard(@CurrentUser() user: AccessTokenPayload, @Param('id') creatorId: string) {
+    return this.creatorsDashboardService.getCreatorDashboard(user, creatorId);
   }
 
   @Get(':id')

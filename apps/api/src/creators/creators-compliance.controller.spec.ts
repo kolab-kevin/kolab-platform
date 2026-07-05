@@ -9,6 +9,7 @@ import { LiveIntelligenceLiveTrendsService } from '../live-intelligence/live-int
 import { CreatorsController } from './creators.controller';
 import { CreatorsService } from './creators.service';
 import { CreatorsComplianceService } from './creators-compliance.service';
+import { CreatorsDashboardService } from './creators-dashboard.service';
 import { CreatorsGoalsService } from './creators-goals.service';
 import { CreatorsOnboardingService } from './creators-onboarding.service';
 import { CreatorsPerformanceScoreService } from './creators-performance-score.service';
@@ -82,6 +83,12 @@ describe('CreatorsController compliance authorization', () => {
             updateCreatorGoal: jest.fn(),
             updateCreatorGoalStatus: jest.fn(),
             recalculateCreatorGoalProgress: jest.fn(),
+          },
+        },
+        {
+          provide: CreatorsDashboardService,
+          useValue: {
+            getCreatorDashboard: jest.fn(),
           },
         },
       ],
