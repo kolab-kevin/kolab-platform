@@ -60,6 +60,7 @@ flowchart TB
 
 ### Home dashboard
 
+- **Data source label:** Subtitle shows `Mock data`, `Live API`, or `No dashboard data yet` (404 empty state) — no client-side score computation.
 - **Hero strip:** Display name, performance score badge, live trend direction arrow.
 - **Today column:** Goals progress, overdue deliverables (red), next live session countdown.
 - **Coach strip:** Top 1–3 alerts/recommendations with CTA buttons.

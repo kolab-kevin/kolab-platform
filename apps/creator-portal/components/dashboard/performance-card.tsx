@@ -4,13 +4,29 @@ import type { DashboardPerformance } from '@/types/dashboard';
 
 type PerformanceCardProps = {
   performance: DashboardPerformance;
+  performanceScore?: number | null;
+  liveTrendDirection?: string | null;
 };
 
-export function PerformanceCard({ performance }: PerformanceCardProps) {
+export function PerformanceCard({
+  performance,
+  performanceScore = null,
+  liveTrendDirection = null,
+}: PerformanceCardProps) {
   return (
     <Card className="border-white/10 bg-white/[0.03]">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">Performance</CardTitle>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="text-base">Performance</CardTitle>
+          <div className="text-muted-foreground flex items-center gap-3 text-xs">
+            {performanceScore != null ? (
+              <span>
+                Score: <strong className="text-foreground">{performanceScore}</strong>/100
+              </span>
+            ) : null}
+            {liveTrendDirection ? <span>Trend: {liveTrendDirection}</span> : null}
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {performance.trendSummary ? (

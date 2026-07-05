@@ -88,7 +88,7 @@ See [Architecture — OBS and Live Studio future](../architecture/creator-studio
 | Phase | ID    | Scope                                               | Status |
 | ----- | ----- | --------------------------------------------------- | ------ |
 | 1     | CS-01 | App shell, auth, navigation, org context            | ✅     |
-| 2     | CS-02 | Home dashboard (aggregated endpoint)                | 🚧     |
+| 2     | CS-02 | Home dashboard (aggregated endpoint)                | ✅     |
 | 3     | CS-03 | Goals and performance surfaces                      | 📋     |
 | 4     | CS-04 | Campaign workspace and deliverables                 | 📋     |
 | 5     | CS-05 | Coach alerts and recommendations                    | 📋     |
@@ -98,6 +98,15 @@ See [Architecture — OBS and Live Studio future](../architecture/creator-studio
 | 9     | CS-09 | OBS/browser-source foundation (post-web validation) | 📋     |
 
 Full phase detail: [Architecture — Implementation phases](../architecture/creator-studio.md#implementation-phases).
+
+### Dashboard live vs mock mode
+
+| Mode     | Configuration                                   | Behavior                                                     |
+| -------- | ----------------------------------------------- | ------------------------------------------------------------ |
+| **Mock** | `NEXT_PUBLIC_USE_MOCK_DASHBOARD=true` (default) | Typed mock dashboard for local UI work                       |
+| **Live** | `NEXT_PUBLIC_USE_MOCK_DASHBOARD=false`          | `GET /api/creators/:id/dashboard` with JWT from auth session |
+
+Set `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_CREATOR_PROFILE_ID` for live mode until creator identity mapping is implemented.
 
 ---
 
