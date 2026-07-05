@@ -8,10 +8,12 @@ Central index for product, engineering, and operations documentation. For long-t
 
 | Field                          | Value                                                                                      |
 | ------------------------------ | ------------------------------------------------------------------------------------------ |
-| **Current Version**            | v0.6 — Creator Intelligence                                                                |
-| **Current Milestone**          | v0.7 Creator Studio — architecture approved, implementation starting                       |
-| **Current Product Focus**      | [Creator Studio](./roadmap/master-roadmap.md#creator-studio) (v0.7)                        |
-| **Current Development Branch** | `feature/creator-studio-architecture` → Creator Studio implementation                      |
+| **Current Platform Version**   | Creator Studio v1.0 — **Complete**                                                         |
+| **Current Version**            | v0.7 — Creator Studio (shipped)                                                            |
+| **Current Milestone**          | v0.8 Manager Portal — MP-01 Manager Shell (in progress)                                    |
+| **Current Product Focus**      | [Manager Portal](./roadmap/master-roadmap.md#manager-portal) (v0.8)                        |
+| **Current Active Development** | Manager Portal v1                                                                          |
+| **Current Development Branch** | `feature/master-roadmap-update` → strategic documentation                                  |
 | **Platform Maturity**          | See [Platform Maturity Dashboard](./roadmap/master-roadmap.md#platform-maturity-dashboard) |
 
 ### Operational references
@@ -149,7 +151,8 @@ Central index for product, engineering, and operations documentation. For long-t
 ## How to use this hub
 
 1. **Planning a feature** — [Product Principles](./vision/product-principles.md) → [Master Roadmap](./roadmap/master-roadmap.md) → [Developer Workflow](./engineering/developer-workflow.md).
-2. **Building Creator Studio** — [Product brief](./product/creator-studio.md) → [Architecture](./architecture/creator-studio.md) → [UX](./design/creator-studio-ux.md).
-3. **Understanding the platform** — [System Map](./architecture/system-map.md) → [Architecture overview](./architecture/README.md).
-4. **Shipping API work** — [API index](./api/README.md) → [Backend standards](./engineering/backend-standards.md).
-5. **Strategic reviews** — [Platform Maturity Dashboard](./roadmap/master-roadmap.md#platform-maturity-dashboard) → [Business Model](./business/business-model.md).
+2. **Building Creator Studio** — [Product brief](./product/creator-studio.md) → [Architecture](./architecture/creator-studio.md) → [UX](./design/creator-studio-ux.md). _(v1.0 complete.)_
+3. **Building Manager Portal** — [Master Roadmap — Manager Portal](./roadmap/master-roadmap.md#manager-portal) → [Release v0.8](./roadmap/releases.md#v08--manager-portal).
+4. **Understanding the platform** — [System Map](./architecture/system-map.md) → [Architecture overview](./architecture/README.md).
+5. **Shipping API work** — [API index](./api/README.md) → [Backend standards](./engineering/backend-standards.md).
+6. **Strategic reviews** — [Platform Maturity Dashboard](./roadmap/master-roadmap.md#platform-maturity-dashboard) → [Business Model](./business/business-model.md).

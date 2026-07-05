@@ -8,7 +8,7 @@
 
 ## Overview
 
-Kōlab is a monorepo platform where **identity and organization scope** anchor **CRM**, **campaigns**, and **live intelligence**. Intelligence outputs feed **goals**, **performance**, and **matching**, which in turn power **Creator Studio** and the future **Manager Portal** and **Live Studio** clients.
+Kōlab is a monorepo platform where **identity and organization scope** anchor **CRM**, **campaigns**, and **live intelligence**. Intelligence outputs feed **goals**, **performance**, and **matching**, which power **Creator Studio v1.0** (complete) and the in-progress **Manager Portal** and future **Live Studio** clients.
 
 ---
 
@@ -70,13 +70,15 @@ flowchart TB
 
 ## Client surfaces
 
-| Surface                     | Role                                   | Maturity           |
-| --------------------------- | -------------------------------------- | ------------------ |
-| **Creator Studio**          | Creator home — goals, dashboard, coach | Web UI 🚧 · API ✅ |
-| **Manager Portal**          | Agency portfolio and campaign command  | 📋 Planned         |
-| **Web / Admin**             | Internal ops, configuration, reporting | Shell ✅           |
-| **Mobile**                  | Creator alerts, lightweight dashboard  | 📋 Planned         |
-| **Live Studio (OBS Layer)** | Capture + intelligence overlays        | 📋 Planned         |
+| Surface                     | Role                                   | Status                              |
+| --------------------------- | -------------------------------------- | ----------------------------------- |
+| **Creator Studio**          | Creator home — goals, dashboard, coach | ✅ Production Ready (v1.0)          |
+| **Manager Portal**          | Agency portfolio and campaign command  | 🚧 Next Active Development (v0.8)   |
+| **Production Workspace**    | In-studio production UI foundation     | ✅ Foundation Complete (mock CS-09) |
+| **OBS Integration**         | Capture, streaming, browser sources    | 📋 Future Phase (v0.9+)             |
+| **Web / Admin**             | Internal ops, configuration, reporting | Shell ✅                            |
+| **Mobile**                  | Creator alerts, lightweight dashboard  | 📋 Planned                          |
+| **Live Studio (OBS Layer)** | Native capture + intelligence overlays | 📋 Planned (v0.9)                   |
 
 ```mermaid
 flowchart LR
@@ -389,11 +391,12 @@ flowchart TB
   WEB --> OBS_LINK
 ```
 
-| Delivery track           | Timing           | Notes                                                              |
-| ------------------------ | ---------------- | ------------------------------------------------------------------ |
-| **Web**                  | v0.7 CS-01–CS-08 | Primary daily workspace                                            |
-| **Desktop wrapper**      | CS-09 / v0.9     | Tauri preferred over Electron unless OBS plugins require otherwise |
-| **OBS / browser source** | v0.9+            | After web workspace proves utility                                 |
+| Delivery track            | Timing           | Status | Notes                                                              |
+| ------------------------- | ---------------- | ------ | ------------------------------------------------------------------ |
+| **Web (v1.0)**            | v0.7 CS-01–CS-10 | ✅     | Primary daily workspace — production ready                         |
+| **Production foundation** | CS-09            | ✅     | Mock provider UI; swappable for future desktop                     |
+| **Desktop wrapper**       | v0.9             | 📋     | Tauri preferred over Electron unless OBS plugins require otherwise |
+| **OBS / browser source**  | v0.9+            | 📋     | Future phase after web workspace validation                        |
 
 **Docs:** [Creator Studio architecture](./creator-studio.md) · [Product brief](../product/creator-studio.md) · [UX](../design/creator-studio-ux.md)
 
@@ -401,16 +404,18 @@ flowchart TB
 
 ## Future product surfaces
 
-| Surface                | Consumes                                         | Status               |
-| ---------------------- | ------------------------------------------------ | -------------------- |
-| **Creator Studio**     | Dashboard, goals, live activity, coach           | Web v0.7 🚧 · API ✅ |
-| **Manager Portal**     | Portfolio CRM, campaigns, matching, analytics    | 📋 Planned           |
-| **Live Studio**        | Streaming, schedules, live intelligence overlays | 📋 Planned           |
-| **Analytics Platform** | Warehouse exports, BI, brand reports             | 📋 Planned           |
-| **AI Platform**        | Deterministic inputs → agents & automation       | 📋 Planned           |
-| **Marketplace**        | Brand discovery, creator listings                | 🔮 Future            |
-| **Financial Platform** | Payouts, invoicing, revenue share                | 🔮 Future            |
-| **Token Economy**      | Credits ledger, utility tokens                   | 📋 Planned           |
+| Surface                  | Consumes                                         | Status                              |
+| ------------------------ | ------------------------------------------------ | ----------------------------------- |
+| **Creator Studio**       | Dashboard, goals, live activity, coach           | ✅ Production Ready (v1.0)          |
+| **Manager Portal**       | Portfolio CRM, campaigns, matching, analytics    | 🚧 Next Active Development (v0.8)   |
+| **Production Workspace** | In-studio production panels                      | ✅ Foundation Complete (CS-09 mock) |
+| **OBS Integration**      | Capture, streaming, browser sources              | 📋 Future Phase (v0.9+)             |
+| **Live Studio**          | Streaming, schedules, live intelligence overlays | 📋 Planned (v0.9)                   |
+| **Analytics Platform**   | Warehouse exports, BI, brand reports             | 📋 Planned                          |
+| **AI Platform**          | Deterministic inputs → agents & automation       | 📋 Planned                          |
+| **Marketplace**          | Brand discovery, creator listings                | 🔮 Future                           |
+| **Financial Platform**   | Payouts, invoicing, revenue share                | 🔮 Future                           |
+| **Token Economy**        | Credits ledger, utility tokens                   | 📋 Planned                          |
 
 ---
 
