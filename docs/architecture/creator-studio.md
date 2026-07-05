@@ -190,6 +190,22 @@ Live mode composes campaign workspace data client-side from org-scoped campaign 
 
 Implementation: `services/campaign-service.ts`, `services/campaign-assignment-service.ts`, `services/campaign-deliverable-service.ts`, `services/campaign-workspace-loader.ts`, `hooks/use-campaign-workspace.ts`, `types/campaign-adapters.ts`, `components/campaigns/*`.
 
+### Coach workspace data modes (CS-05)
+
+Uses the same `NEXT_PUBLIC_USE_MOCK_DASHBOARD` toggle as CS-02–CS-04.
+
+| Module                  | Live endpoints                                                 |
+| ----------------------- | -------------------------------------------------------------- |
+| Session recommendations | `GET /api/live/sessions/:sessionId/recommendations`            |
+| Coach alerts            | `GET /api/live/sessions/:sessionId/coach/alerts`               |
+| Session intelligence    | `GET /api/live/sessions/:sessionId/intelligence`               |
+| Creator intelligence    | `GET /api/creators/:id/intelligence`                           |
+| Dashboard coach summary | `GET /api/creators/:id/dashboard` (overview seed + session id) |
+
+Live mode resolves the latest session ID from dashboard `liveActivity.latestLiveSession`, then composes session-scoped coach endpoints with creator intelligence. Display-only rendering — no recommendation, alert, or score recalculation in the frontend.
+
+Implementation: `services/coach-service.ts`, `services/recommendation-service.ts`, `services/alert-service.ts`, `services/intelligence-service.ts`, `services/creator-intelligence-service.ts`, `hooks/use-coach-workspace.ts`, `types/coach-adapters.ts`, `components/coach/*`.
+
 ---
 
 ## Route and module structure
@@ -366,9 +382,11 @@ Campaign workspace at `/studio/campaigns` with assigned campaigns, deliverables,
 
 ### CS-05 — Coach and recommendations
 
-Coach alerts and recommendations modules; link quick actions to targets.
+Coach workspace at `/studio/coach` combining recommendations, alerts, session intelligence, and creator intelligence. Tab navigation: Summary, Recommendations, Alerts, Intelligence.
 
-**Exit:** Creator navigates from coach signal to relevant module in one click.
+**Status:** Implemented — live API composition with mock fallback, typed DTO adapters, priority/confidence UI, loading/empty/partial/error states, auth error routing.
+
+**Exit:** Creator reviews coaching signals and intelligence without client-side business logic. ✅
 
 ### CS-06 — Live workspace
 
