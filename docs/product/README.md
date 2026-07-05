@@ -25,7 +25,9 @@ KŌLAB Platform is the unified foundation for Kolab's product ecosystem — not 
 
 ## Roadmap
 
-See root [README.md](../../README.md#development-roadmap) for phased delivery plan.
+See the [Master Roadmap](../roadmap/master-roadmap.md) for the living product delivery plan.
+
+See root [README.md](../../README.md#development-roadmap) for legacy phase summary.
 
 ### Release planning
 
