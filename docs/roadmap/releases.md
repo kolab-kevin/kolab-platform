@@ -8,22 +8,22 @@
 
 ## Release overview
 
-| Version                              | Theme                  | Status      |
-| ------------------------------------ | ---------------------- | ----------- |
-| [v0.1](#v01--platform-foundation)    | Platform Foundation    | Shipped     |
-| [v0.2](#v02--identity)               | Identity               | Shipped     |
-| [v0.3](#v03--recruitment-crm)        | Recruitment CRM        | Shipped     |
-| [v0.4](#v04--campaigns)              | Campaigns              | Shipped     |
-| [v0.5](#v05--live-intelligence)      | Live Intelligence      | Shipped     |
-| [v0.6](#v06--creator-intelligence)   | Creator Intelligence   | Shipped     |
-| [v0.7](#v07--creator-studio)         | Creator Studio         | In progress |
-| [v0.8](#v08--manager-portal)         | Manager Portal         | Planned     |
-| [v0.9](#v09--obs-foundation)         | OBS Foundation         | Planned     |
-| [v1.0](#v10--commercial-release)     | Commercial Release     | Planned     |
-| [v1.5](#v15--ai-coach)               | AI Coach               | Planned     |
-| [v2.0](#v20--marketplace)            | Marketplace            | Planned     |
-| [v2.5](#v25--financial-platform)     | Financial Platform     | Planned     |
-| [v3.0](#v30--global-creator-network) | Global Creator Network | Planned     |
+| Version                              | Theme                  | Status          |
+| ------------------------------------ | ---------------------- | --------------- |
+| [v0.1](#v01--platform-foundation)    | Platform Foundation    | Shipped         |
+| [v0.2](#v02--identity)               | Identity               | Shipped         |
+| [v0.3](#v03--recruitment-crm)        | Recruitment CRM        | Shipped         |
+| [v0.4](#v04--campaigns)              | Campaigns              | Shipped         |
+| [v0.5](#v05--live-intelligence)      | Live Intelligence      | Shipped         |
+| [v0.6](#v06--creator-intelligence)   | Creator Intelligence   | Shipped         |
+| [v0.7](#v07--creator-studio)         | Creator Studio         | **Complete**    |
+| [v0.8](#v08--manager-portal)         | Manager Portal         | **In progress** |
+| [v0.9](#v09--obs-foundation)         | OBS Foundation         | Planned         |
+| [v1.0](#v10--commercial-release)     | Commercial Release     | Planned         |
+| [v1.5](#v15--ai-coach)               | AI Coach               | Planned         |
+| [v2.0](#v20--marketplace)            | Marketplace            | Planned         |
+| [v2.5](#v25--financial-platform)     | Financial Platform     | Planned         |
+| [v3.0](#v30--global-creator-network) | Global Creator Network | Planned         |
 
 ---
 
@@ -101,29 +101,62 @@
 
 ## v0.7 — Creator Studio
 
+**Status:** ✅ **COMPLETE** — Creator Studio v1.0 shipped in `apps/creator-portal`.
+
 **Objectives:** Deliver the primary creator-facing surface backed by existing APIs.
 
-**Major capabilities:** Creator portal UX for dashboard, goals, live schedule, campaigns, compliance, coaching summaries. Web-first in `apps/creator-portal`; desktop wrapper deferred to CS-09 / v0.9.
+**Major capabilities:** Creator portal UX for dashboard, goals, live schedule, campaigns, compliance, coaching summaries, replay intelligence, profile/settings, and production workspace foundation. Web-first in `apps/creator-portal`; desktop wrapper and OBS integration deferred to v0.9.
 
-**Success criteria:** Creators complete daily workflows without admin API; dashboard p95 within SLA; mobile-responsive core flows; no client-side score recomputation.
+**Success criteria:** Creators complete daily workflows without admin API; dashboard p95 within SLA; mobile-responsive core flows; no client-side score recomputation. ✅ Met.
 
-**Dependencies:** v0.6 Creator Intelligence (dashboard and goals APIs). **Current primary development focus.**
+**Dependencies:** v0.6 Creator Intelligence (dashboard and goals APIs).
 
 **Documentation:** [Product brief](../product/creator-studio.md) · [Architecture](../architecture/creator-studio.md) · [UX](../design/creator-studio-ux.md)
 
-**Implementation phases:** CS-01 Shell → CS-02 Dashboard → CS-03 Goals/performance → CS-04 Campaigns → CS-05 Coach → CS-06 Live → CS-07 Replay/gifters → CS-08 Settings → CS-09 OBS foundation (after web validation).
+**Implementation phases (complete):**
+
+| Phase | Scope                           | Status |
+| ----- | ------------------------------- | ------ |
+| CS-01 | Shell                           | ✅     |
+| CS-02 | Dashboard                       | ✅     |
+| CS-03 | Goals & Performance             | ✅     |
+| CS-04 | Campaign Workspace              | ✅     |
+| CS-05 | Coach Workspace                 | ✅     |
+| CS-06 | Live Workspace                  | ✅     |
+| CS-07 | Replay & Gifter Intelligence    | ✅     |
+| CS-08 | Profile & Settings              | ✅     |
+| CS-09 | Production Workspace Foundation | ✅     |
+| CS-10 | Integration & Polish            | ✅     |
+
+**Completion notes:** All ten CS phases shipped. Shared workspace shell, mock/live data modes, navigation polish, and accessibility pass complete. Production workspace UI foundation (CS-09) is mock-only; native OBS/desktop integration remains v0.9 scope.
 
 ---
 
 ## v0.8 — Manager Portal
 
+**Status:** 🚧 **IN PROGRESS** — Current primary development focus.
+
 **Objectives:** Extend agency operations to portfolio managers and recruiters at scale.
 
-**Major capabilities:** Roster oversight, campaign pipeline, compliance dashboards, intelligence rollups, bulk actions.
+**Major capabilities:** Roster oversight, campaign pipeline, compliance dashboards, intelligence rollups, bulk actions, recruiting CRM, notifications, reporting, and administration.
 
 **Success criteria:** Managers operate full roster without spreadsheets; permission matrix enforced; audit on bulk changes.
 
 **Dependencies:** v0.7 Creator Studio patterns; Agency CRM backend maturity.
+
+**Implementation phases (planned):**
+
+| Phase | Scope                     | Status |
+| ----- | ------------------------- | ------ |
+| MP-01 | Manager Shell             | 📋     |
+| MP-02 | Creator Management        | 📋     |
+| MP-03 | Live Operations Dashboard | 📋     |
+| MP-04 | Campaign Operations       | 📋     |
+| MP-05 | Recruiting CRM            | 📋     |
+| MP-06 | Notifications & Tasks     | 📋     |
+| MP-07 | Reporting                 | 📋     |
+| MP-08 | Administration            | 📋     |
+| MP-09 | Integration & Polish      | 📋     |
 
 ---
 

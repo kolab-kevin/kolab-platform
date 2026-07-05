@@ -1,9 +1,27 @@
 # Creator Studio
 
-**Status:** Architecture approved — implementation starting (v0.7)  
-**Target:** Release 0.7 (`release/0.7.x`)  
+**Status:** ✅ **COMPLETE** — Creator Studio v1.0 (Release 0.7)  
+**Target:** Release 0.7 (`release/0.7.x`) — shipped  
 **Depends on:** v0.6 Creator Intelligence APIs (dashboard, goals, performance, intelligence, trends)  
-**Branch:** `feature/creator-studio-architecture`
+**Application:** `apps/creator-portal`
+
+---
+
+## Creator Studio v1.0 summary
+
+Creator Studio v1.0 is the creator-facing operating system for daily work on Kōlab. Creators sign in to a unified web workspace and review priorities, goals, campaigns, live activity, coaching signals, replay intelligence, compliance, and profile settings — all backed by existing APIs with mock or live data modes.
+
+| Capability                | Workspaces                                                        |
+| ------------------------- | ----------------------------------------------------------------- |
+| **Home & priorities**     | Dashboard with quick actions and aggregated sections              |
+| **Goals & performance**   | Goals tracking and performance score visualization                |
+| **Campaigns**             | List, kanban, and detail views with deliverables and applications |
+| **Coaching**              | Recommendations, alerts, and intelligence tabs                    |
+| **Live operations**       | Session overview, timeline, summary, and live intelligence        |
+| **Post-live review**      | Replay timeline, highlights, triggers, and gifter intelligence    |
+| **Identity & compliance** | Profile, platform accounts, skills, compliance, and settings      |
+| **Production foundation** | Mock production workspace UI (desktop/OBS deferred to v0.9)       |
+| **Polish**                | Shared shells, navigation, accessibility, tab memory, and caching |
 
 ---
 
@@ -123,24 +141,26 @@ Set `NEXT_PUBLIC_API_BASE_URL` and `NEXT_PUBLIC_CREATOR_PROFILE_ID` for live mod
 
 ## Success criteria
 
-| Criterion     | Measure                                                                               |
-| ------------- | ------------------------------------------------------------------------------------- |
-| Daily utility | Creators complete goals review, deliverable check, and go-live prep without admin API |
-| Performance   | Dashboard initial load p95 within product SLA (target &lt; 2s on broadband)           |
-| Correctness   | UI displays API DTOs only — no client-side score recomputation                        |
-| Privacy       | No raw chat or transcript bodies in any Creator Studio view                           |
-| Mobile        | Core flows usable on phone viewport (responsive, not native app)                      |
-| Audit         | Dashboard and sensitive views emit existing audit actions                             |
+| Criterion     | Measure                                                                               | v1.0 |
+| ------------- | ------------------------------------------------------------------------------------- | ---- |
+| Daily utility | Creators complete goals review, deliverable check, and go-live prep without admin API | ✅   |
+| Performance   | Dashboard initial load p95 within product SLA (target &lt; 2s on broadband)           | ✅   |
+| Correctness   | UI displays API DTOs only — no client-side score recomputation                        | ✅   |
+| Privacy       | No raw chat or transcript bodies in any Creator Studio view                           | ✅   |
+| Mobile        | Core flows usable on phone viewport (responsive, not native app)                      | ✅   |
+| Audit         | Dashboard and sensitive views emit existing audit actions                             | ✅   |
+| Cohesion      | All workspaces share consistent shell, loading, and navigation patterns               | ✅   |
 
 ---
 
-## Out of scope (v0.7)
+## Out of scope (v1.0 complete; deferred)
 
 - New backend domains or Prisma models for Creator Studio
-- Desktop installer (Electron/Tauri) — CS-09 / v0.9
+- Desktop installer (Electron/Tauri) — v0.9 Live Studio
 - Real-time websocket coach delivery — API summaries first
-- Manager portfolio UI — Manager Portal
+- Manager portfolio UI — Manager Portal v0.8
 - AI-generated coaching copy — v1.5 AI Coach release
+- Native OBS capture and streaming — v0.9 OBS Foundation
 
 ---
 

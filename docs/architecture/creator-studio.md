@@ -1,8 +1,20 @@
 # Creator Studio Architecture
 
-**Status:** Approved for v0.7 implementation  
+**Status:** ✅ Production Ready — Creator Studio v1.0  
 **Application:** `apps/creator-portal` (Next.js 15 App Router)  
 **Related:** [Product brief](../product/creator-studio.md) · [UX specification](../design/creator-studio-ux.md) · [Creators API](../api/creators.md) · [Frontend standards](../engineering/frontend-standards.md)
+
+---
+
+## v1.0 delivery summary
+
+Creator Studio v1.0 (CS-01–CS-10) is complete. The web app provides ten integrated workspaces with shared UI patterns, mock/live data modes, navigation polish, and accessibility improvements. Business logic remains in `@kolab/api`; the portal is a presentation layer only.
+
+| Track                                   | Status                                    |
+| --------------------------------------- | ----------------------------------------- |
+| Web workspaces (CS-01–CS-08, CS-10)     | ✅ Production ready                       |
+| Production workspace foundation (CS-09) | ✅ UI foundation complete (mock provider) |
+| Desktop wrapper / OBS integration       | 📋 Deferred to v0.9                       |
 
 ---
 

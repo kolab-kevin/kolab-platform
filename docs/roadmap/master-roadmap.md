@@ -3,7 +3,7 @@
 <!-- markdownlint-disable MD024 MD036 -->
 
 **Status:** Living document — single source of truth for product delivery  
-**Last updated:** 2026-07-04 (strategic planning system v2)  
+**Last updated:** 2026-07-05 (Creator Studio v1.0 complete; Manager Portal active)  
 **Owner:** Kōlab Product & Engineering
 
 **Related:** [Product Strategy](../vision/product-strategy.md) · [Competitive Advantages](../vision/competitive-advantages.md) · [Product Principles](../vision/product-principles.md) · [System Map](../architecture/system-map.md) · [Business Model](../business/business-model.md)
@@ -44,8 +44,8 @@ Estimated completion by product and delivery track. **Overall** is the weighted 
 | Live Intelligence    | 78%     | 12%      | —       | —      | 5%  | 50%     |
 | Creator Intelligence | 82%     | 10%      | —       | —      | 8%  | 52%     |
 | Goals Engine         | 88%     | 5%       | —       | —      | —   | 58%     |
-| Creator Studio       | 30%     | 18%      | —       | 8%     | —   | 24%     |
-| Manager Portal       | 25%     | 6%       | —       | —      | 3%  | 19%     |
+| Creator Studio       | 35%     | 95%      | 15%     | 10%    | —   | 88%     |
+| Manager Portal       | 25%     | 8%       | —       | —      | 3%  | 20%     |
 | OBS Replacement      | 40%     | 5%       | 8%      | —      | 5%  | 22%     |
 | Analytics Platform   | 15%     | 5%       | —       | —      | 10% | 13%     |
 | AI Platform          | 15%     | 5%       | —       | —      | 18% | 14%     |
@@ -171,14 +171,15 @@ Track structural work that does not ship user-visible features but reduces risk,
 
 How strategic delivery evolved. Each version maps to merged platform scope—not marketing releases alone.
 
-| Version                          | Theme                  | Scope delivered                                        | Strategic shift             |
-| -------------------------------- | ---------------------- | ------------------------------------------------------ | --------------------------- |
-| **v0.1 Platform**                | Foundation             | Monorepo, auth, Docker, CI, app shells                 | Prove multi-app platform    |
-| **v0.2 CRM**                     | Identity & recruitment | Organizations, invitations, leads, creator roster      | Organization-scoped CRM     |
-| **v0.3 Campaigns**               | Campaign operations    | Campaigns, applications, assignments, deliverables     | Brand workflow in-platform  |
-| **v0.4 Live Intelligence**       | Live data plane        | Sessions, events, gifters, coaching outputs            | Live ops as structured data |
-| **v0.5 Creator Intelligence**    | Creator graph          | Intelligence profile, trends, performance score, goals | Cross-session creator model |
-| **v0.6 Creator Studio planning** | Creator surface        | Dashboard API, roadmap & strategic docs                | Creator OS backend-first    |
+| Version                          | Theme                  | Scope delivered                                        | Strategic shift                  |
+| -------------------------------- | ---------------------- | ------------------------------------------------------ | -------------------------------- |
+| **v0.1 Platform**                | Foundation             | Monorepo, auth, Docker, CI, app shells                 | Prove multi-app platform         |
+| **v0.2 CRM**                     | Identity & recruitment | Organizations, invitations, leads, creator roster      | Organization-scoped CRM          |
+| **v0.3 Campaigns**               | Campaign operations    | Campaigns, applications, assignments, deliverables     | Brand workflow in-platform       |
+| **v0.4 Live Intelligence**       | Live data plane        | Sessions, events, gifters, coaching outputs            | Live ops as structured data      |
+| **v0.5 Creator Intelligence**    | Creator graph          | Intelligence profile, trends, performance score, goals | Cross-session creator model      |
+| **v0.6 Creator Studio planning** | Creator surface        | Dashboard API, roadmap & strategic docs                | Creator OS backend-first         |
+| **v0.7 Creator Studio**          | Creator OS v1.0        | Creator portal web app CS-01–CS-10                     | Creators operate daily in-studio |
 
 **How the roadmap evolves:** Each version adds a **durable data layer** before client experiences. [Roadmap History](#roadmap-history) grows with every version tag; [Platform Maturity Dashboard](#platform-maturity-dashboard) updates continuously between versions.
 
@@ -195,8 +196,8 @@ How strategic delivery evolved. Each version maps to merged platform scope—not
 | Campaign Management           | 72%        | 🚧     |
 | Live Intelligence             | 70%        | 🚧     |
 | Creator Intelligence          | 75%        | 🚧     |
-| Creator Studio                | 25%        | 🚧     |
-| Manager Portal                | 8%         | 📋     |
+| Creator Studio                | 95%        | ✅     |
+| Manager Portal                | 12%        | 🚧     |
 | Live Studio (OBS Replacement) | 5%         | 📋     |
 | Analytics Platform            | 10%        | 📋     |
 | AI Platform                   | 12%        | 📋     |
@@ -208,6 +209,20 @@ How strategic delivery evolved. Each version maps to merged platform scope—not
 | Internationalization          | 5%         | 🔮     |
 
 **North Star:** [Become the operating system for creator businesses](../vision/product-strategy.md#north-star).
+
+### Completed products
+
+| Product        | Version | Status      | Notes                                                      |
+| -------------- | ------- | ----------- | ---------------------------------------------------------- |
+| Creator Studio | v1.0    | ✅ Complete | Web workspace CS-01–CS-10 shipped in `apps/creator-portal` |
+
+### Current active development
+
+| Focus          | Version | Status         | Next milestone      |
+| -------------- | ------- | -------------- | ------------------- |
+| Manager Portal | v1.0    | 🚧 In Progress | MP-01 Manager Shell |
+
+**Next Active Development:** [Manager Portal](#manager-portal) — agency command center for portfolio, campaigns, recruiting, and operations.
 
 ---
 
@@ -640,44 +655,52 @@ This area strengthens the [Kōlab Flywheel](#kōlab-flywheel) by turning histori
 
 Creator-facing home for goals, live activity, campaigns, coaching, compliance, and quick actions.
 
-### Current completion: 25%
+### Current completion: 95% (v1.0)
 
-### Major capabilities
+**Status:** ✅ **COMPLETE** — Creator Studio v1.0 shipped in `apps/creator-portal`.
 
-- Aggregated creator dashboard API
-- Goals tracking integration
-- Coach and performance summaries
-- Quick action recommendations
+### Major capabilities (v1.0)
+
+- Authenticated studio shell with navigation, breadcrumbs, and org context
+- Home dashboard consuming aggregated creator dashboard API
+- Goals and performance workspaces with display-only API rendering
+- Campaign workspace (list, kanban, detail) with deliverables and applications
+- Coach workspace (recommendations, alerts, intelligence tabs)
+- Live workspace with session overview, timeline, summary, and intelligence
+- Replay & Gifter Intelligence workspace (timeline, highlights, triggers, gifters)
+- Profile, compliance, and settings workspaces
+- Production workspace UI foundation (mock provider; desktop/OBS deferred)
+- Cross-workspace integration polish: shared shells, loading/empty/error states, tab memory, accessibility
 
 ### Completed ✅
 
-- Creator dashboard aggregation endpoint
-- Dashboard types in `@kolab/types`
-- Audit on dashboard view
-
-### In Progress 🚧
-
-- Creator portal UI implementation
-- Mobile-friendly dashboard layouts
-
-### Planned 📋
-
-- Goal management UI
-- Live session launcher from dashboard
-- Achievement celebrations and milestones UI
+- Creator dashboard aggregation endpoint and audit
+- Creator portal web app CS-01 through CS-10
+- Mock and live API data modes for all workspaces
+- Shared workspace UI patterns and navigation polish
 
 ### Future Vision 🔮
 
-- Personalized creator home with configurable widgets
+- Configurable dashboard widgets
+- Native mobile Creator Studio app
+- Live Studio deep-link and desktop wrapper (v0.9+)
+- Real-time websocket coach delivery
 
 ### Roadmap items
 
 | Item                   | Status | Priority | Dependencies         | Backend | Frontend | Desktop | Mobile | Docs | Completion |
 | ---------------------- | ------ | -------- | -------------------- | ------- | -------- | ------- | ------ | ---- | ---------- |
 | Dashboard API          | ✅     | P0       | Goals + Intelligence | L       | —        | —       | —      | M    | 100%       |
-| Creator portal home UI | 🚧     | P0       | Dashboard API        | S       | XL       | —       | L      | M    | 20%        |
-| Goals UI               | 📋     | P1       | Goals engine         | S       | L        | —       | M      | M    | 5%         |
-| Live launcher          | 📋     | P1       | Live Studio          | M       | L        | M       | M      | M    | 0%         |
+| Creator portal home UI | ✅     | P0       | Dashboard API        | S       | XL       | —       | L      | M    | 100%       |
+| Goals UI               | ✅     | P1       | Goals engine         | S       | L        | —       | M      | M    | 100%       |
+| Campaign workspace UI  | ✅     | P1       | Campaigns API        | S       | L        | —       | M      | M    | 100%       |
+| Coach workspace UI     | ✅     | P1       | Live Intelligence    | S       | L        | —       | M      | M    | 100%       |
+| Live workspace UI      | ✅     | P1       | Live Intelligence    | S       | L        | —       | M      | M    | 100%       |
+| Replay intelligence UI | ✅     | P1       | Live Intelligence    | S       | L        | —       | M      | M    | 100%       |
+| Profile & settings UI  | ✅     | P1       | Creator CRM          | S       | M        | —       | M      | M    | 100%       |
+| Production foundation  | ✅     | P2       | Live workspace       | —       | L        | M       | —      | M    | 100%       |
+| Integration & polish   | ✅     | P1       | All CS workspaces    | S       | L        | —       | —      | M    | 100%       |
+| Live launcher (native) | 🔮     | P2       | Live Studio v0.9     | M       | L        | M       | M      | M    | 5%         |
 | Configurable widgets   | 🔮     | P2       | Analytics            | M       | L        | —       | L      | S    | 0%         |
 
 ### How does this improve creator success?
@@ -688,19 +711,20 @@ This area strengthens the [Kōlab Flywheel](#kōlab-flywheel) by giving creators
 
 **Docs:** [Product brief](../product/creator-studio.md) · [Architecture](../architecture/creator-studio.md) · [UX](../design/creator-studio-ux.md) · [Creators API — dashboard](../api/creators.md)
 
-### Implementation phases (v0.7)
+### Implementation phases (v0.7 / v1.0)
 
-| Phase | Scope                         | Status |
-| ----- | ----------------------------- | ------ |
-| CS-01 | App shell, auth, navigation   | 📋     |
-| CS-02 | Home dashboard                | 📋     |
-| CS-03 | Goals and performance         | 📋     |
-| CS-04 | Campaign workspace            | 📋     |
-| CS-05 | Coach and recommendations     | 📋     |
-| CS-06 | Live workspace                | 📋     |
-| CS-07 | Replay and gifter insights    | 📋     |
-| CS-08 | Profile and settings          | 📋     |
-| CS-09 | OBS/browser-source (post-web) | 📋     |
+| Phase | Scope                           | Status |
+| ----- | ------------------------------- | ------ |
+| CS-01 | App shell, auth, navigation     | ✅     |
+| CS-02 | Home dashboard                  | ✅     |
+| CS-03 | Goals and performance           | ✅     |
+| CS-04 | Campaign workspace              | ✅     |
+| CS-05 | Coach and recommendations       | ✅     |
+| CS-06 | Live workspace                  | ✅     |
+| CS-07 | Replay and gifter insights      | ✅     |
+| CS-08 | Profile and settings            | ✅     |
+| CS-09 | Production workspace foundation | ✅     |
+| CS-10 | Integration and polish          | ✅     |
 
 See [Architecture — Implementation phases](../architecture/creator-studio.md#implementation-phases).
 
@@ -712,7 +736,9 @@ See [Architecture — Implementation phases](../architecture/creator-studio.md#i
 
 Agency command center for managers: portfolio intelligence, campaign oversight, matching review, and team accountability.
 
-### Current completion: 8%
+### Current completion: 12%
+
+**Status:** 🚧 **IN PROGRESS** — Next primary development focus (v0.8 / Manager Portal v1).
 
 ### Major capabilities
 
@@ -724,16 +750,24 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 ### Completed ✅
 
 - Backend APIs that Manager Portal will compose (CRM, campaigns, intelligence)
+- Creator Studio v1.0 patterns for workspace shells, navigation, and data modes
 
 ### In Progress 🚧
 
+- Manager Portal v1 planning and MP-01 shell kickoff
 - UX research and information architecture
 
 ### Planned 📋
 
-- Manager Portal Next.js app shell
-- Portfolio dashboard
-- Campaign command views
+- Manager Portal Next.js app shell (MP-01)
+- Creator management (MP-02)
+- Live operations dashboard (MP-03)
+- Campaign operations (MP-04)
+- Recruiting CRM (MP-05)
+- Notifications & tasks (MP-06)
+- Reporting (MP-07)
+- Administration (MP-08)
+- Integration & polish (MP-09)
 
 ### Future Vision 🔮
 
@@ -744,10 +778,24 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 | Item                  | Status | Priority | Dependencies           | Backend | Frontend | Desktop | Mobile | Docs | Completion |
 | --------------------- | ------ | -------- | ---------------------- | ------- | -------- | ------- | ------ | ---- | ---------- |
 | API composition layer | 🚧     | P0       | Agency CRM + Campaigns | M       | —        | —       | —      | S    | 30%        |
-| Manager app shell     | 📋     | P0       | Identity               | S       | L        | —       | —      | M    | 0%         |
+| Manager app shell     | 🚧     | P0       | Identity               | S       | L        | —       | —      | M    | 5%         |
 | Portfolio dashboard   | 📋     | P0       | Creator Intelligence   | M       | XL       | —       | M      | M    | 5%         |
 | Compliance queues     | 📋     | P1       | Creator CRM            | M       | L        | —       | M      | M    | 0%         |
 | AI manager briefings  | 🔮     | P2       | AI Platform            | L       | M        | —       | M      | M    | 0%         |
+
+### Implementation phases (v0.8)
+
+| Phase | Scope                     | Status |
+| ----- | ------------------------- | ------ |
+| MP-01 | Manager shell             | 📋     |
+| MP-02 | Creator management        | 📋     |
+| MP-03 | Live operations dashboard | 📋     |
+| MP-04 | Campaign operations       | 📋     |
+| MP-05 | Recruiting CRM            | 📋     |
+| MP-06 | Notifications & tasks     | 📋     |
+| MP-07 | Reporting                 | 📋     |
+| MP-08 | Administration            | 📋     |
+| MP-09 | Integration & polish      | 📋     |
 
 ### How does this improve creator success?
 
@@ -1261,13 +1309,13 @@ Live Intelligence, Creator Intelligence, performance scoring, goals, gifter anal
 
 **Exit criteria:** Deterministic creator graph available via APIs; audit coverage on intelligence mutations.
 
-### Phase 3 — Creator Studio 🚧
+### Phase 3 — Creator Studio ✅
 
-Dashboard API complete; creator portal UI; goals and live activity surfaces.
+Creator Studio v1.0 web app complete (CS-01–CS-10). Creators operate day-to-day in `apps/creator-portal`.
 
-**Exit criteria:** Creators operate day-to-day without spreadsheet side systems.
+**Exit criteria:** Creators operate day-to-day without spreadsheet side systems. ✅
 
-### Phase 4 — Manager Portal 📋
+### Phase 4 — Manager Portal 🚧
 
 Portfolio dashboards, campaign command, compliance queues, team audit.
 
@@ -1339,7 +1387,7 @@ This document is no longer a brainstorming artifact. It is a **living operationa
 
 Ad-hoc feature ideas belong in the [Research](#research) pipeline until promoted through product brief, engineering spike, and flywheel alignment review.
 
-**Next primary development focus:** [Creator Studio](#creator-studio) — client surface for dashboard, goals, live schedule, campaigns, and coaching summaries backed by v0.6 APIs.
+**Next primary development focus:** [Manager Portal](#manager-portal) — agency command center for portfolio oversight, campaign operations, recruiting CRM, and team accountability (v0.8 / MP-01–MP-09).
 
 ---
 

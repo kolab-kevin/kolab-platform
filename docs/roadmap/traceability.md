@@ -47,14 +47,32 @@
 | Intelligence Engine  | Live Intelligence    | Intelligence             | Integrated intelligence    | Session snapshot generation success  | v0.5          | Implemented |
 | Creator Intelligence | Creator Intelligence | Intelligence             | Cross-session intelligence | Profiles generated per creator       | v0.6          | Implemented |
 | Trend Detection      | Creator Intelligence | Intelligence             | Cross-session intelligence | Trend snapshots with evidence        | v0.6          | Implemented |
+| Creator Studio Shell | Creator Studio       | Recommendations          | Creator operating system   | Authenticated studio navigation      | v0.7          | Implemented |
+| Creator Dashboard UI | Creator Studio       | Recommendations          | Creator operating system   | Dashboard workspace load success     | v0.7          | Implemented |
+| Creator Goals UI     | Creator Studio       | Better Performance       | Creator operating system   | Goals workspace daily usage          | v0.7          | Implemented |
+| Creator Campaign UI  | Creator Studio       | Campaign Growth          | Creator operating system   | Campaign workspace task completion   | v0.7          | Implemented |
+| Creator Coach UI     | Creator Studio       | Recommendations          | Creator operating system   | Coach workspace tab engagement       | v0.7          | Implemented |
+| Creator Live UI      | Creator Studio       | Live Data                | Creator operating system   | Live workspace session review        | v0.7          | Implemented |
+| Creator Replay UI    | Creator Studio       | Intelligence             | Cross-session intelligence | Replay intelligence workspace usage  | v0.7          | Implemented |
+| Creator Profile UI   | Creator Studio       | Creator Retention        | Creator operating system   | Profile and settings completion      | v0.7          | Implemented |
+| Production Workspace | Creator Studio       | Live Data                | OBS replacement            | Production foundation UI available   | v0.7          | Partial     |
+| Creator Studio v1.0  | Creator Studio       | Recommendations          | Creator operating system   | All CS-01–CS-10 phases complete      | v0.7          | Implemented |
 
 ---
 
 ## Coverage notes
 
-- **Backend-first delivery:** Most rows are `Implemented` at API and data layers; frontend maturity remains lower — see [Platform Maturity Dashboard](./master-roadmap.md#platform-maturity-dashboard).
-- **Creator Studio (v0.7):** Dashboard API exists; client surface is the next primary development focus.
-- **Partial items:** Creator Documents schema and API helpers exist; full e-sign and storage provider integration remain planned.
+- **Creator Studio v1.0:** All CS-01–CS-10 phases implemented in `apps/creator-portal`. Production workspace (CS-09) is UI foundation only — OBS capture and desktop integration remain v0.9.
+- **Backend-first delivery:** Domain APIs remain the source of truth; Creator Studio frontend maturity now aligns with backend capabilities for v0.7 scope.
+- **Partial items:** Creator Documents schema and API helpers exist; full e-sign and storage provider integration remain planned. Production Workspace is mock-only pending v0.9 Live Studio.
+- **Next focus:** Manager Portal v0.8 (MP-01–MP-09) — see [Release Roadmap](./releases.md#v08--manager-portal).
+
+### Implementation coverage by product
+
+| Product Area   | Backend | Frontend | Overall |
+| -------------- | ------- | -------- | ------- |
+| Creator Studio | 35%     | 95%      | 88%     |
+| Manager Portal | 25%     | 8%       | 20%     |
 
 ---
 
