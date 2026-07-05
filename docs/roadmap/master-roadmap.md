@@ -686,7 +686,23 @@ Every roadmap item here must improve **creator success**, **agency efficiency**,
 
 This area strengthens the [Kōlab Flywheel](#kōlab-flywheel) by giving creators one place to act on goals, coach signals, and campaigns.
 
-**Docs:** [Creators API — dashboard](../api/creators.md)
+**Docs:** [Product brief](../product/creator-studio.md) · [Architecture](../architecture/creator-studio.md) · [UX](../design/creator-studio-ux.md) · [Creators API — dashboard](../api/creators.md)
+
+### Implementation phases (v0.7)
+
+| Phase | Scope                         | Status |
+| ----- | ----------------------------- | ------ |
+| CS-01 | App shell, auth, navigation   | 📋     |
+| CS-02 | Home dashboard                | 📋     |
+| CS-03 | Goals and performance         | 📋     |
+| CS-04 | Campaign workspace            | 📋     |
+| CS-05 | Coach and recommendations     | 📋     |
+| CS-06 | Live workspace                | 📋     |
+| CS-07 | Replay and gifter insights    | 📋     |
+| CS-08 | Profile and settings          | 📋     |
+| CS-09 | OBS/browser-source (post-web) | 📋     |
+
+See [Architecture — Implementation phases](../architecture/creator-studio.md#implementation-phases).
 
 ---
 
