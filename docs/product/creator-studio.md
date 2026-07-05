@@ -96,6 +96,7 @@ See [Architecture — OBS and Live Studio future](../architecture/creator-studio
 | 7     | CS-07 | Replay and gifter insights                          | ✅     |
 | 8     | CS-08 | Profile, settings, compliance                       | ✅     |
 | 9     | CS-09 | OBS/browser-source foundation (post-web validation) | ✅     |
+| 10    | CS-10 | Integration and polish                              | ✅     |
 
 Full phase detail: [Architecture — Implementation phases](../architecture/creator-studio.md#implementation-phases).
 

@@ -2,21 +2,30 @@
 
 import * as React from 'react';
 
-type Theme = 'dark' | 'light';
+import { readStudioTheme, type StudioTheme, writeStudioTheme } from '@/lib/studio-preferences';
 
 type ThemeContextValue = {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
+  theme: StudioTheme;
+  setTheme: (theme: StudioTheme) => void;
 };
 
 const ThemeContext = React.createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = React.useState<Theme>('dark');
+  const [theme, setThemeState] = React.useState<StudioTheme>('dark');
+
+  React.useEffect(() => {
+    setThemeState(readStudioTheme());
+  }, []);
 
   React.useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
+    writeStudioTheme(theme);
   }, [theme]);
+
+  const setTheme = React.useCallback((next: StudioTheme) => {
+    setThemeState(next);
+  }, []);
 
   return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
 }

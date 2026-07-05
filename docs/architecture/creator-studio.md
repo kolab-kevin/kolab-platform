@@ -493,6 +493,23 @@ Implementation: `services/production-workspace-service.ts`, `services/production
 
 **Deferred intentionally:** OBS capture, RTMP/WebRTC streaming, Electron/Tauri desktop shell, browser-source SDK, and backend production APIs.
 
+### CS-10 — Integration and polish
+
+Cross-workspace integration pass to unify Creator Studio UX without adding product features.
+
+**Status:** Implemented — shared workspace shell, standardized loading/empty/error states, navigation and breadcrumb polish, dashboard response caching, persisted theme and tab preferences, accessibility improvements, and lazy-loaded heavy panels.
+
+**Major UX improvements:**
+
+- Shared `WorkspacePage`, `WorkspaceHeader`, `WorkspaceCard`, loading skeletons, and empty/error states across all workspaces
+- Consistent spacing, card styling, panel headers, and refresh actions
+- Nested route breadcrumbs (e.g. Live → Production) with corrected sidebar active states
+- Coach and campaign tab memory via localStorage
+- Compact sidebar and mock/live source badge preferences applied studio-wide
+- Theme preference persistence for consistent dark mode behavior
+
+**Exit:** Creator Studio feels like one cohesive application. ✅
+
 ---
 
 ## Security and privacy

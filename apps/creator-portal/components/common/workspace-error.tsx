@@ -1,19 +1,29 @@
-import { Button } from '@kolab/ui';
+import { Button, cn } from '@kolab/ui';
 
-type WorkspaceErrorProps = {
+import { WORKSPACE_FOCUS_RING_CLASS } from '@/lib/studio-ui';
+
+type ErrorWorkspaceStateProps = {
   title: string;
   message: string;
   onRetry: () => void;
 };
 
-export function WorkspaceError({ title, message, onRetry }: WorkspaceErrorProps) {
+export function ErrorWorkspaceState({ title, message, onRetry }: ErrorWorkspaceStateProps) {
   return (
-    <div className="border-destructive/30 bg-destructive/10 rounded-xl border p-6 text-center">
+    <section
+      className="border-destructive/30 bg-destructive/10 rounded-xl border p-6 text-center shadow-sm"
+      role="alert"
+      aria-live="assertive"
+    >
       <h2 className="text-lg font-semibold">{title}</h2>
       <p className="text-muted-foreground mt-2 text-sm">{message}</p>
-      <Button className="mt-4" onClick={onRetry}>
+      <Button className={cn('mt-4', WORKSPACE_FOCUS_RING_CLASS)} onClick={onRetry}>
         Retry
       </Button>
-    </div>
+    </section>
   );
+}
+
+export function WorkspaceError(props: ErrorWorkspaceStateProps) {
+  return <ErrorWorkspaceState {...props} />;
 }

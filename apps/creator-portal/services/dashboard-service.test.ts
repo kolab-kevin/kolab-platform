@@ -1,6 +1,7 @@
 import { CreatorDashboardResponseSchema } from '@kolab/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { clearStudioDataCache } from '@/lib/studio-data-cache';
 import { ApiClientError } from '@/services/api-client';
 import { createEmptyDashboard } from '@/services/dashboard-empty';
 import { DashboardApiError } from '@/services/dashboard-errors';
@@ -33,6 +34,7 @@ describe('fetchCreatorDashboard', () => {
     apiGetMock.mockReset();
     useMockDashboardMock.mockReset();
     useMockDashboardMock.mockReturnValue(true);
+    clearStudioDataCache();
   });
 
   it('returns mock dashboard data when mock mode is enabled', async () => {
@@ -44,6 +46,15 @@ describe('fetchCreatorDashboard', () => {
     expect(parsed.success).toBe(true);
     expect(result.source).toBe('mock');
     expect(result.data.quickActions.length).toBeGreaterThan(0);
+    expect(apiGetMock).not.toHaveBeenCalled();
+  });
+
+  it('reuses cached dashboard responses within the cache window', async () => {
+    useMockDashboardMock.mockReturnValue(true);
+
+    await fetchCreatorDashboard('creator_test_001');
+    await fetchCreatorDashboard('creator_test_001');
+
     expect(apiGetMock).not.toHaveBeenCalled();
   });
 

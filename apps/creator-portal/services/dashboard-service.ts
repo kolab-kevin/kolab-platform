@@ -1,6 +1,11 @@
 import { type CreatorDashboardResponse, CreatorDashboardResponseSchema } from '@kolab/types';
 
 import { getCreatorProfileId, useMockDashboard } from '@/lib/env';
+import {
+  DEFAULT_STUDIO_CACHE_TTL_MS,
+  getCachedValue,
+  setCachedValue,
+} from '@/lib/studio-data-cache';
 
 import { apiClient, isApiClientError } from './api-client';
 import { createEmptyDashboard } from './dashboard-empty';
@@ -18,22 +23,38 @@ export function getDashboardPath(creatorProfileId: string): string {
   return `/api/creators/${creatorProfileId}/dashboard`;
 }
 
+function getDashboardCacheKey(creatorProfileId: string): string {
+  return `dashboard:${creatorProfileId}`;
+}
+
 export async function fetchCreatorDashboard(
   creatorProfileId: string = getCreatorProfileId(),
+  options?: { force?: boolean },
 ): Promise<DashboardFetchResult> {
+  const cacheKey = getDashboardCacheKey(creatorProfileId);
+
+  if (!options?.force) {
+    const cached = getCachedValue<DashboardFetchResult>(cacheKey);
+    if (cached) return cached;
+  }
+
   if (useMockDashboard()) {
-    return {
+    const result = {
       data: createMockDashboard(creatorProfileId),
-      source: 'mock',
+      source: 'mock' as const,
     };
+    setCachedValue(cacheKey, result, DEFAULT_STUDIO_CACHE_TTL_MS);
+    return result;
   }
 
   try {
     const data = await apiClient.get<unknown>(getDashboardPath(creatorProfileId));
-    return {
+    const result = {
       data: CreatorDashboardResponseSchema.parse(data),
-      source: 'live',
+      source: 'live' as const,
     };
+    setCachedValue(cacheKey, result, DEFAULT_STUDIO_CACHE_TTL_MS);
+    return result;
   } catch (error) {
     if (isApiClientError(error)) {
       if (error.status === 401 || error.status === 403) {
@@ -41,10 +62,12 @@ export async function fetchCreatorDashboard(
       }
 
       if (error.status === 404) {
-        return {
+        const result = {
           data: createEmptyDashboard(creatorProfileId),
-          source: 'empty',
+          source: 'empty' as const,
         };
+        setCachedValue(cacheKey, result, DEFAULT_STUDIO_CACHE_TTL_MS);
+        return result;
       }
     }
 
