@@ -218,9 +218,9 @@ How strategic delivery evolved. Each version maps to merged platform scope—not
 
 ### Current active development
 
-| Focus          | Version | Status         | Next milestone            |
-| -------------- | ------- | -------------- | ------------------------- |
-| Manager Portal | v1.0    | 🚧 In Progress | MP-04 Campaign Operations |
+| Focus          | Version | Status         | Next milestone       |
+| -------------- | ------- | -------------- | -------------------- |
+| Manager Portal | v1.0    | 🚧 In Progress | MP-05 Recruiting CRM |
 
 **Next Active Development:** [Manager Portal](#manager-portal) — agency command center for portfolio, campaigns, recruiting, and operations.
 
@@ -736,9 +736,9 @@ See [Architecture — Implementation phases](../architecture/creator-studio.md#i
 
 Agency command center for managers: portfolio intelligence, campaign oversight, matching review, and team accountability.
 
-### Current completion: 36%
+### Current completion: 45%
 
-**Status:** 🚧 **IN PROGRESS** — MP-01 through MP-03 shipped; MP-04+ planned (v0.8 / Manager Portal v1).
+**Status:** 🚧 **IN PROGRESS** — MP-01 through MP-04 shipped; MP-05+ planned (v0.8 / Manager Portal v1).
 
 ### Major capabilities
 
@@ -754,15 +754,15 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 - Manager Portal app shell in `apps/manager-portal` (MP-01)
 - Creator Management workspace at `/portal/creators` (MP-02)
 - Live Operations workspace at `/portal/live` (MP-03)
+- Campaign Operations workspace at `/portal/campaigns` (MP-04)
 
 ### In Progress 🚧
 
-- MP-04 Campaign operations
+- MP-05 Recruiting CRM
 - UX research and information architecture for remaining workspaces
 
 ### Planned 📋
 
-- Campaign operations (MP-04)
 - Recruiting CRM (MP-05)
 - Notifications & tasks (MP-06)
 - Reporting (MP-07)
@@ -790,7 +790,7 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 | MP-01 | Manager shell             | ✅     |
 | MP-02 | Creator management        | ✅     |
 | MP-03 | Live operations dashboard | ✅     |
-| MP-04 | Campaign operations       | 📋     |
+| MP-04 | Campaign operations       | ✅     |
 | MP-05 | Recruiting CRM            | 📋     |
 | MP-06 | Notifications & tasks     | 📋     |
 | MP-07 | Reporting                 | 📋     |

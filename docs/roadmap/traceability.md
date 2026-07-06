@@ -60,6 +60,7 @@
 | Manager Portal Shell | Manager Portal       | Agency Growth            | Agency operating system    | Authenticated manager shell available | v0.8          | Implemented |
 | Creator Management   | Manager Portal       | Agency Growth            | Portfolio oversight        | Creator list and detail workspace     | v0.8          | Implemented |
 | Live Operations      | Manager Portal       | Live Data                | Agency live oversight      | Live operations workspace available   | v0.8          | Implemented |
+| Campaign Operations  | Manager Portal       | Agency Growth            | Campaign oversight         | Campaign operations workspace         | v0.8          | Implemented |
 
 ---
 
@@ -68,14 +69,14 @@
 - **Creator Studio v1.0:** All CS-01–CS-10 phases implemented in `apps/creator-portal`. Production workspace (CS-09) is UI foundation only — OBS capture and desktop integration remain v0.9.
 - **Backend-first delivery:** Domain APIs remain the source of truth; Creator Studio frontend maturity now aligns with backend capabilities for v0.7 scope.
 - **Partial items:** Creator Documents schema and API helpers exist; full e-sign and storage provider integration remain planned. Production Workspace is mock-only pending v0.9 Live Studio.
-- **Next focus:** Manager Portal v0.8 — MP-04 Campaign Operations (MP-01 through MP-03 complete)
+- **Next focus:** Manager Portal v0.8 — MP-05 Recruiting CRM (MP-01 through MP-04 complete)
 
 ### Implementation coverage by product
 
 | Product Area   | Backend | Frontend | Overall |
 | -------------- | ------- | -------- | ------- |
 | Creator Studio | 35%     | 95%      | 88%     |
-| Manager Portal | 25%     | 36%      | 33%     |
+| Manager Portal | 25%     | 45%      | 40%     |
 
 ---
 
