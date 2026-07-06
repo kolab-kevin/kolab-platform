@@ -68,6 +68,9 @@
     }
   },
   "lint-staged": {
+    "apps/manager-portal/next-env.d.ts": [
+      "node apps/manager-portal/scripts/fix-next-env.mjs"
+    ],
     "apps/**/*.{ts,tsx}": [
       "eslint --fix --max-warnings 0",
       "prettier --write"
