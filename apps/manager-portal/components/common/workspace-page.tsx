@@ -16,9 +16,18 @@ type WorkspacePageProps = {
   errorTitle?: string;
   onRetry: () => void;
   actions?: ReactNode;
+  emptyNotice?: ReactNode;
   children: ReactNode;
   className?: string;
 };
+
+export function EmptyWorkspaceState({ message }: { message: string }) {
+  return (
+    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-100">
+      {message}
+    </div>
+  );
+}
 
 export function WorkspacePage({
   title,
@@ -29,6 +38,7 @@ export function WorkspacePage({
   errorTitle,
   onRetry,
   actions,
+  emptyNotice,
   children,
   className,
 }: WorkspacePageProps) {
@@ -46,6 +56,7 @@ export function WorkspacePage({
       {!loading && error ? (
         <ErrorWorkspaceState title={errorTitle} message={error} onRetry={onRetry} />
       ) : null}
+      {!loading && !error && emptyNotice ? emptyNotice : null}
       {!loading && !error ? children : null}
     </div>
   );

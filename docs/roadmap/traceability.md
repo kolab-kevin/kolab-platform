@@ -58,6 +58,7 @@
 | Production Workspace | Creator Studio       | Live Data                | OBS replacement            | Production foundation UI available    | v0.7          | Partial     |
 | Creator Studio v1.0  | Creator Studio       | Recommendations          | Creator operating system   | All CS-01–CS-10 phases complete       | v0.7          | Implemented |
 | Manager Portal Shell | Manager Portal       | Agency Growth            | Agency operating system    | Authenticated manager shell available | v0.8          | Implemented |
+| Creator Management   | Manager Portal       | Agency Growth            | Portfolio oversight        | Creator list and detail workspace     | v0.8          | Implemented |
 
 ---
 
@@ -66,14 +67,14 @@
 - **Creator Studio v1.0:** All CS-01–CS-10 phases implemented in `apps/creator-portal`. Production workspace (CS-09) is UI foundation only — OBS capture and desktop integration remain v0.9.
 - **Backend-first delivery:** Domain APIs remain the source of truth; Creator Studio frontend maturity now aligns with backend capabilities for v0.7 scope.
 - **Partial items:** Creator Documents schema and API helpers exist; full e-sign and storage provider integration remain planned. Production Workspace is mock-only pending v0.9 Live Studio.
-- **Next focus:** Manager Portal v0.8 — MP-02 Creator Management (MP-01 shell complete)
+- **Next focus:** Manager Portal v0.8 — MP-03 Live Operations Dashboard (MP-01 shell and MP-02 creator management complete)
 
 ### Implementation coverage by product
 
 | Product Area   | Backend | Frontend | Overall |
 | -------------- | ------- | -------- | ------- |
 | Creator Studio | 35%     | 95%      | 88%     |
-| Manager Portal | 25%     | 18%      | 22%     |
+| Manager Portal | 25%     | 27%      | 27%     |
 
 ---
 
