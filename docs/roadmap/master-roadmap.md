@@ -45,7 +45,7 @@ Estimated completion by product and delivery track. **Overall** is the weighted 
 | Creator Intelligence | 82%     | 10%      | —       | —      | 8%  | 52%     |
 | Goals Engine         | 88%     | 5%       | —       | —      | —   | 58%     |
 | Creator Studio       | 35%     | 95%      | 15%     | 10%    | —   | 88%     |
-| Manager Portal       | 25%     | 8%       | —       | —      | 3%  | 20%     |
+| Manager Portal       | 25%     | 18%      | —       | —      | 3%  | 22%     |
 | OBS Replacement      | 40%     | 5%       | 8%      | —      | 5%  | 22%     |
 | Analytics Platform   | 15%     | 5%       | —       | —      | 10% | 13%     |
 | AI Platform          | 15%     | 5%       | —       | —      | 18% | 14%     |
@@ -197,7 +197,7 @@ How strategic delivery evolved. Each version maps to merged platform scope—not
 | Live Intelligence             | 70%        | 🚧     |
 | Creator Intelligence          | 75%        | 🚧     |
 | Creator Studio                | 95%        | ✅     |
-| Manager Portal                | 12%        | 🚧     |
+| Manager Portal                | 18%        | 🚧     |
 | Live Studio (OBS Replacement) | 5%         | 📋     |
 | Analytics Platform            | 10%        | 📋     |
 | AI Platform                   | 12%        | 📋     |
@@ -218,9 +218,9 @@ How strategic delivery evolved. Each version maps to merged platform scope—not
 
 ### Current active development
 
-| Focus          | Version | Status         | Next milestone      |
-| -------------- | ------- | -------------- | ------------------- |
-| Manager Portal | v1.0    | 🚧 In Progress | MP-01 Manager Shell |
+| Focus          | Version | Status         | Next milestone           |
+| -------------- | ------- | -------------- | ------------------------ |
+| Manager Portal | v1.0    | 🚧 In Progress | MP-02 Creator Management |
 
 **Next Active Development:** [Manager Portal](#manager-portal) — agency command center for portfolio, campaigns, recruiting, and operations.
 
@@ -736,9 +736,9 @@ See [Architecture — Implementation phases](../architecture/creator-studio.md#i
 
 Agency command center for managers: portfolio intelligence, campaign oversight, matching review, and team accountability.
 
-### Current completion: 12%
+### Current completion: 18%
 
-**Status:** 🚧 **IN PROGRESS** — Next primary development focus (v0.8 / Manager Portal v1).
+**Status:** 🚧 **IN PROGRESS** — MP-01 shell shipped; MP-02+ planned (v0.8 / Manager Portal v1).
 
 ### Major capabilities
 
@@ -751,15 +751,15 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 
 - Backend APIs that Manager Portal will compose (CRM, campaigns, intelligence)
 - Creator Studio v1.0 patterns for workspace shells, navigation, and data modes
+- Manager Portal app shell in `apps/manager-portal` (MP-01)
 
 ### In Progress 🚧
 
-- Manager Portal v1 planning and MP-01 shell kickoff
-- UX research and information architecture
+- MP-02 Creator management workspace
+- UX research and information architecture for remaining workspaces
 
 ### Planned 📋
 
-- Manager Portal Next.js app shell (MP-01)
 - Creator management (MP-02)
 - Live operations dashboard (MP-03)
 - Campaign operations (MP-04)
@@ -778,7 +778,7 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 | Item                  | Status | Priority | Dependencies           | Backend | Frontend | Desktop | Mobile | Docs | Completion |
 | --------------------- | ------ | -------- | ---------------------- | ------- | -------- | ------- | ------ | ---- | ---------- |
 | API composition layer | 🚧     | P0       | Agency CRM + Campaigns | M       | —        | —       | —      | S    | 30%        |
-| Manager app shell     | 🚧     | P0       | Identity               | S       | L        | —       | —      | M    | 5%         |
+| Manager app shell     | ✅     | P0       | Identity               | S       | L        | —       | —      | M    | 100%       |
 | Portfolio dashboard   | 📋     | P0       | Creator Intelligence   | M       | XL       | —       | M      | M    | 5%         |
 | Compliance queues     | 📋     | P1       | Creator CRM            | M       | L        | —       | M      | M    | 0%         |
 | AI manager briefings  | 🔮     | P2       | AI Platform            | L       | M        | —       | M      | M    | 0%         |
@@ -787,7 +787,7 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 
 | Phase | Scope                     | Status |
 | ----- | ------------------------- | ------ |
-| MP-01 | Manager shell             | 📋     |
+| MP-01 | Manager shell             | ✅     |
 | MP-02 | Creator management        | 📋     |
 | MP-03 | Live operations dashboard | 📋     |
 | MP-04 | Campaign operations       | 📋     |
