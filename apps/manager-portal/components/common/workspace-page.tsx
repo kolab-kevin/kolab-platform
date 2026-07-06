@@ -29,6 +29,24 @@ export function EmptyWorkspaceState({ message }: { message: string }) {
   );
 }
 
+type WorkspaceHeaderProps = {
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+};
+
+export function WorkspaceHeader({ title, description, actions }: WorkspaceHeaderProps) {
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        {description ? <p className="text-muted-foreground mt-1 text-sm">{description}</p> : null}
+      </div>
+      {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+    </div>
+  );
+}
+
 export function WorkspacePage({
   title,
   description,
@@ -44,13 +62,7 @@ export function WorkspacePage({
 }: WorkspacePageProps) {
   return (
     <div className={cn(PORTAL_PAGE_CLASS, className)}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-          {description ? <p className="text-muted-foreground mt-1 text-sm">{description}</p> : null}
-        </div>
-        {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
-      </div>
+      <WorkspaceHeader title={title} description={description} actions={actions} />
 
       {loading ? <GlobalLoading label={loadingLabel} /> : null}
       {!loading && error ? (
