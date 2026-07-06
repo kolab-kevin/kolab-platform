@@ -1,9 +1,9 @@
 # Manager Portal
 
-**Status:** MP-02 Creator Management — **Implemented**  
+**Status:** MP-03 Live Operations — **Implemented**  
 **Target:** Release 0.8 (`release/0.8.x`)  
 **Application:** `apps/manager-portal`  
-**Depends on:** v0.7 Creator Studio patterns; existing Creator CRM and intelligence APIs
+**Depends on:** v0.7 Creator Studio patterns; existing Creator CRM and Live Intelligence APIs
 
 ---
 
@@ -11,7 +11,7 @@
 
 Deliver **Manager Portal** — the agency command center where managers oversee creators, live operations, campaigns, recruiting, tasks, reporting, and administration in one place.
 
-MP-01 establishes the authenticated application shell and mock dashboard. MP-02 ships the Creator Management workspace. Remaining domain workspaces ship in MP-03 through MP-09.
+MP-01 establishes the authenticated application shell and mock dashboard. MP-02 ships Creator Management. MP-03 ships Live Operations. Remaining domain workspaces ship in MP-04 through MP-09.
 
 ---
 
@@ -46,31 +46,45 @@ MP-01 establishes the authenticated application shell and mock dashboard. MP-02 
 
 ---
 
+## MP-03 capabilities
+
+| Capability                                             | Status |
+| ------------------------------------------------------ | ------ |
+| Live sessions list (status, viewers, revenue, health)  | ✅     |
+| Agency monitoring (live roster, alerts, spike counts)  | ✅     |
+| Coach queue (high-priority alerts and recommendations) | ✅     |
+| Session timeline (key events, PK, gifts, milestones)   | ✅     |
+| Quick actions (UI-only)                                | ✅     |
+| Mock/live data modes                                   | ✅     |
+| Typed live operations workspace DTO                    | ✅     |
+
+---
+
 ## Navigation
 
-| Route                | Purpose                      | Status                     |
-| -------------------- | ---------------------------- | -------------------------- |
-| `/portal/dashboard`  | Agency command overview      | Mock dashboard             |
-| `/portal/creators`   | Portfolio creator management | Creator workspace (MP-02)  |
-| `/portal/live`       | Live operations dashboard    | Placeholder (MP-03)        |
-| `/portal/campaigns`  | Campaign operations          | Placeholder (MP-04)        |
-| `/portal/recruiting` | Recruiting CRM               | Placeholder (MP-05)        |
-| `/portal/tasks`      | Notifications and tasks      | Placeholder (MP-06)        |
-| `/portal/reports`    | Reporting                    | Placeholder (MP-07)        |
-| `/portal/admin`      | Administration               | Placeholder (MP-08)        |
-| `/portal/settings`   | Settings                     | Placeholder (MP-09 polish) |
+| Route                | Purpose                      | Status                            |
+| -------------------- | ---------------------------- | --------------------------------- |
+| `/portal/dashboard`  | Agency command overview      | Mock dashboard                    |
+| `/portal/creators`   | Portfolio creator management | Creator workspace (MP-02)         |
+| `/portal/live`       | Live operations dashboard    | Live operations workspace (MP-03) |
+| `/portal/campaigns`  | Campaign operations          | Placeholder (MP-04)               |
+| `/portal/recruiting` | Recruiting CRM               | Placeholder (MP-05)               |
+| `/portal/tasks`      | Notifications and tasks      | Placeholder (MP-06)               |
+| `/portal/reports`    | Reporting                    | Placeholder (MP-07)               |
+| `/portal/admin`      | Administration               | Placeholder (MP-08)               |
+| `/portal/settings`   | Settings                     | Placeholder (MP-09 polish)        |
 
 ---
 
 ## Data modes
 
-| Variable                         | Purpose                                                       |
-| -------------------------------- | ------------------------------------------------------------- |
-| `NEXT_PUBLIC_USE_MOCK_DASHBOARD` | `true` (default) serves typed mock dashboard and creator data |
-| `NEXT_PUBLIC_API_URL`            | API host for auth and live creator endpoints                  |
-| `NEXT_PUBLIC_ORGANIZATION_ID`    | Default mock organization id                                  |
+| Variable                         | Purpose                                                         |
+| -------------------------------- | --------------------------------------------------------------- |
+| `NEXT_PUBLIC_USE_MOCK_DASHBOARD` | `true` (default) serves typed mock dashboard and workspace data |
+| `NEXT_PUBLIC_API_URL`            | API host for auth and live API endpoints                        |
+| `NEXT_PUBLIC_ORGANIZATION_ID`    | Default mock organization id                                    |
 
-Live creator management composes existing Creator CRM endpoints. Live dashboard API integration remains deferred.
+Live workspaces compose existing Creator CRM and Live Intelligence endpoints. Live dashboard API integration remains deferred.
 
 ---
 
@@ -80,7 +94,7 @@ Live creator management composes existing Creator CRM endpoints. Live dashboard 
 | ----- | ------------------------- | ------ |
 | MP-01 | Manager shell             | ✅     |
 | MP-02 | Creator management        | ✅     |
-| MP-03 | Live operations dashboard | 📋     |
+| MP-03 | Live operations dashboard | ✅     |
 | MP-04 | Campaign operations       | 📋     |
 | MP-05 | Recruiting CRM            | 📋     |
 | MP-06 | Notifications & tasks     | 📋     |

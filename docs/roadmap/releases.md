@@ -134,11 +134,11 @@
 
 ## v0.8 — Manager Portal
 
-**Status:** 🚧 **IN PROGRESS** — MP-01 shell and MP-02 Creator Management shipped; MP-03 Live Operations next.
+**Status:** 🚧 **IN PROGRESS** — MP-01 through MP-03 shipped; MP-04 Campaign Operations next.
 
 **Objectives:** Extend agency operations to portfolio managers and recruiters at scale.
 
-**Major capabilities:** Authenticated manager portal shell, mock agency dashboard, creator management workspace, placeholder workspaces for live ops, campaigns, recruiting, tasks, reports, admin, and settings.
+**Major capabilities:** Authenticated manager portal shell, mock agency dashboard, creator management workspace, live operations workspace, placeholder workspaces for campaigns, recruiting, tasks, reports, admin, and settings.
 
 **Success criteria:** Managers operate full roster without spreadsheets; permission matrix enforced; audit on bulk changes.
 
@@ -150,13 +150,15 @@
 
 **MP-02 completion notes:** `/portal/creators` ships searchable/sortable creator list, detail panel (profile through live summary), UI-only filters and quick actions, and mock/live modes composing existing Creator CRM endpoints. Presentation-only — no frontend score calculations.
 
+**MP-03 completion notes:** `/portal/live` ships live sessions list, agency monitoring, coach queue, session timeline, UI-only quick actions, and mock/live modes composing existing Live Intelligence endpoints. Presentation-only — no frontend score calculations.
+
 **Implementation phases:**
 
 | Phase | Scope                     | Status |
 | ----- | ------------------------- | ------ |
 | MP-01 | Manager Shell             | ✅     |
 | MP-02 | Creator Management        | ✅     |
-| MP-03 | Live Operations Dashboard | 📋     |
+| MP-03 | Live Operations Dashboard | ✅     |
 | MP-04 | Campaign Operations       | 📋     |
 | MP-05 | Recruiting CRM            | 📋     |
 | MP-06 | Notifications & Tasks     | 📋     |

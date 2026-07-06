@@ -9,3 +9,5 @@ export const PORTAL_CARD_TITLE_CLASS = 'text-base';
 
 export const PORTAL_FOCUS_RING_CLASS =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';
+
+export const PORTAL_SECTION_CLASS = 'space-y-4';
