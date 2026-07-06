@@ -1,6 +1,6 @@
 # Manager Portal Architecture
 
-**Status:** MP-04 Campaign Operations implemented  
+**Status:** MP-05 Recruiting CRM implemented  
 **Application:** `apps/manager-portal` (Next.js 15 App Router)  
 **Port:** 3004 (local dev)  
 **Related:** [Product brief](../product/manager-portal.md) · [Frontend standards](../engineering/frontend-standards.md)
@@ -9,7 +9,7 @@
 
 ## Overview
 
-Manager Portal is the agency-facing experience layer for portfolio oversight, campaign operations, recruiting, and team accountability. MP-01 ships the authenticated shell and mock dashboard. MP-02 adds Creator Management. MP-03 adds Live Operations. MP-04 adds Campaign Operations with mock/live data modes identical to Creator Studio.
+Manager Portal is the agency-facing experience layer for portfolio oversight, campaign operations, recruiting, and team accountability. MP-01 ships the authenticated shell and mock dashboard. MP-02 adds Creator Management. MP-03 adds Live Operations. MP-04 adds Campaign Operations. MP-05 adds Recruiting CRM with mock/live data modes identical to Creator Studio.
 
 ```mermaid
 flowchart LR
@@ -19,23 +19,27 @@ flowchart LR
     CREATORS[Creator workspace MP-02]
     LIVE[Live operations MP-03]
     CAMPAIGNS[Campaign ops MP-04]
-    PLACE[Placeholder workspaces MP-05+]
+    RECRUITING[Recruiting CRM MP-05]
+    PLACE[Placeholder workspaces MP-06+]
   end
   subgraph api [@kolab/api]
     CRM[Creator CRM endpoints]
     LIVEAPI[Live Intelligence endpoints]
     CAMP[Campaign endpoints]
+    RECRUIT[Recruitment endpoints]
   end
   SHELL --> DASH
   SHELL --> CREATORS
   SHELL --> LIVE
   SHELL --> CAMPAIGNS
+  SHELL --> RECRUITING
   SHELL --> PLACE
   CREATORS --> CRM
   LIVE --> LIVEAPI
   LIVE --> CRM
   CAMPAIGNS --> CAMP
   CAMPAIGNS --> CRM
+  RECRUITING --> RECRUIT
   DASH -.-> CRM
 ```
 
@@ -45,16 +49,16 @@ flowchart LR
 
 ## Frontend architecture
 
-| Layer               | Responsibility                                                                                                          |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **App Router**      | Routes under `/portal/*`, auth layout, error boundaries                                                                 |
-| **`@kolab/ui`**     | AuthProvider, ErrorBoundary, Card, Button, auth forms                                                                   |
-| **`@kolab/auth`**   | `APP_ALLOWED_ROLES.admin` gate for manager access                                                                       |
-| **`@kolab/sdk`**    | Auth client                                                                                                             |
-| **`@kolab/types`**  | Shared API response schemas (live mode)                                                                                 |
-| **Local Zod types** | `types/creator-management.ts`, `types/live-operations.ts`, `types/campaign-operations.ts`, `types/manager-dashboard.ts` |
-| **Services**        | Mock/live fetch, API composition for creator, live, and campaign workspaces                                             |
-| **Hooks**           | Workspace state for creators, live operations, and campaign operations                                                  |
+| Layer               | Responsibility                                                                                                                                           |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **App Router**      | Routes under `/portal/*`, auth layout, error boundaries                                                                                                  |
+| **`@kolab/ui`**     | AuthProvider, ErrorBoundary, Card, Button, auth forms                                                                                                    |
+| **`@kolab/auth`**   | `APP_ALLOWED_ROLES.admin` gate for manager access                                                                                                        |
+| **`@kolab/sdk`**    | Auth client                                                                                                                                              |
+| **`@kolab/types`**  | Shared API response schemas (live mode)                                                                                                                  |
+| **Local Zod types** | `types/creator-management.ts`, `types/live-operations.ts`, `types/campaign-operations.ts`, `types/recruiting-workspace.ts`, `types/manager-dashboard.ts` |
+| **Services**        | Mock/live fetch, API composition for creator, live, campaign, and recruiting workspaces                                                                  |
+| **Hooks**           | Workspace state for creators, live operations, campaign operations, and recruiting                                                                       |
 
 ---
 
@@ -81,7 +85,7 @@ apps/manager-portal/
         creators/page.tsx           # Creator Management (MP-02)
         live/page.tsx               # Live Operations (MP-03)
         campaigns/page.tsx          # Campaign Operations (MP-04)
-        recruiting/                 # Placeholder (MP-05)
+        recruiting/page.tsx         # Recruiting CRM (MP-05)
         tasks/                      # Placeholder (MP-06)
         reports/                    # Placeholder (MP-07)
         admin/                      # Placeholder (MP-08)
@@ -92,6 +96,7 @@ apps/manager-portal/
     creators/                       # List, detail, filters, quick actions
     live/                           # Sessions, monitoring, coach queue, timeline
     campaigns/                      # Overview, board, detail, deliverables, applications
+    recruiting/                     # Overview, pipeline, detail, follow-ups, performance
     common/                         # Loading, errors, workspace page, layout
   contexts/organization-context.tsx
   hooks/use-portal-navigation.ts
@@ -99,6 +104,7 @@ apps/manager-portal/
   hooks/use-creator-management-workspace.ts
   hooks/use-live-operations-workspace.ts
   hooks/use-campaign-operations.ts
+  hooks/use-recruiting-workspace.ts
   services/
     api-client.ts
     dashboard-mock.ts
@@ -119,6 +125,13 @@ apps/manager-portal/
     campaign-detail-service.ts
     campaign-deliverables-service.ts
     campaign-applications-service.ts
+    recruiting-mock.ts
+    recruiting-operations-service.ts
+    recruiting-loader.ts
+    recruitment-pipeline-service.ts
+    prospect-detail-service.ts
+    followup-service.ts
+    recruiter-performance-service.ts
   types/
     navigation.ts
     manager-dashboard.ts
@@ -128,6 +141,8 @@ apps/manager-portal/
     live-operations-adapters.ts
     campaign-operations.ts
     campaign-operations-adapters.ts
+    recruiting-workspace.ts
+    recruiting-adapters.ts
 ```
 
 ---
@@ -226,6 +241,36 @@ Campaign selection loads detail, deliverables, and applications in parallel via 
 
 ---
 
+## MP-05 Recruiting CRM
+
+### MP-05 data modes
+
+| Mode | Trigger                                      | Behavior                               |
+| ---- | -------------------------------------------- | -------------------------------------- |
+| Mock | `NEXT_PUBLIC_USE_MOCK_DASHBOARD !== 'false'` | Typed fixtures in `recruiting-mock.ts` |
+| Live | Mock disabled                                | Composes Recruitment endpoints         |
+
+### MP-05 live API mapping
+
+| UI section            | Endpoint(s)                         |
+| --------------------- | ----------------------------------- |
+| Prospect list/board   | `GET /api/recruitment/leads`        |
+| Prospect detail       | `GET /api/recruitment/leads/:id`    |
+| Follow-up queue       | Derived from lead `nextFollowUpAt`  |
+| Recruiter performance | `GET /api/recruiters` + lead rollup |
+| Notes & history       | Included in lead detail response    |
+
+Prospect selection loads detail via `recruiting-loader.ts`. Pipeline columns map backend `LeadStatus` values to manager-facing stages. `ACTIVE_CREATOR` and `INACTIVE` leads are excluded from the main board.
+
+### MP-05 client-side presentation
+
+- Pipeline columns map `APPLICATION` → Interview and `CONTRACT_SENT` → Pending.
+- Recruiter metrics are computed client-side from assigned leads.
+- Quick actions are disabled UI placeholders.
+- No new business logic or scoring in components.
+
+---
+
 ## MP-01 dashboard mock
 
 Mock dashboard sections (display-only):
@@ -274,6 +319,13 @@ Validated by `ManagerDashboardResponseSchema` in tests.
 - Quick actions present as UI-only controls ✅
 - Service and adapter tests validate schemas and mapping ✅
 
+### MP-05
+
+- `/portal/recruiting` renders overview, pipeline, detail, follow-up queue, and recruiter performance ✅
+- Mock/live modes share typed DTOs ✅
+- Quick actions present as UI-only controls ✅
+- Service and adapter tests validate schemas and mapping ✅
+
 ---
 
 ## Related documentation
@@ -282,5 +334,6 @@ Validated by `ManagerDashboardResponseSchema` in tests.
 - [Creators API](../api/creators.md)
 - [Live Intelligence API](../api/live-intelligence.md)
 - [Campaigns API](../api/campaigns.md)
+- [Recruitment API](../api/recruitment.md)
 - [System Map — Manager Portal](./system-map.md)
 - [Master Roadmap — Manager Portal](../roadmap/master-roadmap.md#manager-portal)

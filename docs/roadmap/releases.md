@@ -134,11 +134,11 @@
 
 ## v0.8 — Manager Portal
 
-**Status:** 🚧 **IN PROGRESS** — MP-01 through MP-04 shipped; MP-05 Recruiting CRM next.
+**Status:** 🚧 **IN PROGRESS** — MP-01 through MP-05 shipped; MP-06 Notifications & Tasks next.
 
 **Objectives:** Extend agency operations to portfolio managers and recruiters at scale.
 
-**Major capabilities:** Authenticated manager portal shell, mock agency dashboard, creator management workspace, live operations workspace, campaign operations workspace, placeholder workspaces for recruiting, tasks, reports, admin, and settings.
+**Major capabilities:** Authenticated manager portal shell, mock agency dashboard, creator management workspace, live operations workspace, campaign operations workspace, recruiting CRM workspace, placeholder workspaces for tasks, reports, admin, and settings.
 
 **Success criteria:** Managers operate full roster without spreadsheets; permission matrix enforced; audit on bulk changes.
 
@@ -154,6 +154,8 @@
 
 **MP-04 completion notes:** `/portal/campaigns` ships campaign overview, board, detail, deliverables, applications, UI-only quick actions, and mock/live modes composing existing Campaign endpoints. Presentation-only — status history synthesized from campaign timestamps.
 
+**MP-05 completion notes:** `/portal/recruiting` ships recruiting overview, prospect pipeline, detail, follow-up queue, recruiter performance, UI-only quick actions, and mock/live modes composing existing Recruitment endpoints. Presentation-only — recruiter metrics and follow-up buckets computed client-side.
+
 **Implementation phases:**
 
 | Phase | Scope                     | Status |
@@ -162,7 +164,7 @@
 | MP-02 | Creator Management        | ✅     |
 | MP-03 | Live Operations Dashboard | ✅     |
 | MP-04 | Campaign Operations       | ✅     |
-| MP-05 | Recruiting CRM            | 📋     |
+| MP-05 | Recruiting CRM            | ✅     |
 | MP-06 | Notifications & Tasks     | 📋     |
 | MP-07 | Reporting                 | 📋     |
 | MP-08 | Administration            | 📋     |
