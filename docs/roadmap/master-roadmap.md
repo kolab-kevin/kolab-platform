@@ -45,7 +45,7 @@ Estimated completion by product and delivery track. **Overall** is the weighted 
 | Creator Intelligence | 82%     | 10%      | —       | —      | 8%  | 52%     |
 | Goals Engine         | 88%     | 5%       | —       | —      | —   | 58%     |
 | Creator Studio       | 35%     | 95%      | 15%     | 10%    | —   | 88%     |
-| Manager Portal       | 25%     | 18%      | —       | —      | 3%  | 22%     |
+| Manager Portal       | 25%     | 50%      | —       | —      | 3%  | 45%     |
 | OBS Replacement      | 40%     | 5%       | 8%      | —      | 5%  | 22%     |
 | Analytics Platform   | 15%     | 5%       | —       | —      | 10% | 13%     |
 | AI Platform          | 15%     | 5%       | —       | —      | 18% | 14%     |
@@ -218,9 +218,9 @@ How strategic delivery evolved. Each version maps to merged platform scope—not
 
 ### Current active development
 
-| Focus          | Version | Status         | Next milestone       |
-| -------------- | ------- | -------------- | -------------------- |
-| Manager Portal | v1.0    | 🚧 In Progress | MP-05 Recruiting CRM |
+| Focus          | Version | Status         | Next milestone              |
+| -------------- | ------- | -------------- | --------------------------- |
+| Manager Portal | v1.0    | 🚧 In Progress | MP-06 Notifications & Tasks |
 
 **Next Active Development:** [Manager Portal](#manager-portal) — agency command center for portfolio, campaigns, recruiting, and operations.
 
@@ -736,9 +736,9 @@ See [Architecture — Implementation phases](../architecture/creator-studio.md#i
 
 Agency command center for managers: portfolio intelligence, campaign oversight, matching review, and team accountability.
 
-### Current completion: 45%
+### Current completion: 50%
 
-**Status:** 🚧 **IN PROGRESS** — MP-01 through MP-04 shipped; MP-05+ planned (v0.8 / Manager Portal v1).
+**Status:** 🚧 **IN PROGRESS** — MP-01 through MP-05 shipped; MP-06+ planned (v0.8 / Manager Portal v1).
 
 ### Major capabilities
 
@@ -755,15 +755,15 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 - Creator Management workspace at `/portal/creators` (MP-02)
 - Live Operations workspace at `/portal/live` (MP-03)
 - Campaign Operations workspace at `/portal/campaigns` (MP-04)
+- Recruiting CRM workspace at `/portal/recruiting` (MP-05)
 
 ### In Progress 🚧
 
-- MP-05 Recruiting CRM
+- MP-06 Notifications & tasks
 - UX research and information architecture for remaining workspaces
 
 ### Planned 📋
 
-- Recruiting CRM (MP-05)
 - Notifications & tasks (MP-06)
 - Reporting (MP-07)
 - Administration (MP-08)
@@ -791,7 +791,7 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 | MP-02 | Creator management        | ✅     |
 | MP-03 | Live operations dashboard | ✅     |
 | MP-04 | Campaign operations       | ✅     |
-| MP-05 | Recruiting CRM            | 📋     |
+| MP-05 | Recruiting CRM            | ✅     |
 | MP-06 | Notifications & tasks     | 📋     |
 | MP-07 | Reporting                 | 📋     |
 | MP-08 | Administration            | 📋     |

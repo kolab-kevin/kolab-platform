@@ -61,6 +61,7 @@
 | Creator Management   | Manager Portal       | Agency Growth            | Portfolio oversight        | Creator list and detail workspace     | v0.8          | Implemented |
 | Live Operations      | Manager Portal       | Live Data                | Agency live oversight      | Live operations workspace available   | v0.8          | Implemented |
 | Campaign Operations  | Manager Portal       | Agency Growth            | Campaign oversight         | Campaign operations workspace         | v0.8          | Implemented |
+| Recruiting CRM       | Manager Portal       | More Creators            | Lead pipeline & conversion | Recruiting CRM workspace              | v0.8          | Implemented |
 
 ---
 
@@ -69,14 +70,14 @@
 - **Creator Studio v1.0:** All CS-01–CS-10 phases implemented in `apps/creator-portal`. Production workspace (CS-09) is UI foundation only — OBS capture and desktop integration remain v0.9.
 - **Backend-first delivery:** Domain APIs remain the source of truth; Creator Studio frontend maturity now aligns with backend capabilities for v0.7 scope.
 - **Partial items:** Creator Documents schema and API helpers exist; full e-sign and storage provider integration remain planned. Production Workspace is mock-only pending v0.9 Live Studio.
-- **Next focus:** Manager Portal v0.8 — MP-05 Recruiting CRM (MP-01 through MP-04 complete)
+- **Next focus:** Manager Portal v0.8 — MP-06 Notifications & Tasks (MP-01 through MP-05 complete)
 
 ### Implementation coverage by product
 
 | Product Area   | Backend | Frontend | Overall |
 | -------------- | ------- | -------- | ------- |
 | Creator Studio | 35%     | 95%      | 88%     |
-| Manager Portal | 25%     | 45%      | 40%     |
+| Manager Portal | 25%     | 50%      | 45%     |
 
 ---
 
@@ -84,5 +85,5 @@
 
 - [Creators API](../api/creators.md)
 - [Live Intelligence API](../api/live-intelligence.md)
-- [Campaigns API](../api/campaigns.md)
+- [Recruitment API](../api/recruitment.md)
 - [Release Roadmap](./releases.md)
