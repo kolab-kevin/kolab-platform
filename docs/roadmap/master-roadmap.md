@@ -218,9 +218,9 @@ How strategic delivery evolved. Each version maps to merged platform scope—not
 
 ### Current active development
 
-| Focus          | Version | Status         | Next milestone           |
-| -------------- | ------- | -------------- | ------------------------ |
-| Manager Portal | v1.0    | 🚧 In Progress | MP-02 Creator Management |
+| Focus          | Version | Status         | Next milestone                  |
+| -------------- | ------- | -------------- | ------------------------------- |
+| Manager Portal | v1.0    | 🚧 In Progress | MP-03 Live Operations Dashboard |
 
 **Next Active Development:** [Manager Portal](#manager-portal) — agency command center for portfolio, campaigns, recruiting, and operations.
 
@@ -736,9 +736,9 @@ See [Architecture — Implementation phases](../architecture/creator-studio.md#i
 
 Agency command center for managers: portfolio intelligence, campaign oversight, matching review, and team accountability.
 
-### Current completion: 18%
+### Current completion: 27%
 
-**Status:** 🚧 **IN PROGRESS** — MP-01 shell shipped; MP-02+ planned (v0.8 / Manager Portal v1).
+**Status:** 🚧 **IN PROGRESS** — MP-01 shell and MP-02 creator management shipped; MP-03+ planned (v0.8 / Manager Portal v1).
 
 ### Major capabilities
 
@@ -752,15 +752,15 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 - Backend APIs that Manager Portal will compose (CRM, campaigns, intelligence)
 - Creator Studio v1.0 patterns for workspace shells, navigation, and data modes
 - Manager Portal app shell in `apps/manager-portal` (MP-01)
+- Creator Management workspace at `/portal/creators` (MP-02)
 
 ### In Progress 🚧
 
-- MP-02 Creator management workspace
+- MP-03 Live operations dashboard
 - UX research and information architecture for remaining workspaces
 
 ### Planned 📋
 
-- Creator management (MP-02)
 - Live operations dashboard (MP-03)
 - Campaign operations (MP-04)
 - Recruiting CRM (MP-05)
@@ -788,7 +788,7 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 | Phase | Scope                     | Status |
 | ----- | ------------------------- | ------ |
 | MP-01 | Manager shell             | ✅     |
-| MP-02 | Creator management        | 📋     |
+| MP-02 | Creator management        | ✅     |
 | MP-03 | Live operations dashboard | 📋     |
 | MP-04 | Campaign operations       | 📋     |
 | MP-05 | Recruiting CRM            | 📋     |
