@@ -218,9 +218,9 @@ How strategic delivery evolved. Each version maps to merged platform scope—not
 
 ### Current active development
 
-| Focus          | Version | Status         | Next milestone  |
-| -------------- | ------- | -------------- | --------------- |
-| Manager Portal | v1.0    | 🚧 In Progress | MP-07 Reporting |
+| Focus          | Version | Status         | Next milestone       |
+| -------------- | ------- | -------------- | -------------------- |
+| Manager Portal | v1.0    | 🚧 In Progress | MP-08 Administration |
 
 **Next Active Development:** [Manager Portal](#manager-portal) — agency command center for portfolio, campaigns, recruiting, and operations.
 
@@ -736,9 +736,9 @@ See [Architecture — Implementation phases](../architecture/creator-studio.md#i
 
 Agency command center for managers: portfolio intelligence, campaign oversight, matching review, and team accountability.
 
-### Current completion: 55%
+### Current completion: 60%
 
-**Status:** 🚧 **IN PROGRESS** — MP-01 through MP-06 shipped; MP-07+ planned (v0.8 / Manager Portal v1).
+**Status:** 🚧 **IN PROGRESS** — MP-01 through MP-07 shipped; MP-08+ planned (v0.8 / Manager Portal v1).
 
 ### Major capabilities
 
@@ -757,15 +757,15 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 - Campaign Operations workspace at `/portal/campaigns` (MP-04)
 - Recruiting CRM workspace at `/portal/recruiting` (MP-05)
 - Operations Center workspace at `/portal/tasks` (MP-06)
+- Executive Reporting & Analytics workspace at `/portal/reports` (MP-07)
 
 ### In Progress 🚧
 
-- MP-07 Reporting
+- MP-08 Administration
 - UX research and information architecture for remaining workspaces
 
 ### Planned 📋
 
-- Reporting (MP-07)
 - Administration (MP-08)
 - Integration & polish (MP-09)
 
@@ -793,7 +793,7 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 | MP-04 | Campaign operations       | ✅     |
 | MP-05 | Recruiting CRM            | ✅     |
 | MP-06 | Operations Center         | ✅     |
-| MP-07 | Reporting                 | 📋     |
+| MP-07 | Reporting                 | ✅     |
 | MP-08 | Administration            | 📋     |
 | MP-09 | Integration & polish      | 📋     |
 
