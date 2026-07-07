@@ -1,8 +1,8 @@
 # PAR-01 — Platform Architecture Review Framework
 
-**Status:** 📋 **Framework defined — review not yet executed**  
+**Status:** 🚧 **Review in progress** — PAR-01.1 complete  
 **Milestone:** PAR-01 (post Creator Studio v1 / Manager Portal v1)  
-**Branch:** `feature/par-01-review-framework`  
+**Branch:** `feature/par-01-1-repository-review`  
 **Type:** Architecture review framework (documentation only)  
 **Gating:** Phase 2 initiatives must not start until PAR-01 final outputs are approved
 
@@ -186,6 +186,8 @@ Each subsection below follows: **Review objective · Evidence · Correctness · 
 
 **Scoring dimensions:** Correctness · Scalability · Operability · Changeability · Risk  
 **Required findings:** Strengths · Weaknesses · Risks · Recommendations · Fix now / Before Phase 2 / Later
+
+**Review output:** ✅ [PAR-01.1 Repository Architecture Review](./reviews/par-01-1-repository-architecture.md) — **3.2 / 5 (★★★☆☆ Acceptable)**
 
 ---
 
@@ -558,25 +560,35 @@ Populate during PAR-01 execution; rank by Phase 2 blocker severity:
 
 ## Execution plan — block-by-block
 
-| Step | Action                           | Output                          |
-| ---- | -------------------------------- | ------------------------------- |
-| 1    | Kickoff — assign section owners  | RACI confirmed                  |
-| 2    | Block 1 reviews (PAR-01.1–1.7)   | Section findings + scores       |
-| 3    | Block 1 checkpoint CP-1          | ADR if needed                   |
-| 4    | Block 2 reviews (PAR-01.8–1.13)  | Section findings + risk entries |
-| 5    | Block 2 checkpoint CP-2          | Security gate                   |
-| 6    | Block 3 reviews (PAR-01.14–1.17) | AI/data/integration findings    |
-| 7    | Block 3 checkpoint CP-3          | Governance gate                 |
-| 8    | Block 4 reviews (PAR-01.18–1.21) | Debt + v2 roadmap draft         |
-| 9    | Consolidate risk register        | `R-PAR-*` complete              |
-| 10   | Publish Top 10 + traceability    | All findings linked             |
-| 11   | Executive review CP-4            | Phase 2 go/no-go                |
-| 12   | Ratify Platform v2 roadmap       | Gating document published       |
+| Step | Action                           | Output                                  |
+| ---- | -------------------------------- | --------------------------------------- |
+| 1    | Kickoff — assign section owners  | RACI confirmed                          |
+| 2    | Block 1 reviews (PAR-01.1–1.7)   | Section findings + scores (PAR-01.1 ✅) |
+| 3    | Block 1 checkpoint CP-1          | ADR if needed                           |
+| 4    | Block 2 reviews (PAR-01.8–1.13)  | Section findings + risk entries         |
+| 5    | Block 2 checkpoint CP-2          | Security gate                           |
+| 6    | Block 3 reviews (PAR-01.14–1.17) | AI/data/integration findings            |
+| 7    | Block 3 checkpoint CP-3          | Governance gate                         |
+| 8    | Block 4 reviews (PAR-01.18–1.21) | Debt + v2 roadmap draft                 |
+| 9    | Consolidate risk register        | `R-PAR-*` complete                      |
+| 10   | Publish Top 10 + traceability    | All findings linked                     |
+| 11   | Executive review CP-4            | Phase 2 go/no-go                        |
+| 12   | Ratify Platform v2 roadmap       | Gating document published               |
+
+---
+
+## Section reviews
+
+| Section                          | Status      | Output                                                  |
+| -------------------------------- | ----------- | ------------------------------------------------------- |
+| PAR-01.1 Repository Architecture | ✅ Complete | [Review](./reviews/par-01-1-repository-architecture.md) |
+| PAR-01.2 – PAR-01.21             | 📋 Pending  | —                                                       |
 
 ---
 
 ## Related documentation
 
+- [PAR-01.1 Repository Architecture Review](./reviews/par-01-1-repository-architecture.md)
 - [System Map](./system-map.md)
 - [Decision Log](./decision-log.md)
 - [Creator Studio Architecture](./creator-studio.md)
