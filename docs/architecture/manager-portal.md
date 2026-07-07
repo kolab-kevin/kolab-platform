@@ -1,6 +1,6 @@
 # Manager Portal Architecture
 
-**Status:** MP-06 Operations Center implemented  
+**Status:** MP-07 Reporting & Analytics implemented  
 **Application:** `apps/manager-portal` (Next.js 15 App Router)  
 **Port:** 3004 (local dev)  
 **Related:** [Product brief](../product/manager-portal.md) · [Frontend standards](../engineering/frontend-standards.md)
@@ -9,7 +9,7 @@
 
 ## Overview
 
-Manager Portal is the agency-facing experience layer for portfolio oversight, campaign operations, recruiting, and team accountability. MP-01 ships the authenticated shell and mock dashboard. MP-02 adds Creator Management. MP-03 adds Live Operations. MP-04 adds Campaign Operations. MP-05 adds Recruiting CRM. MP-06 adds the Operations Center with mock/live data modes identical to Creator Studio.
+Manager Portal is the agency-facing experience layer for portfolio oversight, campaign operations, recruiting, and team accountability. MP-01 ships the authenticated shell and mock dashboard. MP-02 adds Creator Management. MP-03 adds Live Operations. MP-04 adds Campaign Operations. MP-05 adds Recruiting CRM. MP-06 adds the Operations Center. MP-07 adds Reporting & Analytics with mock/live data modes identical to Creator Studio.
 
 ```mermaid
 flowchart LR
@@ -21,7 +21,8 @@ flowchart LR
     CAMPAIGNS[Campaign ops MP-04]
     RECRUITING[Recruiting CRM MP-05]
     OPS[Operations Center MP-06]
-    PLACE[Placeholder workspaces MP-07+]
+    REPORTS[Reporting MP-07]
+    PLACE[Placeholder workspaces MP-08+]
   end
   subgraph api [@kolab/api]
     CRM[Creator CRM endpoints]
@@ -36,6 +37,7 @@ flowchart LR
   SHELL --> CAMPAIGNS
   SHELL --> RECRUITING
   SHELL --> OPS
+  SHELL --> REPORTS
   SHELL --> PLACE
   CREATORS --> CRM
   LIVE --> LIVEAPI
@@ -48,6 +50,10 @@ flowchart LR
   OPS --> RECRUIT
   OPS --> CRM
   OPS --> AUDIT
+  REPORTS --> CRM
+  REPORTS --> CAMP
+  REPORTS --> RECRUIT
+  REPORTS --> LIVEAPI
   DASH -.-> CRM
 ```
 
@@ -57,16 +63,16 @@ flowchart LR
 
 ## Frontend architecture
 
-| Layer               | Responsibility                                                                                                                                                                         |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **App Router**      | Routes under `/portal/*`, auth layout, error boundaries                                                                                                                                |
-| **`@kolab/ui`**     | AuthProvider, ErrorBoundary, Card, Button, auth forms                                                                                                                                  |
-| **`@kolab/auth`**   | `APP_ALLOWED_ROLES.admin` gate for manager access                                                                                                                                      |
-| **`@kolab/sdk`**    | Auth client                                                                                                                                                                            |
-| **`@kolab/types`**  | Shared API response schemas (live mode)                                                                                                                                                |
-| **Local Zod types** | `types/creator-management.ts`, `types/live-operations.ts`, `types/campaign-operations.ts`, `types/recruiting-workspace.ts`, `types/operations-center.ts`, `types/manager-dashboard.ts` |
-| **Services**        | Mock/live fetch, API composition for creator, live, campaign, recruiting, and operations workspaces                                                                                    |
-| **Hooks**           | Workspace state for creators, live operations, campaign operations, recruiting, and operations center                                                                                  |
+| Layer               | Responsibility                                                                                                                                                                                                         |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **App Router**      | Routes under `/portal/*`, auth layout, error boundaries                                                                                                                                                                |
+| **`@kolab/ui`**     | AuthProvider, ErrorBoundary, Card, Button, auth forms                                                                                                                                                                  |
+| **`@kolab/auth`**   | `APP_ALLOWED_ROLES.admin` gate for manager access                                                                                                                                                                      |
+| **`@kolab/sdk`**    | Auth client                                                                                                                                                                                                            |
+| **`@kolab/types`**  | Shared API response schemas (live mode)                                                                                                                                                                                |
+| **Local Zod types** | `types/creator-management.ts`, `types/live-operations.ts`, `types/campaign-operations.ts`, `types/recruiting-workspace.ts`, `types/operations-center.ts`, `types/reporting-workspace.ts`, `types/manager-dashboard.ts` |
+| **Services**        | Mock/live fetch, API composition for creator, live, campaign, recruiting, operations, and reporting workspaces                                                                                                         |
+| **Hooks**           | Workspace state for creators, live operations, campaign operations, recruiting, operations center, and reporting                                                                                                       |
 
 ---
 
@@ -95,7 +101,7 @@ apps/manager-portal/
         campaigns/page.tsx          # Campaign Operations (MP-04)
         recruiting/page.tsx         # Recruiting CRM (MP-05)
         tasks/page.tsx              # Operations Center (MP-06)
-        reports/                    # Placeholder (MP-07)
+        reports/page.tsx            # Reporting & Analytics (MP-07)
         admin/                      # Placeholder (MP-08)
         settings/                   # Placeholder (MP-09)
   components/
@@ -106,6 +112,7 @@ apps/manager-portal/
     campaigns/                      # Overview, board, detail, deliverables, applications
     recruiting/                     # Overview, pipeline, detail, follow-ups, performance
     operations-center/              # Overview, tasks, alerts, deadlines, activity, AI queue
+    reporting/                      # Executive overview, domain analytics, intelligence, export
     common/                         # Loading, errors, workspace page, layout
   contexts/organization-context.tsx
   hooks/use-portal-navigation.ts
@@ -115,6 +122,7 @@ apps/manager-portal/
   hooks/use-campaign-operations.ts
   hooks/use-recruiting-workspace.ts
   hooks/use-operations-center.ts
+  hooks/use-reporting-workspace.ts
   services/
     api-client.ts
     dashboard-mock.ts
@@ -149,6 +157,14 @@ apps/manager-portal/
     alert-center-service.ts
     deadline-service.ts
     activity-feed-service.ts
+    reporting-mock.ts
+    reporting-service.ts
+    reporting-loader.ts
+    creator-analytics-service.ts
+    campaign-analytics-service.ts
+    recruiting-analytics-service.ts
+    live-analytics-service.ts
+    executive-dashboard-service.ts
   types/
     navigation.ts
     manager-dashboard.ts
@@ -162,6 +178,8 @@ apps/manager-portal/
     recruiting-adapters.ts
     operations-center.ts
     operations-center-adapters.ts
+    reporting-workspace.ts
+    reporting-adapters.ts
 ```
 
 ---
@@ -320,6 +338,37 @@ Live aggregation runs in `operations-loader.ts`. Manager tasks and overview metr
 
 ---
 
+## MP-07 Reporting & Analytics
+
+### MP-07 data modes
+
+| Mode | Trigger                                      | Behavior                              |
+| ---- | -------------------------------------------- | ------------------------------------- |
+| Mock | `NEXT_PUBLIC_USE_MOCK_DASHBOARD !== 'false'` | Typed fixtures in `reporting-mock.ts` |
+| Live | Mock disabled                                | Composes cross-domain reporting APIs  |
+
+### MP-07 live API mapping
+
+| UI section             | Endpoint(s)                                               |
+| ---------------------- | --------------------------------------------------------- |
+| Executive overview     | Aggregated from creators, campaigns, leads, live sessions |
+| Creator analytics      | `GET /api/creators`                                       |
+| Campaign analytics     | `GET /api/campaigns`                                      |
+| Recruiting analytics   | `GET /api/recruitment/leads`, `GET /api/recruiters`       |
+| Live analytics         | `GET /api/live/sessions`                                  |
+| Intelligence dashboard | Derived client-side from aggregated portfolio data        |
+| Export center          | UI-only placeholders                                      |
+
+Live aggregation runs in `reporting-loader.ts`. Health scores, funnel metrics, and intelligence items are computed client-side for presentation.
+
+### MP-07 client-side presentation
+
+- ROI and time-to-conversion labels are placeholders where backend analytics are unavailable.
+- Export actions are disabled UI placeholders.
+- No new business logic or scoring engines in components beyond presentation rollups.
+
+---
+
 ## MP-01 dashboard mock
 
 Mock dashboard sections (display-only):
@@ -377,9 +426,16 @@ Validated by `ManagerDashboardResponseSchema` in tests.
 
 ### MP-06
 
-- `/portal/tasks` renders overview, tasks, alerts, deadlines, activity feed, and AI recommendations ✅
+- `/portal/operations` renders overview, alerts, tasks, coaching, and activity ✅
 - Mock/live modes share typed DTOs ✅
 - Quick actions present as UI-only controls ✅
+- Service and adapter tests validate schemas and mapping ✅
+
+### MP-07
+
+- `/portal/reports` renders executive overview, domain analytics, intelligence dashboard, and export center ✅
+- Mock/live modes share typed DTOs ✅
+- Export actions present as UI-only controls ✅
 - Service and adapter tests validate schemas and mapping ✅
 
 ---
