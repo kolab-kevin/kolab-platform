@@ -3,7 +3,7 @@
 <!-- markdownlint-disable MD024 MD036 -->
 
 **Status:** Living document — single source of truth for product delivery  
-**Last updated:** 2026-07-05 (Creator Studio v1.0 complete; Manager Portal active)  
+**Last updated:** 2026-07-06 (Creator Studio v1.0 + Manager Portal v1.0 complete; PAR-01 review gate active)  
 **Owner:** Kōlab Product & Engineering
 
 **Related:** [Product Strategy](../vision/product-strategy.md) · [Competitive Advantages](../vision/competitive-advantages.md) · [Product Principles](../vision/product-principles.md) · [System Map](../architecture/system-map.md) · [Business Model](../business/business-model.md)
@@ -218,11 +218,12 @@ How strategic delivery evolved. Each version maps to merged platform scope—not
 
 ### Current active development
 
-| Focus          | Version | Status      | Next milestone            |
-| -------------- | ------- | ----------- | ------------------------- |
-| Manager Portal | v1.0    | ✅ Complete | Manager Portal v1 shipped |
+| Focus          | Version | Status         | Next milestone                         |
+| -------------- | ------- | -------------- | -------------------------------------- |
+| Manager Portal | v1.0    | ✅ Complete    | Manager Portal v1 shipped              |
+| PAR-01         | Review  | 📋 In progress | Platform Architecture Review execution |
 
-**Next Active Development:** [Manager Portal](#manager-portal) — agency command center for portfolio, campaigns, recruiting, and operations.
+**Next Active Development:** [PAR-01 Platform Architecture Review](../architecture/par-01-platform-architecture-review.md) — post-v1 architecture review gating Phase 2 initiatives.
 
 ---
 
@@ -767,7 +768,7 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 
 ### Planned 📋
 
-- Future enhancements beyond v1 scope
+- Future v1.x enhancements (non-blocking)
 
 ### Future Vision 🔮
 
@@ -802,6 +803,51 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 Every roadmap item here must improve **creator success**, **agency efficiency**, **platform intelligence**, **revenue**, or **retention**. If it does not, deprioritize or reframe it.
 
 This area strengthens the [Kōlab Flywheel](#kōlab-flywheel) by raising agency efficiency across portfolios and campaigns.
+
+---
+
+## PAR-01 Platform Architecture Review
+
+### Purpose
+
+Formal post-v1 architecture review after Creator Studio v1 (CS-01–CS-10) and Manager Portal v1 (MP-01–MP-09). Gates Phase 2 initiatives until consolidated findings, risk register, and Platform v2 roadmap are approved.
+
+### Current completion: 10%
+
+**Status:** 📋 **IN PROGRESS** — review framework defined; execution not yet complete.
+
+**Framework:** [PAR-01 Platform Architecture Review](../architecture/par-01-platform-architecture-review.md)
+
+### Review blocks
+
+| Block | Sections         | Theme               |
+| ----- | ---------------- | ------------------- |
+| 1     | PAR-01.1 – 1.7   | Platform Foundation |
+| 2     | PAR-01.8 – 1.13  | Systems Qualities   |
+| 3     | PAR-01.14 – 1.17 | Intelligence & Data |
+| 4     | PAR-01.18 – 1.21 | Strategic Readiness |
+
+### Completed ✅
+
+- PAR-01 review framework documentation (21 sections, scoring, risk register format, Phase 2 map, execution plan)
+
+### In Progress 🚧
+
+- Block-by-block review execution
+
+### Planned 📋
+
+- Consolidated risk register
+- Ratified architecture principles
+- Decision checkpoints (ADRs)
+- Kōlab Platform v2 roadmap (Phase 2 gate)
+- Top 10 architectural improvements before Phase 2
+
+### Exit criteria
+
+- All sections scored with traceable findings
+- PAR-01 CP-4 checkpoint approved
+- Phase 2 initiatives unblocked only after Platform v2 roadmap sign-off
 
 ---
 
@@ -1387,7 +1433,7 @@ This document is no longer a brainstorming artifact. It is a **living operationa
 
 Ad-hoc feature ideas belong in the [Research](#research) pipeline until promoted through product brief, engineering spike, and flywheel alignment review.
 
-**Next primary development focus:** [Manager Portal](#manager-portal) — agency command center for portfolio oversight, campaign operations, recruiting CRM, and team accountability (v0.8 / MP-01–MP-09).
+**Next primary development focus:** [PAR-01 Platform Architecture Review](../architecture/par-01-platform-architecture-review.md) — post-v1 review gating Phase 2. Manager Portal v1 (MP-01–MP-09) and Creator Studio v1 (CS-01–CS-10) are complete.
 
 ---
 

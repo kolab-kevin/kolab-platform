@@ -8,22 +8,23 @@
 
 ## Release overview
 
-| Version                              | Theme                  | Status          |
-| ------------------------------------ | ---------------------- | --------------- |
-| [v0.1](#v01--platform-foundation)    | Platform Foundation    | Shipped         |
-| [v0.2](#v02--identity)               | Identity               | Shipped         |
-| [v0.3](#v03--recruitment-crm)        | Recruitment CRM        | Shipped         |
-| [v0.4](#v04--campaigns)              | Campaigns              | Shipped         |
-| [v0.5](#v05--live-intelligence)      | Live Intelligence      | Shipped         |
-| [v0.6](#v06--creator-intelligence)   | Creator Intelligence   | Shipped         |
-| [v0.7](#v07--creator-studio)         | Creator Studio         | **Complete**    |
-| [v0.8](#v08--manager-portal)         | Manager Portal         | **In progress** |
-| [v0.9](#v09--obs-foundation)         | OBS Foundation         | Planned         |
-| [v1.0](#v10--commercial-release)     | Commercial Release     | Planned         |
-| [v1.5](#v15--ai-coach)               | AI Coach               | Planned         |
-| [v2.0](#v20--marketplace)            | Marketplace            | Planned         |
-| [v2.5](#v25--financial-platform)     | Financial Platform     | Planned         |
-| [v3.0](#v30--global-creator-network) | Global Creator Network | Planned         |
+| Version                                         | Theme                        | Status          |
+| ----------------------------------------------- | ---------------------------- | --------------- |
+| [v0.1](#v01--platform-foundation)               | Platform Foundation          | Shipped         |
+| [v0.2](#v02--identity)                          | Identity                     | Shipped         |
+| [v0.3](#v03--recruitment-crm)                   | Recruitment CRM              | Shipped         |
+| [v0.4](#v04--campaigns)                         | Campaigns                    | Shipped         |
+| [v0.5](#v05--live-intelligence)                 | Live Intelligence            | Shipped         |
+| [v0.6](#v06--creator-intelligence)              | Creator Intelligence         | Shipped         |
+| [v0.7](#v07--creator-studio)                    | Creator Studio               | **Complete**    |
+| [v0.8](#v08--manager-portal)                    | Manager Portal               | **Complete**    |
+| [PAR-01](#par-01--platform-architecture-review) | Platform Architecture Review | **In progress** |
+| [v0.9](#v09--obs-foundation)                    | OBS Foundation               | Planned         |
+| [v1.0](#v10--commercial-release)                | Commercial Release           | Planned         |
+| [v1.5](#v15--ai-coach)                          | AI Coach                     | Planned         |
+| [v2.0](#v20--marketplace)                       | Marketplace                  | Planned         |
+| [v2.5](#v25--financial-platform)                | Financial Platform           | Planned         |
+| [v3.0](#v30--global-creator-network)            | Global Creator Network       | Planned         |
 
 ---
 
@@ -177,6 +178,33 @@
 | MP-07 | Reporting                 | ✅     |
 | MP-08 | Administration            | ✅     |
 | MP-09 | Integration & Polish      | ✅     |
+
+---
+
+## PAR-01 — Platform Architecture Review
+
+**Status:** 📋 **IN PROGRESS** — framework defined; block-by-block review execution next.
+
+**Objectives:** Assess platform architecture after Creator Studio v1 and Manager Portal v1; produce consolidated risk register, ratified principles, decision checkpoints, and Platform v2 roadmap before Phase 2 initiatives.
+
+**Major capabilities:** 21-section review across Platform Foundation, Systems Qualities, Intelligence & Data, and Strategic Readiness; traceability from findings to ADRs and tasks; Phase 2 initiative dependency map.
+
+**Success criteria:** PAR-01 CP-4 checkpoint approved; no Critical unmitigated risks blocking Phase 2; [Platform v2 roadmap](../architecture/par-01-platform-architecture-review.md#par-0121-kōlab-platform-v2-roadmap) published as gating document.
+
+**Dependencies:** v0.7 Creator Studio v1 complete; v0.8 Manager Portal v1 complete.
+
+**Documentation:** [PAR-01 framework](../architecture/par-01-platform-architecture-review.md)
+
+**Review blocks:**
+
+| Block | Scope               | Sections         |
+| ----- | ------------------- | ---------------- |
+| 1     | Platform Foundation | PAR-01.1 – 1.7   |
+| 2     | Systems Qualities   | PAR-01.8 – 1.13  |
+| 3     | Intelligence & Data | PAR-01.14 – 1.17 |
+| 4     | Strategic Readiness | PAR-01.18 – 1.21 |
+
+**Required outputs:** Section reviews · Risk register · Architecture principles · Decision checkpoints · Phase 2 map · Platform v2 roadmap · Top 10 improvements · Execution plan
 
 ---
 

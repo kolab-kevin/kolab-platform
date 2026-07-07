@@ -6,15 +6,15 @@ Central index for product, engineering, and operations documentation. For long-t
 
 ## Current Platform Status
 
-| Field                          | Value                                                                                      |
-| ------------------------------ | ------------------------------------------------------------------------------------------ |
-| **Current Platform Version**   | Creator Studio v1.0 — **Complete**                                                         |
-| **Current Version**            | v0.7 — Creator Studio (shipped)                                                            |
-| **Current Milestone**          | v0.8 Manager Portal — MP-01 Manager Shell (in progress)                                    |
-| **Current Product Focus**      | [Manager Portal](./roadmap/master-roadmap.md#manager-portal) (v0.8)                        |
-| **Current Active Development** | Manager Portal v1                                                                          |
-| **Current Development Branch** | `feature/master-roadmap-update` → strategic documentation                                  |
-| **Platform Maturity**          | See [Platform Maturity Dashboard](./roadmap/master-roadmap.md#platform-maturity-dashboard) |
+| Field                          | Value                                                                                        |
+| ------------------------------ | -------------------------------------------------------------------------------------------- |
+| **Current Platform Version**   | Creator Studio v1.0 + Manager Portal v1.0 — **Complete**                                     |
+| **Current Version**            | v0.8 — Manager Portal (shipped) · PAR-01 review gate (active)                                |
+| **Current Milestone**          | **PAR-01** — Platform Architecture Review (framework defined)                                |
+| **Current Product Focus**      | [PAR-01 Platform Architecture Review](./architecture/par-01-platform-architecture-review.md) |
+| **Current Active Development** | PAR-01 review execution (documentation-led; no stealth refactors)                            |
+| **Current Development Branch** | `feature/par-01-review-framework`                                                            |
+| **Platform Maturity**          | See [Platform Maturity Dashboard](./roadmap/master-roadmap.md#platform-maturity-dashboard)   |
 
 ### Operational references
 
@@ -31,19 +31,20 @@ Central index for product, engineering, and operations documentation. For long-t
 
 ## Strategic hub
 
-| Area             | Document                                                     | Description                                                |
-| ---------------- | ------------------------------------------------------------ | ---------------------------------------------------------- |
-| **Roadmap**      | [**Master Roadmap**](./roadmap/master-roadmap.md)            | Living product roadmap — maturity, debt, research, history |
-| **Vision**       | [Product Strategy](./vision/product-strategy.md)             | Mission, flywheel, five- and ten-year vision               |
-| **Vision**       | [Competitive Advantages](./vision/competitive-advantages.md) | Moats and why Kōlab wins                                   |
-| **Vision**       | [Product Principles](./vision/product-principles.md)         | Design and engineering principles                          |
-| **Business**     | [Business Model](./business/business-model.md)               | Revenue streams and sustainability                         |
-| **Business**     | [Risk Register](./business/risk-register.md)                 | Strategic and technical risk tracking                      |
-| **Architecture** | [System Map](./architecture/system-map.md)                   | Platform layers and relationships                          |
-| **Architecture** | [Decision Log](./architecture/decision-log.md)               | Major architectural decisions (ADR)                        |
-| **Architecture** | [Creator Studio](./architecture/creator-studio.md)           | Creator portal frontend architecture                       |
-| **Design**       | [Creator Studio UX](./design/creator-studio-ux.md)           | UX principles and module patterns                          |
-| **Architecture** | [Event Taxonomy](./architecture/event-taxonomy.md)           | Canonical platform event classification                    |
+| Area             | Document                                                                                     | Description                                                |
+| ---------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| **Roadmap**      | [**Master Roadmap**](./roadmap/master-roadmap.md)                                            | Living product roadmap — maturity, debt, research, history |
+| **Vision**       | [Product Strategy](./vision/product-strategy.md)                                             | Mission, flywheel, five- and ten-year vision               |
+| **Vision**       | [Competitive Advantages](./vision/competitive-advantages.md)                                 | Moats and why Kōlab wins                                   |
+| **Vision**       | [Product Principles](./vision/product-principles.md)                                         | Design and engineering principles                          |
+| **Business**     | [Business Model](./business/business-model.md)                                               | Revenue streams and sustainability                         |
+| **Business**     | [Risk Register](./business/risk-register.md)                                                 | Strategic and technical risk tracking                      |
+| **Architecture** | [PAR-01 Platform Architecture Review](./architecture/par-01-platform-architecture-review.md) | Post-v1 review framework and Phase 2 gate                  |
+| **Architecture** | [System Map](./architecture/system-map.md)                                                   | Platform layers and relationships                          |
+| **Architecture** | [Decision Log](./architecture/decision-log.md)                                               | Major architectural decisions (ADR)                        |
+| **Architecture** | [Creator Studio](./architecture/creator-studio.md)                                           | Creator portal frontend architecture                       |
+| **Design**       | [Creator Studio UX](./design/creator-studio-ux.md)                                           | UX principles and module patterns                          |
+| **Architecture** | [Event Taxonomy](./architecture/event-taxonomy.md)                                           | Canonical platform event classification                    |
 
 ---
 
@@ -73,6 +74,7 @@ Central index for product, engineering, and operations documentation. For long-t
 ## Architecture
 
 - [Architecture overview](./architecture/README.md)
+- [PAR-01 Platform Architecture Review](./architecture/par-01-platform-architecture-review.md)
 - [System Map](./architecture/system-map.md)
 - [Identity](./architecture/identity.md)
 - [Recruitment CRM](./architecture/recruitment-crm.md)
@@ -152,7 +154,8 @@ Central index for product, engineering, and operations documentation. For long-t
 
 1. **Planning a feature** — [Product Principles](./vision/product-principles.md) → [Master Roadmap](./roadmap/master-roadmap.md) → [Developer Workflow](./engineering/developer-workflow.md).
 2. **Building Creator Studio** — [Product brief](./product/creator-studio.md) → [Architecture](./architecture/creator-studio.md) → [UX](./design/creator-studio-ux.md). _(v1.0 complete.)_
-3. **Building Manager Portal** — [Master Roadmap — Manager Portal](./roadmap/master-roadmap.md#manager-portal) → [Release v0.8](./roadmap/releases.md#v08--manager-portal).
-4. **Understanding the platform** — [System Map](./architecture/system-map.md) → [Architecture overview](./architecture/README.md).
-5. **Shipping API work** — [API index](./api/README.md) → [Backend standards](./engineering/backend-standards.md).
-6. **Strategic reviews** — [Platform Maturity Dashboard](./roadmap/master-roadmap.md#platform-maturity-dashboard) → [Business Model](./business/business-model.md).
+3. **Building Manager Portal** — [Master Roadmap — Manager Portal](./roadmap/master-roadmap.md#manager-portal) → [Release v0.8](./roadmap/releases.md#v08--manager-portal). _(v1.0 complete.)_
+4. **Running PAR-01 architecture review** — [PAR-01 framework](./architecture/par-01-platform-architecture-review.md) → [Master Roadmap — PAR-01](./roadmap/master-roadmap.md#par-01-platform-architecture-review).
+5. **Understanding the platform** — [System Map](./architecture/system-map.md) → [Architecture overview](./architecture/README.md).
+6. **Shipping API work** — [API index](./api/README.md) → [Backend standards](./engineering/backend-standards.md).
+7. **Strategic reviews** — [Platform Maturity Dashboard](./roadmap/master-roadmap.md#platform-maturity-dashboard) → [Business Model](./business/business-model.md).
