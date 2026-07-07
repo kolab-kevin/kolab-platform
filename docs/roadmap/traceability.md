@@ -64,6 +64,7 @@
 | Recruiting CRM        | Manager Portal       | More Creators            | Lead pipeline & conversion | Recruiting CRM workspace              | v0.8          | Implemented |
 | Operations Center     | Manager Portal       | Agency Growth            | Daily manager workflow     | Operations center workspace           | v0.8          | Implemented |
 | Reporting & Analytics | Manager Portal       | Agency Growth            | Executive decision-making  | Reporting & analytics workspace       | v0.8          | Implemented |
+| Administration        | Manager Portal       | Agency Growth            | Organization governance    | Administration workspace              | v0.8          | Implemented |
 
 ---
 
@@ -72,14 +73,14 @@
 - **Creator Studio v1.0:** All CS-01–CS-10 phases implemented in `apps/creator-portal`. Production workspace (CS-09) is UI foundation only — OBS capture and desktop integration remain v0.9.
 - **Backend-first delivery:** Domain APIs remain the source of truth; Creator Studio frontend maturity now aligns with backend capabilities for v0.7 scope.
 - **Partial items:** Creator Documents schema and API helpers exist; full e-sign and storage provider integration remain planned. Production Workspace is mock-only pending v0.9 Live Studio.
-- **Next focus:** Manager Portal v0.8 — MP-08 Administration (MP-01 through MP-07 complete)
+- **Next focus:** Manager Portal v0.8 — MP-09 Integration & polish (MP-01 through MP-08 complete)
 
 ### Implementation coverage by product
 
 | Product Area   | Backend | Frontend | Overall |
 | -------------- | ------- | -------- | ------- |
 | Creator Studio | 35%     | 95%      | 88%     |
-| Manager Portal | 25%     | 60%      | 55%     |
+| Manager Portal | 25%     | 65%      | 60%     |
 
 ---
 

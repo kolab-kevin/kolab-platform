@@ -1,6 +1,6 @@
 # Manager Portal
 
-**Status:** MP-07 Reporting & Analytics — **Implemented**  
+**Status:** MP-08 Administration — **Implemented**  
 **Target:** Release 0.8 (`release/0.8.x`)  
 **Application:** `apps/manager-portal`  
 **Depends on:** v0.7 Creator Studio patterns; existing Creator CRM, Live Intelligence, and Campaign APIs
@@ -11,7 +11,7 @@
 
 Deliver **Manager Portal** — the agency command center where managers oversee creators, live operations, campaigns, recruiting, tasks, reporting, and administration in one place.
 
-MP-01 establishes the authenticated application shell and mock dashboard. MP-02 ships Creator Management. MP-03 ships Live Operations. MP-04 ships Campaign Operations. MP-05 ships Recruiting CRM. MP-06 ships the Operations Center. MP-07 ships Reporting & Analytics. Remaining domain workspaces ship in MP-08 through MP-09.
+MP-01 establishes the authenticated application shell and mock dashboard. MP-02 ships Creator Management. MP-03 ships Live Operations. MP-04 ships Campaign Operations. MP-05 ships Recruiting CRM. MP-06 ships the Operations Center. MP-07 ships Reporting & Analytics. MP-08 ships Administration. Remaining polish ships in MP-09.
 
 ---
 
@@ -122,6 +122,23 @@ MP-01 establishes the authenticated application shell and mock dashboard. MP-02 
 
 ---
 
+## MP-08 capabilities
+
+| Capability                                                   | Status |
+| ------------------------------------------------------------ | ------ |
+| Organization profile (name, contact, timezone, statistics)   | ✅     |
+| User management (users, roles, status, invitations)          | ✅     |
+| Roles & permissions (summaries, read-only permission matrix) | ✅     |
+| Organization settings (general, branding, feature flags)     | ✅     |
+| Audit center (audit log, admin actions, security events)     | ✅     |
+| System health (API, storage, version, environment)           | ✅     |
+| Integrations (services, masked API keys, webhooks)           | ✅     |
+| Quick actions (UI-only)                                      | ✅     |
+| Mock/live data modes                                         | ✅     |
+| Typed administration workspace DTO                           | ✅     |
+
+---
+
 ## Navigation
 
 | Route                | Purpose                      | Status                                |
@@ -133,7 +150,7 @@ MP-01 establishes the authenticated application shell and mock dashboard. MP-02 
 | `/portal/recruiting` | Recruiting CRM               | Recruiting workspace (MP-05)          |
 | `/portal/tasks`      | Operations Center            | Operations center workspace (MP-06)   |
 | `/portal/reports`    | Reporting & Analytics        | Reporting workspace (MP-07)           |
-| `/portal/admin`      | Administration               | Placeholder (MP-08)                   |
+| `/portal/admin`      | Administration               | Administration workspace (MP-08)      |
 | `/portal/settings`   | Settings                     | Placeholder (MP-09 polish)            |
 
 ---
@@ -146,7 +163,7 @@ MP-01 establishes the authenticated application shell and mock dashboard. MP-02 
 | `NEXT_PUBLIC_API_URL`            | API host for auth and live API endpoints                        |
 | `NEXT_PUBLIC_ORGANIZATION_ID`    | Default mock organization id                                    |
 
-Live workspaces compose existing Creator CRM, Live Intelligence, Campaign, Recruitment, Audit, and Documents endpoints. Live dashboard API integration remains deferred.
+Live workspaces compose existing Creator CRM, Live Intelligence, Campaign, Recruitment, Organization, RBAC, Audit, and Agency endpoints. Live dashboard API integration remains deferred.
 
 ---
 
@@ -161,7 +178,7 @@ Live workspaces compose existing Creator CRM, Live Intelligence, Campaign, Recru
 | MP-05 | Recruiting CRM            | ✅     |
 | MP-06 | Operations Center         | ✅     |
 | MP-07 | Reporting & Analytics     | ✅     |
-| MP-08 | Administration            | 📋     |
+| MP-08 | Administration            | ✅     |
 | MP-09 | Integration & polish      | 📋     |
 
 ---

@@ -218,9 +218,9 @@ How strategic delivery evolved. Each version maps to merged platform scope—not
 
 ### Current active development
 
-| Focus          | Version | Status         | Next milestone       |
-| -------------- | ------- | -------------- | -------------------- |
-| Manager Portal | v1.0    | 🚧 In Progress | MP-08 Administration |
+| Focus          | Version | Status         | Next milestone             |
+| -------------- | ------- | -------------- | -------------------------- |
+| Manager Portal | v1.0    | 🚧 In Progress | MP-09 Integration & polish |
 
 **Next Active Development:** [Manager Portal](#manager-portal) — agency command center for portfolio, campaigns, recruiting, and operations.
 
@@ -736,9 +736,9 @@ See [Architecture — Implementation phases](../architecture/creator-studio.md#i
 
 Agency command center for managers: portfolio intelligence, campaign oversight, matching review, and team accountability.
 
-### Current completion: 60%
+### Current completion: 65%
 
-**Status:** 🚧 **IN PROGRESS** — MP-01 through MP-07 shipped; MP-08+ planned (v0.8 / Manager Portal v1).
+**Status:** 🚧 **IN PROGRESS** — MP-01 through MP-08 shipped; MP-09 planned (v0.8 / Manager Portal v1).
 
 ### Major capabilities
 
@@ -758,15 +758,15 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 - Recruiting CRM workspace at `/portal/recruiting` (MP-05)
 - Operations Center workspace at `/portal/tasks` (MP-06)
 - Executive Reporting & Analytics workspace at `/portal/reports` (MP-07)
+- Administration workspace at `/portal/admin` (MP-08)
 
 ### In Progress 🚧
 
-- MP-08 Administration
+- MP-09 Integration & polish
 - UX research and information architecture for remaining workspaces
 
 ### Planned 📋
 
-- Administration (MP-08)
 - Integration & polish (MP-09)
 
 ### Future Vision 🔮
@@ -794,7 +794,7 @@ Agency command center for managers: portfolio intelligence, campaign oversight, 
 | MP-05 | Recruiting CRM            | ✅     |
 | MP-06 | Operations Center         | ✅     |
 | MP-07 | Reporting                 | ✅     |
-| MP-08 | Administration            | 📋     |
+| MP-08 | Administration            | ✅     |
 | MP-09 | Integration & polish      | 📋     |
 
 ### How does this improve creator success?

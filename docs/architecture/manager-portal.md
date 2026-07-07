@@ -1,6 +1,6 @@
 # Manager Portal Architecture
 
-**Status:** MP-07 Reporting & Analytics implemented  
+**Status:** MP-08 Administration implemented  
 **Application:** `apps/manager-portal` (Next.js 15 App Router)  
 **Port:** 3004 (local dev)  
 **Related:** [Product brief](../product/manager-portal.md) · [Frontend standards](../engineering/frontend-standards.md)
@@ -9,7 +9,7 @@
 
 ## Overview
 
-Manager Portal is the agency-facing experience layer for portfolio oversight, campaign operations, recruiting, and team accountability. MP-01 ships the authenticated shell and mock dashboard. MP-02 adds Creator Management. MP-03 adds Live Operations. MP-04 adds Campaign Operations. MP-05 adds Recruiting CRM. MP-06 adds the Operations Center. MP-07 adds Reporting & Analytics with mock/live data modes identical to Creator Studio.
+Manager Portal is the agency-facing experience layer for portfolio oversight, campaign operations, recruiting, and team accountability. MP-01 ships the authenticated shell and mock dashboard. MP-02 adds Creator Management. MP-03 adds Live Operations. MP-04 adds Campaign Operations. MP-05 adds Recruiting CRM. MP-06 adds the Operations Center. MP-07 adds Reporting & Analytics. MP-08 adds Administration with mock/live data modes identical to Creator Studio.
 
 ```mermaid
 flowchart LR
@@ -22,7 +22,8 @@ flowchart LR
     RECRUITING[Recruiting CRM MP-05]
     OPS[Operations Center MP-06]
     REPORTS[Reporting MP-07]
-    PLACE[Placeholder workspaces MP-08+]
+    ADMIN[Administration MP-08]
+    PLACE[Placeholder MP-09]
   end
   subgraph api [@kolab/api]
     CRM[Creator CRM endpoints]
@@ -30,6 +31,8 @@ flowchart LR
     CAMP[Campaign endpoints]
     RECRUIT[Recruitment endpoints]
     AUDIT[Audit logs]
+    ORG[Organization & RBAC]
+    AGENCY[Agency profile & settings]
   end
   SHELL --> DASH
   SHELL --> CREATORS
@@ -38,6 +41,7 @@ flowchart LR
   SHELL --> RECRUITING
   SHELL --> OPS
   SHELL --> REPORTS
+  SHELL --> ADMIN
   SHELL --> PLACE
   CREATORS --> CRM
   LIVE --> LIVEAPI
@@ -54,6 +58,9 @@ flowchart LR
   REPORTS --> CAMP
   REPORTS --> RECRUIT
   REPORTS --> LIVEAPI
+  ADMIN --> ORG
+  ADMIN --> AGENCY
+  ADMIN --> AUDIT
   DASH -.-> CRM
 ```
 
@@ -63,16 +70,16 @@ flowchart LR
 
 ## Frontend architecture
 
-| Layer               | Responsibility                                                                                                                                                                                                         |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **App Router**      | Routes under `/portal/*`, auth layout, error boundaries                                                                                                                                                                |
-| **`@kolab/ui`**     | AuthProvider, ErrorBoundary, Card, Button, auth forms                                                                                                                                                                  |
-| **`@kolab/auth`**   | `APP_ALLOWED_ROLES.admin` gate for manager access                                                                                                                                                                      |
-| **`@kolab/sdk`**    | Auth client                                                                                                                                                                                                            |
-| **`@kolab/types`**  | Shared API response schemas (live mode)                                                                                                                                                                                |
-| **Local Zod types** | `types/creator-management.ts`, `types/live-operations.ts`, `types/campaign-operations.ts`, `types/recruiting-workspace.ts`, `types/operations-center.ts`, `types/reporting-workspace.ts`, `types/manager-dashboard.ts` |
-| **Services**        | Mock/live fetch, API composition for creator, live, campaign, recruiting, operations, and reporting workspaces                                                                                                         |
-| **Hooks**           | Workspace state for creators, live operations, campaign operations, recruiting, operations center, and reporting                                                                                                       |
+| Layer               | Responsibility                                                                                                                                                                                                                                              |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **App Router**      | Routes under `/portal/*`, auth layout, error boundaries                                                                                                                                                                                                     |
+| **`@kolab/ui`**     | AuthProvider, ErrorBoundary, Card, Button, auth forms                                                                                                                                                                                                       |
+| **`@kolab/auth`**   | `APP_ALLOWED_ROLES.admin` gate for manager access                                                                                                                                                                                                           |
+| **`@kolab/sdk`**    | Auth client                                                                                                                                                                                                                                                 |
+| **`@kolab/types`**  | Shared API response schemas (live mode)                                                                                                                                                                                                                     |
+| **Local Zod types** | `types/creator-management.ts`, `types/live-operations.ts`, `types/campaign-operations.ts`, `types/recruiting-workspace.ts`, `types/operations-center.ts`, `types/reporting-workspace.ts`, `types/administration-workspace.ts`, `types/manager-dashboard.ts` |
+| **Services**        | Mock/live fetch, API composition for creator, live, campaign, recruiting, operations, reporting, and administration workspaces                                                                                                                              |
+| **Hooks**           | Workspace state for creators, live operations, campaign operations, recruiting, operations center, reporting, and administration                                                                                                                            |
 
 ---
 
@@ -102,7 +109,7 @@ apps/manager-portal/
         recruiting/page.tsx         # Recruiting CRM (MP-05)
         tasks/page.tsx              # Operations Center (MP-06)
         reports/page.tsx            # Reporting & Analytics (MP-07)
-        admin/                      # Placeholder (MP-08)
+        admin/page.tsx              # Administration (MP-08)
         settings/                   # Placeholder (MP-09)
   components/
     layouts/                        # Shell, sidebar, top nav, breadcrumbs
@@ -113,6 +120,7 @@ apps/manager-portal/
     recruiting/                     # Overview, pipeline, detail, follow-ups, performance
     operations-center/              # Overview, tasks, alerts, deadlines, activity, AI queue
     reporting/                      # Executive overview, domain analytics, intelligence, export
+    admin/                          # Organization profile, users, RBAC, audit, health, integrations
     common/                         # Loading, errors, workspace page, layout
   contexts/organization-context.tsx
   hooks/use-portal-navigation.ts
@@ -123,6 +131,7 @@ apps/manager-portal/
   hooks/use-recruiting-workspace.ts
   hooks/use-operations-center.ts
   hooks/use-reporting-workspace.ts
+  hooks/use-administration-workspace.ts
   services/
     api-client.ts
     dashboard-mock.ts
@@ -165,6 +174,15 @@ apps/manager-portal/
     recruiting-analytics-service.ts
     live-analytics-service.ts
     executive-dashboard-service.ts
+    administration-mock.ts
+    administration-service.ts
+    administration-loader.ts
+    organization-service.ts
+    user-management-service.ts
+    rbac-service.ts
+    audit-center-service.ts
+    system-health-service.ts
+    integration-service.ts
   types/
     navigation.ts
     manager-dashboard.ts
@@ -180,6 +198,8 @@ apps/manager-portal/
     operations-center-adapters.ts
     reporting-workspace.ts
     reporting-adapters.ts
+    administration-workspace.ts
+    administration-adapters.ts
 ```
 
 ---
@@ -369,6 +389,39 @@ Live aggregation runs in `reporting-loader.ts`. Health scores, funnel metrics, a
 
 ---
 
+## MP-08 Administration
+
+### MP-08 data modes
+
+| Mode | Trigger                                      | Behavior                                   |
+| ---- | -------------------------------------------- | ------------------------------------------ |
+| Mock | `NEXT_PUBLIC_USE_MOCK_DASHBOARD !== 'false'` | Typed fixtures in `administration-mock.ts` |
+| Live | Mock disabled                                | Composes Organization, RBAC, Audit, Agency |
+
+### MP-08 live API mapping
+
+| UI section            | Endpoint(s)                                                       |
+| --------------------- | ----------------------------------------------------------------- |
+| Organization profile  | `GET /api/organizations/current`, `GET /api/agency`               |
+| User management       | `GET /api/organizations/members`, `GET /api/invitations`          |
+| Roles & permissions   | Derived from members + `@kolab/auth` permission map               |
+| Organization settings | `GET /api/agency`, `GET /api/agency/settings`                     |
+| Audit center          | `GET /api/audit-logs`                                             |
+| System health         | Derived from loader reachability + presentation placeholders      |
+| Integrations          | UI-only placeholders (live mode returns empty connected services) |
+| Quick actions         | UI-only placeholders                                              |
+
+Live aggregation runs in `administration-loader.ts`. Permission matrix, health metadata, and integration placeholders are presentation-only.
+
+### MP-08 client-side presentation
+
+- Feature flags and webhook configuration are read-only placeholders.
+- Queue, background jobs, and future integrations are placeholders where backend monitoring is unavailable.
+- Quick actions are disabled UI placeholders except refresh.
+- No new business logic in components beyond RBAC map display from `@kolab/auth`.
+
+---
+
 ## MP-01 dashboard mock
 
 Mock dashboard sections (display-only):
@@ -436,6 +489,13 @@ Validated by `ManagerDashboardResponseSchema` in tests.
 - `/portal/reports` renders executive overview, domain analytics, intelligence dashboard, and export center ✅
 - Mock/live modes share typed DTOs ✅
 - Export actions present as UI-only controls ✅
+- Service and adapter tests validate schemas and mapping ✅
+
+### MP-08
+
+- `/portal/admin` renders organization profile, user management, RBAC, settings, audit, health, and integrations ✅
+- Mock/live modes share typed DTOs ✅
+- Quick actions present as UI-only controls ✅
 - Service and adapter tests validate schemas and mapping ✅
 
 ---
