@@ -134,11 +134,11 @@
 
 ## v0.8 — Manager Portal
 
-**Status:** 🚧 **IN PROGRESS** — MP-01 through MP-05 shipped; MP-06 Notifications & Tasks next.
+**Status:** 🚧 **IN PROGRESS** — MP-01 through MP-06 shipped; MP-07 Reporting next.
 
 **Objectives:** Extend agency operations to portfolio managers and recruiters at scale.
 
-**Major capabilities:** Authenticated manager portal shell, mock agency dashboard, creator management workspace, live operations workspace, campaign operations workspace, recruiting CRM workspace, placeholder workspaces for tasks, reports, admin, and settings.
+**Major capabilities:** Authenticated manager portal shell, mock agency dashboard, creator management workspace, live operations workspace, campaign operations workspace, recruiting CRM workspace, operations center workspace, placeholder workspaces for reports, admin, and settings.
 
 **Success criteria:** Managers operate full roster without spreadsheets; permission matrix enforced; audit on bulk changes.
 
@@ -156,6 +156,8 @@
 
 **MP-05 completion notes:** `/portal/recruiting` ships recruiting overview, prospect pipeline, detail, follow-up queue, recruiter performance, UI-only quick actions, and mock/live modes composing existing Recruitment endpoints. Presentation-only — recruiter metrics and follow-up buckets computed client-side.
 
+**MP-06 completion notes:** `/portal/tasks` ships operations overview, task queue, alerts center, deadlines, activity feed, AI recommendations, UI-only quick actions, and mock/live modes composing Live Intelligence, Campaign, Recruitment, Audit, and Documents endpoints. Presentation-only — tasks and overview metrics derived client-side.
+
 **Implementation phases:**
 
 | Phase | Scope                     | Status |
@@ -165,7 +167,7 @@
 | MP-03 | Live Operations Dashboard | ✅     |
 | MP-04 | Campaign Operations       | ✅     |
 | MP-05 | Recruiting CRM            | ✅     |
-| MP-06 | Notifications & Tasks     | 📋     |
+| MP-06 | Operations Center         | ✅     |
 | MP-07 | Reporting                 | 📋     |
 | MP-08 | Administration            | 📋     |
 | MP-09 | Integration & Polish      | 📋     |

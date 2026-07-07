@@ -1,6 +1,6 @@
 # Manager Portal
 
-**Status:** MP-05 Recruiting CRM — **Implemented**  
+**Status:** MP-06 Operations Center — **Implemented**  
 **Target:** Release 0.8 (`release/0.8.x`)  
 **Application:** `apps/manager-portal`  
 **Depends on:** v0.7 Creator Studio patterns; existing Creator CRM, Live Intelligence, and Campaign APIs
@@ -11,7 +11,7 @@
 
 Deliver **Manager Portal** — the agency command center where managers oversee creators, live operations, campaigns, recruiting, tasks, reporting, and administration in one place.
 
-MP-01 establishes the authenticated application shell and mock dashboard. MP-02 ships Creator Management. MP-03 ships Live Operations. MP-04 ships Campaign Operations. MP-05 ships Recruiting CRM. Remaining domain workspaces ship in MP-06 through MP-09.
+MP-01 establishes the authenticated application shell and mock dashboard. MP-02 ships Creator Management. MP-03 ships Live Operations. MP-04 ships Campaign Operations. MP-05 ships Recruiting CRM. MP-06 ships the Operations Center. Remaining domain workspaces ship in MP-07 through MP-09.
 
 ---
 
@@ -90,6 +90,22 @@ MP-01 establishes the authenticated application shell and mock dashboard. MP-02 
 
 ---
 
+## MP-06 capabilities
+
+| Capability                                                    | Status |
+| ------------------------------------------------------------- | ------ |
+| Operations overview (tasks, alerts, deadlines, issues)        | ✅     |
+| My tasks (assigned through completed columns)                 | ✅     |
+| Alerts center (live, coach, compliance, campaign, recruiting) | ✅     |
+| Upcoming deadlines (deliverables through documents)           | ✅     |
+| Activity feed (chronological manager activity)                | ✅     |
+| AI recommendations (read-only priority queue)                 | ✅     |
+| Quick actions (UI-only)                                       | ✅     |
+| Mock/live data modes                                          | ✅     |
+| Typed operations center workspace DTO                         | ✅     |
+
+---
+
 ## Navigation
 
 | Route                | Purpose                      | Status                                |
@@ -99,7 +115,7 @@ MP-01 establishes the authenticated application shell and mock dashboard. MP-02 
 | `/portal/live`       | Live operations dashboard    | Live operations workspace (MP-03)     |
 | `/portal/campaigns`  | Campaign operations          | Campaign operations workspace (MP-04) |
 | `/portal/recruiting` | Recruiting CRM               | Recruiting workspace (MP-05)          |
-| `/portal/tasks`      | Notifications and tasks      | Placeholder (MP-06)                   |
+| `/portal/tasks`      | Operations Center            | Operations center workspace (MP-06)   |
 | `/portal/reports`    | Reporting                    | Placeholder (MP-07)                   |
 | `/portal/admin`      | Administration               | Placeholder (MP-08)                   |
 | `/portal/settings`   | Settings                     | Placeholder (MP-09 polish)            |
@@ -114,7 +130,7 @@ MP-01 establishes the authenticated application shell and mock dashboard. MP-02 
 | `NEXT_PUBLIC_API_URL`            | API host for auth and live API endpoints                        |
 | `NEXT_PUBLIC_ORGANIZATION_ID`    | Default mock organization id                                    |
 
-Live workspaces compose existing Creator CRM, Live Intelligence, Campaign, and Recruitment endpoints. Live dashboard API integration remains deferred.
+Live workspaces compose existing Creator CRM, Live Intelligence, Campaign, Recruitment, Audit, and Documents endpoints. Live dashboard API integration remains deferred.
 
 ---
 
@@ -127,7 +143,7 @@ Live workspaces compose existing Creator CRM, Live Intelligence, Campaign, and R
 | MP-03 | Live operations dashboard | ✅     |
 | MP-04 | Campaign operations       | ✅     |
 | MP-05 | Recruiting CRM            | ✅     |
-| MP-06 | Notifications & tasks     | 📋     |
+| MP-06 | Operations Center         | ✅     |
 | MP-07 | Reporting                 | 📋     |
 | MP-08 | Administration            | 📋     |
 | MP-09 | Integration & polish      | 📋     |
