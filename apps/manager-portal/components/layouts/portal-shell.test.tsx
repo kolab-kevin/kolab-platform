@@ -37,6 +37,22 @@ vi.mock('@/contexts/organization-context', () => ({
   }),
 }));
 
+vi.mock('@/contexts/portal-preferences-context', () => ({
+  usePortalPreferences: () => ({
+    preferences: {
+      sidebarCollapsed: false,
+      theme: 'dark',
+      compactWorkspaces: false,
+      workspaceViewState: {},
+    },
+    setSidebarCollapsed: () => undefined,
+    setTheme: () => undefined,
+    setCompactWorkspaces: () => undefined,
+    setWorkspaceViewState: () => undefined,
+    getWorkspaceViewState: () => undefined,
+  }),
+}));
+
 import { PortalShell } from '@/components/layouts/portal-shell';
 
 describe('PortalShell', () => {

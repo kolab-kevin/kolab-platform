@@ -1,4 +1,5 @@
 import { WorkspaceCard } from '@/components/common/workspace-layout';
+import { PORTAL_INNER_TILE_CLASS } from '@/lib/portal-ui';
 import type { ManagerSystemHealth } from '@/types/administration-workspace';
 
 type SystemHealthPanelProps = {
@@ -49,10 +50,7 @@ export function SystemHealthPanel({ systemHealth }: SystemHealthPanelProps) {
     <WorkspaceCard title="System health" description="Platform status and environment metadata">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {metrics.map((metric) => (
-          <div
-            key={metric.label}
-            className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-3"
-          >
+          <div key={metric.label} className={PORTAL_INNER_TILE_CLASS}>
             <div className="text-muted-foreground text-xs uppercase tracking-wide">
               {metric.label}
             </div>

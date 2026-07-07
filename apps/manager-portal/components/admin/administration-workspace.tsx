@@ -1,54 +1,69 @@
 'use client';
 
-import { Button } from '@kolab/ui';
+import dynamic from 'next/dynamic';
 
-import { AuditCenterPanel } from '@/components/admin/audit-center-panel';
-import { IntegrationsPanel } from '@/components/admin/integrations-panel';
 import { OrganizationProfilePanel } from '@/components/admin/organization-profile-panel';
-import { OrganizationSettingsPanel } from '@/components/admin/organization-settings-panel';
 import { QuickActionsPanel } from '@/components/admin/quick-actions-panel';
-import { RolesPermissionsPanel } from '@/components/admin/roles-permissions-panel';
-import { SystemHealthPanel } from '@/components/admin/system-health-panel';
-import { UserManagementPanel } from '@/components/admin/user-management-panel';
+import { GlobalLoading } from '@/components/common/global-loading';
+import { WorkspaceDataPage } from '@/components/common/workspace-data-page';
 import { WorkspaceSection } from '@/components/common/workspace-layout';
-import { EmptyWorkspaceState, WorkspacePage } from '@/components/common/workspace-page';
 import { useAdministrationWorkspace } from '@/hooks/use-administration-workspace';
+import { PORTAL_GRID_CLASS } from '@/lib/portal-ui';
+
+const UserManagementPanel = dynamic(
+  () =>
+    import('@/components/admin/user-management-panel').then((module) => module.UserManagementPanel),
+  { loading: () => <GlobalLoading label="Loading user management…" /> },
+);
+
+const RolesPermissionsPanel = dynamic(
+  () =>
+    import('@/components/admin/roles-permissions-panel').then(
+      (module) => module.RolesPermissionsPanel,
+    ),
+  { loading: () => <GlobalLoading label="Loading roles and permissions…" /> },
+);
+
+const OrganizationSettingsPanel = dynamic(
+  () =>
+    import('@/components/admin/organization-settings-panel').then(
+      (module) => module.OrganizationSettingsPanel,
+    ),
+  { loading: () => <GlobalLoading label="Loading organization settings…" /> },
+);
+
+const AuditCenterPanel = dynamic(
+  () => import('@/components/admin/audit-center-panel').then((module) => module.AuditCenterPanel),
+  { loading: () => <GlobalLoading label="Loading audit center…" /> },
+);
+
+const SystemHealthPanel = dynamic(
+  () => import('@/components/admin/system-health-panel').then((module) => module.SystemHealthPanel),
+  { loading: () => <GlobalLoading label="Loading system health…" /> },
+);
+
+const IntegrationsPanel = dynamic(
+  () => import('@/components/admin/integrations-panel').then((module) => module.IntegrationsPanel),
+  { loading: () => <GlobalLoading label="Loading integrations…" /> },
+);
 
 export function AdministrationWorkspace() {
   const { workspace, loading, error, source, refresh } = useAdministrationWorkspace();
 
-  const sourceLabel =
-    source === 'mock'
-      ? 'Mock data'
-      : source === 'partial'
-        ? 'Partial API data'
-        : source === 'live'
-          ? 'Live API data'
-          : undefined;
-
   return (
-    <WorkspacePage
+    <WorkspaceDataPage
       title="Administration"
-      description={
-        workspace
-          ? `${workspace.userManagement.users.length} team members${sourceLabel ? ` · ${sourceLabel}` : ''}`
-          : 'Organization administration and system status'
+      fallbackDescription="Organization administration and system status"
+      loadedDescription={
+        workspace ? `${workspace.userManagement.users.length} team members` : undefined
       }
       loading={loading}
       loadingLabel="Loading administration workspace…"
       error={error}
       errorTitle="Unable to load administration workspace"
-      onRetry={() => void refresh()}
-      actions={
-        <Button variant="outline" size="sm" onClick={() => void refresh()}>
-          Refresh
-        </Button>
-      }
-      emptyNotice={
-        source === 'empty' ? (
-          <EmptyWorkspaceState message="No administration data is available in this organization yet." />
-        ) : null
-      }
+      source={source}
+      emptyMessage="No administration data is available in this organization yet."
+      onRefresh={refresh}
     >
       {workspace ? (
         <div className="space-y-6">
@@ -58,7 +73,7 @@ export function AdministrationWorkspace() {
 
           <OrganizationProfilePanel profile={workspace.organizationProfile} />
 
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className={PORTAL_GRID_CLASS}>
             <UserManagementPanel userManagement={workspace.userManagement} />
             <RolesPermissionsPanel rolesPermissions={workspace.rolesPermissions} />
           </div>
@@ -67,12 +82,12 @@ export function AdministrationWorkspace() {
 
           <AuditCenterPanel auditCenter={workspace.auditCenter} />
 
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className={PORTAL_GRID_CLASS}>
             <SystemHealthPanel systemHealth={workspace.systemHealth} />
             <IntegrationsPanel integrations={workspace.integrations} />
           </div>
         </div>
       ) : null}
-    </WorkspacePage>
+    </WorkspaceDataPage>
   );
 }

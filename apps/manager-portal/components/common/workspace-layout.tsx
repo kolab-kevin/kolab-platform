@@ -47,9 +47,15 @@ export function WorkspaceSection({
   children,
   className,
 }: WorkspaceSectionProps) {
+  const sectionId = title ? title.toLowerCase().replace(/\s+/g, '-') : undefined;
+
   return (
-    <section className={cn(PORTAL_SECTION_CLASS, className)}>
-      {title ? <h2 className="text-lg font-semibold tracking-tight">{title}</h2> : null}
+    <section className={cn(PORTAL_SECTION_CLASS, className)} aria-labelledby={sectionId}>
+      {title ? (
+        <h2 id={sectionId} className="text-lg font-semibold tracking-tight">
+          {title}
+        </h2>
+      ) : null}
       {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
       {children}
     </section>

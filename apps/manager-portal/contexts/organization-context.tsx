@@ -3,6 +3,7 @@
 import * as React from 'react';
 
 import { getDefaultOrganizationId } from '@/lib/env';
+import { PORTAL_STORAGE_KEYS, readPortalStorage, writePortalStorage } from '@/lib/portal-storage';
 import type { ManagerProfileSummary, OrganizationOption } from '@/types/portal-context';
 
 type OrganizationContextValue = {
@@ -26,9 +27,14 @@ export function OrganizationProvider({
   children: React.ReactNode;
   userEmail?: string | null;
 }) {
-  const [activeOrganizationId, setActiveOrganizationId] = React.useState(
-    getDefaultOrganizationId(),
+  const [activeOrganizationId, setActiveOrganizationIdState] = React.useState(() =>
+    readPortalStorage(PORTAL_STORAGE_KEYS.activeOrganizationId, getDefaultOrganizationId()),
   );
+
+  const setActiveOrganizationId = React.useCallback((organizationId: string) => {
+    setActiveOrganizationIdState(organizationId);
+    writePortalStorage(PORTAL_STORAGE_KEYS.activeOrganizationId, organizationId);
+  }, []);
 
   const activeOrganization =
     PLACEHOLDER_ORGANIZATIONS.find((org) => org.id === activeOrganizationId) ??

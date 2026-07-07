@@ -1,4 +1,4 @@
-import { Button } from '@kolab/ui';
+import { QuickActionsBar } from '@/components/common/workspace-toolbar';
 
 const ACTIONS = [
   'Create Task',
@@ -11,12 +11,11 @@ const ACTIONS = [
 
 export function QuickActionsPanel() {
   return (
-    <div className="flex flex-wrap gap-2">
-      {ACTIONS.map((action) => (
-        <Button key={action} variant="outline" size="sm" type="button" disabled>
-          {action}
-        </Button>
-      ))}
-    </div>
+    <QuickActionsBar
+      actions={ACTIONS.map((label) => ({
+        label,
+        disabled: true,
+      }))}
+    />
   );
 }
