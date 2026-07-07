@@ -1,15 +1,13 @@
 'use client';
 
-import { Button } from '@kolab/ui';
-
 import { CampaignApplicationsPanel } from '@/components/campaigns/campaign-applications-panel';
 import { CampaignBoardPanel } from '@/components/campaigns/campaign-board-panel';
 import { CampaignDeliverablesPanel } from '@/components/campaigns/campaign-deliverables-panel';
 import { CampaignDetailPanel } from '@/components/campaigns/campaign-detail-panel';
 import { CampaignOverviewPanel } from '@/components/campaigns/campaign-overview-panel';
 import { CampaignQuickActions } from '@/components/campaigns/campaign-quick-actions';
+import { WorkspaceDataPage } from '@/components/common/workspace-data-page';
 import { WorkspaceSection } from '@/components/common/workspace-layout';
-import { EmptyWorkspaceState, WorkspacePage } from '@/components/common/workspace-page';
 import { useCampaignOperations } from '@/hooks/use-campaign-operations';
 
 export function CampaignOperationsWorkspace() {
@@ -25,38 +23,20 @@ export function CampaignOperationsWorkspace() {
     refresh,
   } = useCampaignOperations();
 
-  const sourceLabel =
-    source === 'mock'
-      ? 'Mock data'
-      : source === 'partial'
-        ? 'Partial API data'
-        : source === 'live'
-          ? 'Live API data'
-          : undefined;
-
   return (
-    <WorkspacePage
+    <WorkspaceDataPage
       title="Campaigns"
-      description={
-        workspace
-          ? `${workspace.campaigns.length} campaigns in portfolio${sourceLabel ? ` · ${sourceLabel}` : ''}`
-          : 'Campaign pipeline and deliverable oversight'
+      fallbackDescription="Campaign pipeline and deliverable oversight"
+      loadedDescription={
+        workspace ? `${workspace.campaigns.length} campaigns in portfolio` : undefined
       }
       loading={loading}
       loadingLabel="Loading campaign operations…"
       error={error}
       errorTitle="Unable to load campaign operations"
-      onRetry={() => void refresh()}
-      actions={
-        <Button variant="outline" size="sm" onClick={() => void refresh()}>
-          Refresh
-        </Button>
-      }
-      emptyNotice={
-        source === 'empty' ? (
-          <EmptyWorkspaceState message="No campaigns are available in this organization yet." />
-        ) : null
-      }
+      source={source}
+      emptyMessage="No campaigns are available in this organization yet."
+      onRefresh={refresh}
     >
       {workspace ? (
         <div className="space-y-6">
@@ -87,6 +67,6 @@ export function CampaignOperationsWorkspace() {
           </div>
         </div>
       ) : null}
-    </WorkspacePage>
+    </WorkspaceDataPage>
   );
 }

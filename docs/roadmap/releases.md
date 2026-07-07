@@ -134,7 +134,7 @@
 
 ## v0.8 — Manager Portal
 
-**Status:** 🚧 **IN PROGRESS** — MP-01 through MP-08 shipped; MP-09 Integration & polish next.
+**Status:** ✅ **COMPLETE** — MP-01 through MP-09 shipped (Manager Portal v1).
 
 **Objectives:** Extend agency operations to portfolio managers and recruiters at scale.
 
@@ -162,6 +162,8 @@
 
 **MP-08 completion notes:** `/portal/admin` ships organization profile, user management, roles & permissions, organization settings, audit center, system health, integrations, UI-only quick actions, and mock/live modes composing Organization, Agency, RBAC, Audit, and Invitation endpoints. Presentation-only — permission matrix and health metadata derived client-side.
 
+**MP-09 completion notes:** Shared workspace shell, metric cards, quick actions bar, portal preferences, organization persistence, workspace cache, lazy-loaded reporting/admin panels, navigation keyboard support, skip link, and accessibility pass complete. `/portal/settings` ships portal preferences workspace.
+
 **Implementation phases:**
 
 | Phase | Scope                     | Status |
@@ -174,7 +176,7 @@
 | MP-06 | Operations Center         | ✅     |
 | MP-07 | Reporting                 | ✅     |
 | MP-08 | Administration            | ✅     |
-| MP-09 | Integration & Polish      | 📋     |
+| MP-09 | Integration & Polish      | ✅     |
 
 ---
 

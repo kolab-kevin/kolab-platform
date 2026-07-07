@@ -1,6 +1,6 @@
 # Manager Portal
 
-**Status:** MP-08 Administration — **Implemented**  
+**Status:** MP-09 Integration & Polish — **Implemented**  
 **Target:** Release 0.8 (`release/0.8.x`)  
 **Application:** `apps/manager-portal`  
 **Depends on:** v0.7 Creator Studio patterns; existing Creator CRM, Live Intelligence, and Campaign APIs
@@ -11,7 +11,7 @@
 
 Deliver **Manager Portal** — the agency command center where managers oversee creators, live operations, campaigns, recruiting, tasks, reporting, and administration in one place.
 
-MP-01 establishes the authenticated application shell and mock dashboard. MP-02 ships Creator Management. MP-03 ships Live Operations. MP-04 ships Campaign Operations. MP-05 ships Recruiting CRM. MP-06 ships the Operations Center. MP-07 ships Reporting & Analytics. MP-08 ships Administration. Remaining polish ships in MP-09.
+MP-01 establishes the authenticated application shell and mock dashboard. MP-02 ships Creator Management. MP-03 ships Live Operations. MP-04 ships Campaign Operations. MP-05 ships Recruiting CRM. MP-06 ships the Operations Center. MP-07 ships Reporting & Analytics. MP-08 ships Administration. MP-09 completes integration polish across shared shell, navigation, preferences, performance, and accessibility.
 
 ---
 
@@ -139,6 +139,23 @@ MP-01 establishes the authenticated application shell and mock dashboard. MP-02 
 
 ---
 
+## MP-09 capabilities
+
+| Capability                                             | Status |
+| ------------------------------------------------------ | ------ |
+| Shared workspace shell (`WorkspaceDataPage`, toolbars) | ✅     |
+| Shared metric cards and metrics grid                   | ✅     |
+| Shared quick actions bar                               | ✅     |
+| Portal preferences (theme, sidebar, workspace views)   | ✅     |
+| Persisted organization selection                       | ✅     |
+| Workspace data cache (deduplicated fetches)            | ✅     |
+| Lazy-loaded reporting and admin panels                 | ✅     |
+| Navigation keyboard support and skip link              | ✅     |
+| Accessibility pass (ARIA, focus-visible, headings)     | ✅     |
+| Settings workspace at `/portal/settings`               | ✅     |
+
+---
+
 ## Navigation
 
 | Route                | Purpose                      | Status                                |
@@ -151,7 +168,7 @@ MP-01 establishes the authenticated application shell and mock dashboard. MP-02 
 | `/portal/tasks`      | Operations Center            | Operations center workspace (MP-06)   |
 | `/portal/reports`    | Reporting & Analytics        | Reporting workspace (MP-07)           |
 | `/portal/admin`      | Administration               | Administration workspace (MP-08)      |
-| `/portal/settings`   | Settings                     | Placeholder (MP-09 polish)            |
+| `/portal/settings`   | Settings                     | Portal preferences workspace (MP-09)  |
 
 ---
 
@@ -179,7 +196,7 @@ Live workspaces compose existing Creator CRM, Live Intelligence, Campaign, Recru
 | MP-06 | Operations Center         | ✅     |
 | MP-07 | Reporting & Analytics     | ✅     |
 | MP-08 | Administration            | ✅     |
-| MP-09 | Integration & polish      | 📋     |
+| MP-09 | Integration & polish      | ✅     |
 
 ---
 

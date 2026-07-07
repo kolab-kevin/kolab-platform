@@ -61,10 +61,14 @@ export function WorkspacePage({
   className,
 }: WorkspacePageProps) {
   return (
-    <div className={cn(PORTAL_PAGE_CLASS, className)}>
+    <div className={cn(PORTAL_PAGE_CLASS, className)} aria-busy={loading}>
       <WorkspaceHeader title={title} description={description} actions={actions} />
 
-      {loading ? <GlobalLoading label={loadingLabel} /> : null}
+      {loading ? (
+        <div role="status" aria-live="polite">
+          <GlobalLoading label={loadingLabel} />
+        </div>
+      ) : null}
       {!loading && error ? (
         <ErrorWorkspaceState title={errorTitle} message={error} onRetry={onRetry} />
       ) : null}

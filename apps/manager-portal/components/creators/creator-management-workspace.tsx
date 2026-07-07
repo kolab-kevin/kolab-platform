@@ -2,11 +2,13 @@
 
 import { Button } from '@kolab/ui';
 
-import { EmptyWorkspaceState, WorkspacePage } from '@/components/common/workspace-page';
+import { WorkspaceDataPage } from '@/components/common/workspace-data-page';
+import { WorkspaceSection } from '@/components/common/workspace-layout';
 import { CreatorDetailPanel } from '@/components/creators/creator-detail-panel';
 import { CreatorFiltersPanel } from '@/components/creators/creator-filters-panel';
 import { CreatorListPanel } from '@/components/creators/creator-list-panel';
 import { useCreatorManagementWorkspace } from '@/hooks/use-creator-management-workspace';
+import { combineWorkspaceDataSources } from '@/lib/data-source';
 
 export function CreatorManagementWorkspace() {
   const {
@@ -37,45 +39,26 @@ export function CreatorManagementWorkspace() {
     refreshDetail,
   } = useCreatorManagementWorkspace();
 
-  const sourceLabel =
-    source === 'mock' || detailSource === 'mock'
-      ? 'Mock data'
-      : source === 'partial' || detailSource === 'partial'
-        ? 'Partial API data'
-        : source === 'live' || detailSource === 'live'
-          ? 'Live API data'
-          : undefined;
+  const combinedSource = combineWorkspaceDataSources([source, detailSource]);
 
   return (
-    <WorkspacePage
+    <WorkspaceDataPage
       title="Creators"
-      description={
-        workspace
-          ? `${totalFilteredCount} creators in portfolio${sourceLabel ? ` · ${sourceLabel}` : ''}`
-          : 'Portfolio creator management'
-      }
+      fallbackDescription="Portfolio creator management"
+      loadedDescription={workspace ? `${totalFilteredCount} creators in portfolio` : undefined}
       loading={loading}
       loadingLabel="Loading creator workspace…"
       error={error}
       errorTitle="Unable to load creators"
-      onRetry={() => void refresh()}
-      actions={
-        <Button variant="outline" size="sm" onClick={() => void refresh()}>
-          Refresh
-        </Button>
-      }
-      emptyNotice={
-        source === 'empty' ? (
-          <EmptyWorkspaceState message="No creators are available in this organization yet." />
-        ) : null
-      }
+      source={combinedSource}
+      emptyMessage="No creators are available in this organization yet."
+      onRefresh={refresh}
     >
       {workspace ? (
         <div className="space-y-4">
-          <section className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-            <h2 className="mb-3 text-base font-semibold">Filters</h2>
+          <WorkspaceSection title="Filters">
             <CreatorFiltersPanel filters={filters} onChange={setFilters} />
-          </section>
+          </WorkspaceSection>
 
           <div className="grid gap-4 xl:grid-cols-12">
             <div className="space-y-4 xl:col-span-7">
@@ -108,6 +91,6 @@ export function CreatorManagementWorkspace() {
           </div>
         </div>
       ) : null}
-    </WorkspacePage>
+    </WorkspaceDataPage>
   );
 }

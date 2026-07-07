@@ -1,9 +1,7 @@
 'use client';
 
-import { Button } from '@kolab/ui';
-
+import { WorkspaceDataPage } from '@/components/common/workspace-data-page';
 import { WorkspaceSection } from '@/components/common/workspace-layout';
-import { EmptyWorkspaceState, WorkspacePage } from '@/components/common/workspace-page';
 import { FollowUpQueuePanel } from '@/components/recruiting/followup-queue-panel';
 import { PipelineBoardPanel } from '@/components/recruiting/pipeline-board-panel';
 import { ProspectDetailPanel } from '@/components/recruiting/prospect-detail-panel';
@@ -25,38 +23,20 @@ export function RecruitingWorkspace() {
     refresh,
   } = useRecruitingWorkspace();
 
-  const sourceLabel =
-    source === 'mock'
-      ? 'Mock data'
-      : source === 'partial'
-        ? 'Partial API data'
-        : source === 'live'
-          ? 'Live API data'
-          : undefined;
-
   return (
-    <WorkspacePage
+    <WorkspaceDataPage
       title="Recruiting"
-      description={
-        workspace
-          ? `${workspace.prospects.length} prospects in pipeline${sourceLabel ? ` · ${sourceLabel}` : ''}`
-          : 'Lead pipeline and conversion workflows'
+      fallbackDescription="Lead pipeline and conversion workflows"
+      loadedDescription={
+        workspace ? `${workspace.prospects.length} prospects in pipeline` : undefined
       }
       loading={loading}
       loadingLabel="Loading recruiting workspace…"
       error={error}
       errorTitle="Unable to load recruiting workspace"
-      onRetry={() => void refresh()}
-      actions={
-        <Button variant="outline" size="sm" onClick={() => void refresh()}>
-          Refresh
-        </Button>
-      }
-      emptyNotice={
-        source === 'empty' ? (
-          <EmptyWorkspaceState message="No prospects are available in this organization yet." />
-        ) : null
-      }
+      source={source}
+      emptyMessage="No prospects are available in this organization yet."
+      onRefresh={refresh}
     >
       {workspace ? (
         <div className="space-y-6">
@@ -87,6 +67,6 @@ export function RecruitingWorkspace() {
           </div>
         </div>
       ) : null}
-    </WorkspacePage>
+    </WorkspaceDataPage>
   );
 }

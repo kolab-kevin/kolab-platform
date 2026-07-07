@@ -1,4 +1,4 @@
-import { Button } from '@kolab/ui';
+import { QuickActionsBar } from '@/components/common/workspace-toolbar';
 
 const ACTIONS = [
   'Invite User',
@@ -14,19 +14,12 @@ type QuickActionsPanelProps = {
 
 export function QuickActionsPanel({ onRefresh }: QuickActionsPanelProps) {
   return (
-    <div className="flex flex-wrap gap-2">
-      {ACTIONS.map((action) => (
-        <Button
-          key={action}
-          variant="outline"
-          size="sm"
-          type="button"
-          disabled={action !== 'Refresh Status'}
-          onClick={action === 'Refresh Status' ? onRefresh : undefined}
-        >
-          {action}
-        </Button>
-      ))}
-    </div>
+    <QuickActionsBar
+      actions={ACTIONS.map((label) => ({
+        label,
+        disabled: label !== 'Refresh Status',
+        onClick: label === 'Refresh Status' ? onRefresh : undefined,
+      }))}
+    />
   );
 }

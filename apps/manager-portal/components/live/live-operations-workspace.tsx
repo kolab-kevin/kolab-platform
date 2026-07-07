@@ -1,9 +1,7 @@
 'use client';
 
-import { Button } from '@kolab/ui';
-
+import { WorkspaceDataPage } from '@/components/common/workspace-data-page';
 import { WorkspaceSection } from '@/components/common/workspace-layout';
-import { EmptyWorkspaceState, WorkspacePage } from '@/components/common/workspace-page';
 import { AgencyMonitorPanel } from '@/components/live/agency-monitor-panel';
 import { CoachQueuePanel } from '@/components/live/coach-queue-panel';
 import { LiveSessionsPanel } from '@/components/live/live-sessions-panel';
@@ -26,38 +24,22 @@ export function LiveOperationsWorkspace() {
     refresh,
   } = useLiveOperationsWorkspace();
 
-  const sourceLabel =
-    source === 'mock'
-      ? 'Mock data'
-      : source === 'partial'
-        ? 'Partial API data'
-        : source === 'live'
-          ? 'Live API data'
-          : undefined;
-
   return (
-    <WorkspacePage
+    <WorkspaceDataPage
       title="Live Operations"
-      description={
+      fallbackDescription="Live session oversight and coaching signals"
+      loadedDescription={
         workspace
-          ? `${workspace.sessions.filter((session) => session.status === 'LIVE').length} live now${sourceLabel ? ` · ${sourceLabel}` : ''}`
-          : 'Live session oversight and coaching signals'
+          ? `${workspace.sessions.filter((session) => session.status === 'LIVE').length} live now`
+          : undefined
       }
       loading={loading}
       loadingLabel="Loading live operations…"
       error={error}
       errorTitle="Unable to load live operations"
-      onRetry={() => void refresh()}
-      actions={
-        <Button variant="outline" size="sm" onClick={() => void refresh()}>
-          Refresh
-        </Button>
-      }
-      emptyNotice={
-        source === 'empty' ? (
-          <EmptyWorkspaceState message="No live sessions are available in this organization yet." />
-        ) : null
-      }
+      source={source}
+      emptyMessage="No live sessions are available in this organization yet."
+      onRefresh={refresh}
     >
       {workspace ? (
         <div className="space-y-6">
@@ -87,6 +69,6 @@ export function LiveOperationsWorkspace() {
           </div>
         </div>
       ) : null}
-    </WorkspacePage>
+    </WorkspaceDataPage>
   );
 }

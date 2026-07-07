@@ -1,8 +1,6 @@
 'use client';
 
-import { Button } from '@kolab/ui';
-
-import { WorkspacePage } from '@/components/common/workspace-page';
+import { WorkspaceDataPage } from '@/components/common/workspace-data-page';
 import {
   AgencyOverviewCard,
   CampaignHealthCard,
@@ -21,23 +19,21 @@ export function DashboardView() {
   const { data, loading, error, refresh } = useManagerDashboard(activeOrganization.id);
 
   return (
-    <WorkspacePage
+    <WorkspaceDataPage
       title="Dashboard"
-      description={
+      fallbackDescription={`${activeOrganization.name} · Agency command overview`}
+      loadedDescription={
         data
-          ? `${activeOrganization.name} · Updated ${new Date(data.generatedAt).toLocaleString()} · Mock data`
-          : `${activeOrganization.name} · Agency command overview`
+          ? `${activeOrganization.name} · Updated ${new Date(data.generatedAt).toLocaleString()}`
+          : undefined
       }
       loading={loading}
       loadingLabel="Loading dashboard…"
       error={error}
       errorTitle="Unable to load dashboard"
-      onRetry={() => void refresh()}
-      actions={
-        <Button variant="outline" size="sm" onClick={() => void refresh()}>
-          Refresh
-        </Button>
-      }
+      source="mock"
+      emptyMessage="No dashboard data is available yet."
+      onRefresh={refresh}
     >
       {data ? (
         <div className="grid gap-4 xl:grid-cols-12">
@@ -57,6 +53,6 @@ export function DashboardView() {
           </div>
         </div>
       ) : null}
-    </WorkspacePage>
+    </WorkspaceDataPage>
   );
 }

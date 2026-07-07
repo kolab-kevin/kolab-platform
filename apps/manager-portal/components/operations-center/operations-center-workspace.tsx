@@ -1,9 +1,7 @@
 'use client';
 
-import { Button } from '@kolab/ui';
-
+import { WorkspaceDataPage } from '@/components/common/workspace-data-page';
 import { WorkspaceSection } from '@/components/common/workspace-layout';
-import { EmptyWorkspaceState, WorkspacePage } from '@/components/common/workspace-page';
 import { ActivityFeedPanel } from '@/components/operations-center/activity-feed-panel';
 import { AiRecommendationsPanel } from '@/components/operations-center/ai-recommendations-panel';
 import { AlertCenterPanel } from '@/components/operations-center/alert-center-panel';
@@ -16,38 +14,18 @@ import { useOperationsCenter } from '@/hooks/use-operations-center';
 export function OperationsCenterWorkspace() {
   const { workspace, loading, error, source, refresh } = useOperationsCenter();
 
-  const sourceLabel =
-    source === 'mock'
-      ? 'Mock data'
-      : source === 'partial'
-        ? 'Partial API data'
-        : source === 'live'
-          ? 'Live API data'
-          : undefined;
-
   return (
-    <WorkspacePage
+    <WorkspaceDataPage
       title="Operations Center"
-      description={
-        workspace
-          ? `${workspace.overview.openTasks} open tasks${sourceLabel ? ` · ${sourceLabel}` : ''}`
-          : 'Operational tasks and alerts'
-      }
+      fallbackDescription="Operational tasks and alerts"
+      loadedDescription={workspace ? `${workspace.overview.openTasks} open tasks` : undefined}
       loading={loading}
       loadingLabel="Loading operations center…"
       error={error}
       errorTitle="Unable to load operations center"
-      onRetry={() => void refresh()}
-      actions={
-        <Button variant="outline" size="sm" onClick={() => void refresh()}>
-          Refresh
-        </Button>
-      }
-      emptyNotice={
-        source === 'empty' ? (
-          <EmptyWorkspaceState message="No operational items are available in this organization yet." />
-        ) : null
-      }
+      source={source}
+      emptyMessage="No operational items are available in this organization yet."
+      onRefresh={refresh}
     >
       {workspace ? (
         <div className="space-y-6">
@@ -72,6 +50,6 @@ export function OperationsCenterWorkspace() {
           </div>
         </div>
       ) : null}
-    </WorkspacePage>
+    </WorkspaceDataPage>
   );
 }

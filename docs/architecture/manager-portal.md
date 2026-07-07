@@ -1,6 +1,6 @@
 # Manager Portal Architecture
 
-**Status:** MP-08 Administration implemented  
+**Status:** MP-09 Integration & Polish implemented  
 **Application:** `apps/manager-portal` (Next.js 15 App Router)  
 **Port:** 3004 (local dev)  
 **Related:** [Product brief](../product/manager-portal.md) · [Frontend standards](../engineering/frontend-standards.md)
@@ -9,7 +9,7 @@
 
 ## Overview
 
-Manager Portal is the agency-facing experience layer for portfolio oversight, campaign operations, recruiting, and team accountability. MP-01 ships the authenticated shell and mock dashboard. MP-02 adds Creator Management. MP-03 adds Live Operations. MP-04 adds Campaign Operations. MP-05 adds Recruiting CRM. MP-06 adds the Operations Center. MP-07 adds Reporting & Analytics. MP-08 adds Administration with mock/live data modes identical to Creator Studio.
+Manager Portal is the agency-facing experience layer for portfolio oversight, campaign operations, recruiting, and team accountability. MP-01 ships the authenticated shell and mock dashboard. MP-02 adds Creator Management. MP-03 adds Live Operations. MP-04 adds Campaign Operations. MP-05 adds Recruiting CRM. MP-06 adds the Operations Center. MP-07 adds Reporting & Analytics. MP-08 adds Administration. MP-09 completes shared shell polish, preferences, caching, lazy loading, and accessibility.
 
 ```mermaid
 flowchart LR
@@ -23,7 +23,7 @@ flowchart LR
     OPS[Operations Center MP-06]
     REPORTS[Reporting MP-07]
     ADMIN[Administration MP-08]
-    PLACE[Placeholder MP-09]
+    SETTINGS[Settings MP-09]
   end
   subgraph api [@kolab/api]
     CRM[Creator CRM endpoints]
@@ -42,7 +42,7 @@ flowchart LR
   SHELL --> OPS
   SHELL --> REPORTS
   SHELL --> ADMIN
-  SHELL --> PLACE
+  SHELL --> SETTINGS
   CREATORS --> CRM
   LIVE --> LIVEAPI
   LIVE --> CRM
@@ -110,7 +110,7 @@ apps/manager-portal/
         tasks/page.tsx              # Operations Center (MP-06)
         reports/page.tsx            # Reporting & Analytics (MP-07)
         admin/page.tsx              # Administration (MP-08)
-        settings/                   # Placeholder (MP-09)
+        settings/page.tsx           # Portal preferences (MP-09)
   components/
     layouts/                        # Shell, sidebar, top nav, breadcrumbs
     dashboard/                      # Dashboard cards and view
@@ -121,7 +121,8 @@ apps/manager-portal/
     operations-center/              # Overview, tasks, alerts, deadlines, activity, AI queue
     reporting/                      # Executive overview, domain analytics, intelligence, export
     admin/                          # Organization profile, users, RBAC, audit, health, integrations
-    common/                         # Loading, errors, workspace page, layout
+    settings/                       # Portal preferences
+    common/                         # Workspace shell, metrics, toolbars, skip link
   contexts/organization-context.tsx
   hooks/use-portal-navigation.ts
   hooks/use-manager-dashboard.ts
@@ -132,6 +133,11 @@ apps/manager-portal/
   hooks/use-operations-center.ts
   hooks/use-reporting-workspace.ts
   hooks/use-administration-workspace.ts
+  hooks/use-workspace-query.ts
+  hooks/use-portal-preferences.ts (via contexts/portal-preferences-context.tsx)
+  lib/portal-storage.ts
+  lib/workspace-cache.ts
+  lib/data-source.ts
   services/
     api-client.ts
     dashboard-mock.ts
@@ -422,6 +428,34 @@ Live aggregation runs in `administration-loader.ts`. Permission matrix, health m
 
 ---
 
+## MP-09 Integration & Polish
+
+### MP-09 shared infrastructure
+
+| Layer           | Files                                                                | Purpose                                     |
+| --------------- | -------------------------------------------------------------------- | ------------------------------------------- |
+| Workspace shell | `components/common/workspace-data-page.tsx`, `workspace-toolbar.tsx` | Standard loading/error/refresh/empty states |
+| Metrics         | `components/common/metric-card.tsx`, `workspace-metrics-grid.tsx`    | Shared metric presentation                  |
+| Data fetching   | `hooks/use-workspace-query.ts`, `lib/workspace-cache.ts`             | Cached workspace queries                    |
+| Preferences     | `contexts/portal-preferences-context.tsx`, `lib/portal-storage.ts`   | Theme, sidebar, workspace view persistence  |
+| Navigation      | `components/common/skip-to-content-link.tsx`, `portal-sidebar.tsx`   | Skip link, keyboard nav, collapsed sidebar  |
+| Settings        | `components/settings/settings-workspace.tsx`                         | Portal preferences UI                       |
+
+### MP-09 performance
+
+- Workspace fetches deduplicated via in-memory TTL cache (`workspace-cache.ts`)
+- Reporting analytics and admin heavy panels lazy-loaded with `next/dynamic`
+- Organization selection persisted in `localStorage`
+
+### MP-09 accessibility
+
+- Skip-to-content link targeting `#portal-main-content`
+- `aria-busy`, `aria-live`, and breadcrumb `aria-current` semantics
+- Sidebar arrow-key navigation between primary nav links
+- Global `:focus-visible` ring styling
+
+---
+
 ## MP-01 dashboard mock
 
 Mock dashboard sections (display-only):
@@ -497,6 +531,13 @@ Validated by `ManagerDashboardResponseSchema` in tests.
 - Mock/live modes share typed DTOs ✅
 - Quick actions present as UI-only controls ✅
 - Service and adapter tests validate schemas and mapping ✅
+
+### MP-09
+
+- `/portal/settings` renders portal preferences workspace ✅
+- Shared workspace shell adopted across all domain workspaces ✅
+- Workspace cache and lazy-loaded panels reduce duplicate work ✅
+- Accessibility and navigation polish verified in shell and workspace components ✅
 
 ---
 
