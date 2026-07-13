@@ -24,9 +24,9 @@
   "devDependencies": {
     "@kolab/eslint-config": "workspace:*",
     "@kolab/typescript-config": "workspace:*",
-    "@types/node": "^22.10.2",
-    "eslint": "^9.17.0",
-    "typescript": "^5.7.2"
+    "@types/node": "^26.1.1",
+    "eslint": "^10.7.0",
+    "typescript": "^7.0.2"
   },
   "peerDependencies": {
     "@nestjs/common": "^10.0.0",
