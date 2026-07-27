@@ -16,9 +16,9 @@
     "@kolab/sdk": "workspace:*",
     "@kolab/types": "workspace:*",
     "@kolab/ui": "workspace:*",
-    "next": "^15.1.3",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "next": "^16.2.12",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@kolab/eslint-config": "workspace:*",
