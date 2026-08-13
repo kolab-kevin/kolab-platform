@@ -1,8 +1,8 @@
 # PAR-01 — Platform Architecture Review Framework
 
-**Status:** 🚧 **Review in progress** — PAR-01.1 complete  
+**Status:** 🚧 **Review in progress** — PAR-01.1–1.2 complete  
 **Milestone:** PAR-01 (post Creator Studio v1 / Manager Portal v1)  
-**Branch:** `feature/par-01-1-repository-review`  
+**Branch:** `feature/par-01-2-shared-packages-review`  
 **Type:** Architecture review framework (documentation only)  
 **Gating:** Phase 2 initiatives must not start until PAR-01 final outputs are approved
 
@@ -124,9 +124,21 @@ For **each major finding**, record:
 
 Maintain one register during PAR-01 execution (separate working doc or appendix table):
 
-| Risk ID     | Section  | Risk description | Severity                       | Likelihood          | Business impact                          | Mitigation | Timeline                         | Owner        | Status                                |
-| ----------- | -------- | ---------------- | ------------------------------ | ------------------- | ---------------------------------------- | ---------- | -------------------------------- | ------------ | ------------------------------------- |
-| `R-PAR-001` | PAR-01.x | …                | Critical / High / Medium / Low | High / Medium / Low | Revenue, compliance, retention, velocity | …          | Fix now / Before Phase 2 / Later | Role or name | Open / Mitigating / Accepted / Closed |
+| Risk ID     | Section  | Risk description                                        | Severity | Likelihood | Business impact                            | Mitigation                                     | Timeline       | Owner              | Status |
+| ----------- | -------- | ------------------------------------------------------- | -------- | ---------- | ------------------------------------------ | ---------------------------------------------- | -------------- | ------------------ | ------ |
+| `R-PAR-001` | PAR-01.1 | Creator Studio and Manager Portal not in CI             | High     | Medium     | v1 UI regressions merge undetected         | Add Turbo-filtered CI for CS/MP                | Fix now        | Platform Architect | Open   |
+| `R-PAR-002` | PAR-01.1 | Branch docs (`main`) vs workflow (`develop`) conflict   | Medium   | Medium     | Wrong merge targets                        | ADR + update branch-strategy                   | Fix now        | Engineering Lead   | Open   |
+| `R-PAR-003` | PAR-01.1 | Manager Portal absent from compose, CORS, inventory     | Medium   | High       | Local/prod misconfiguration                | Sync README, compose, CORS                     | Fix now        | Platform Architect | Open   |
+| `R-PAR-004` | PAR-01.1 | Partial cycle checks miss portals/packages              | Medium   | Low        | Hidden coupling                            | Expand check:cycles.mjs                        | Before Phase 2 | Platform Architect | Open   |
+| `R-PAR-005` | PAR-01.1 | Stub packages may be assumed production-ready           | Low      | Medium     | Phase 2 plans overestimate capabilities    | Stub registry in PAR-01.2                      | Before Phase 2 | Platform Architect | Open   |
+| `R-PAR-006` | PAR-01.2 | `@kolab/types` monolithic barrel blocks Phase 2 scale   | High     | Medium     | Velocity, merge conflicts, rebuild cost    | Domain subpaths or package split               | Before Phase 2 | Platform Architect | Open   |
+| `R-PAR-007` | PAR-01.2 | Five stub packages compile but provide no capability    | Medium   | High       | False Phase 2 dependency assumptions       | Stub registry; block imports until implemented | Before Phase 2 | Platform Architect | Open   |
+| `R-PAR-008` | PAR-01.2 | `@kolab/ui` runtime coupling to `@kolab/auth`           | Medium   | Medium     | Design system refactors ripple to all apps | UI boundary ADR; headless split                | Before Phase 2 | Platform Architect | Open   |
+| `R-PAR-009` | PAR-01.2 | No tests on types, database, sdk, ui contract packages  | Medium   | High       | Silent API/contract drift                  | Add schema and client tests                    | Before Phase 2 | Engineering Lead   | Open   |
+| `R-PAR-010` | PAR-01.2 | Observability OTel/Sentry exports are placeholders      | Medium   | Medium     | False ops confidence when env vars set     | Implement or remove; document status           | Before Phase 2 | Platform Architect | Open   |
+| `R-PAR-011` | PAR-01.2 | `APP_ALLOWED_ROLES` lacks manager-portal; MP uses admin | High     | Medium     | Incorrect access control for MP            | Add managerPortal role map                     | Fix now        | Platform Architect | Open   |
+| `R-PAR-012` | PAR-01.2 | No package READMEs or ownership matrix                  | Low      | Medium     | Onboarding friction, unclear ownership     | Add packages/README.md                         | Before Phase 2 | Platform Architect | Open   |
+| `R-PAR-013` | PAR-01.2 | All packages 0.0.0 workspace:* — no semver traceability | Low      | Medium     | External publish risk in Phase 2           | Changesets ADR when needed                     | Later          | Engineering Lead   | Open   |
 
 **Severity guide:** Critical = Phase 2 blocked or legal/security exposure; High = major rework likely; Medium = bounded impact; Low = hygiene.
 
@@ -205,6 +217,8 @@ Each subsection below follows: **Review objective · Evidence · Correctness · 
 
 **Scoring dimensions:** Correctness · Scalability · Operability · Changeability · Risk  
 **Required findings:** Strengths · Weaknesses · Risks · Recommendations · Fix now / Before Phase 2 / Later
+
+**Review output:** ✅ [PAR-01.2 Shared Packages Architecture Review](./reviews/par-01-2-shared-packages-architecture.md) — **2.7 / 5 (★★☆☆☆ Needs Work)**
 
 ---
 
@@ -560,35 +574,37 @@ Populate during PAR-01 execution; rank by Phase 2 blocker severity:
 
 ## Execution plan — block-by-block
 
-| Step | Action                           | Output                                  |
-| ---- | -------------------------------- | --------------------------------------- |
-| 1    | Kickoff — assign section owners  | RACI confirmed                          |
-| 2    | Block 1 reviews (PAR-01.1–1.7)   | Section findings + scores (PAR-01.1 ✅) |
-| 3    | Block 1 checkpoint CP-1          | ADR if needed                           |
-| 4    | Block 2 reviews (PAR-01.8–1.13)  | Section findings + risk entries         |
-| 5    | Block 2 checkpoint CP-2          | Security gate                           |
-| 6    | Block 3 reviews (PAR-01.14–1.17) | AI/data/integration findings            |
-| 7    | Block 3 checkpoint CP-3          | Governance gate                         |
-| 8    | Block 4 reviews (PAR-01.18–1.21) | Debt + v2 roadmap draft                 |
-| 9    | Consolidate risk register        | `R-PAR-*` complete                      |
-| 10   | Publish Top 10 + traceability    | All findings linked                     |
-| 11   | Executive review CP-4            | Phase 2 go/no-go                        |
-| 12   | Ratify Platform v2 roadmap       | Gating document published               |
+| Step | Action                           | Output                                               |
+| ---- | -------------------------------- | ---------------------------------------------------- |
+| 1    | Kickoff — assign section owners  | RACI confirmed                                       |
+| 2    | Block 1 reviews (PAR-01.1–1.7)   | Section findings + scores (PAR-01.1 ✅, PAR-01.2 ✅) |
+| 3    | Block 1 checkpoint CP-1          | ADR if needed                                        |
+| 4    | Block 2 reviews (PAR-01.8–1.13)  | Section findings + risk entries                      |
+| 5    | Block 2 checkpoint CP-2          | Security gate                                        |
+| 6    | Block 3 reviews (PAR-01.14–1.17) | AI/data/integration findings                         |
+| 7    | Block 3 checkpoint CP-3          | Governance gate                                      |
+| 8    | Block 4 reviews (PAR-01.18–1.21) | Debt + v2 roadmap draft                              |
+| 9    | Consolidate risk register        | `R-PAR-*` complete                                   |
+| 10   | Publish Top 10 + traceability    | All findings linked                                  |
+| 11   | Executive review CP-4            | Phase 2 go/no-go                                     |
+| 12   | Ratify Platform v2 roadmap       | Gating document published                            |
 
 ---
 
 ## Section reviews
 
-| Section                          | Status      | Output                                                  |
-| -------------------------------- | ----------- | ------------------------------------------------------- |
-| PAR-01.1 Repository Architecture | ✅ Complete | [Review](./reviews/par-01-1-repository-architecture.md) |
-| PAR-01.2 – PAR-01.21             | 📋 Pending  | —                                                       |
+| Section                          | Status      | Output                                                               |
+| -------------------------------- | ----------- | -------------------------------------------------------------------- |
+| PAR-01.1 Repository Architecture | ✅ Complete | [Review](./reviews/par-01-1-repository-architecture.md) — 3.2/5      |
+| PAR-01.2 Shared Packages         | ✅ Complete | [Review](./reviews/par-01-2-shared-packages-architecture.md) — 2.7/5 |
+| PAR-01.3 – PAR-01.21             | 📋 Pending  | —                                                                    |
 
 ---
 
 ## Related documentation
 
 - [PAR-01.1 Repository Architecture Review](./reviews/par-01-1-repository-architecture.md)
+- [PAR-01.2 Shared Packages Architecture Review](./reviews/par-01-2-shared-packages-architecture.md)
 - [System Map](./system-map.md)
 - [Decision Log](./decision-log.md)
 - [Creator Studio Architecture](./creator-studio.md)
