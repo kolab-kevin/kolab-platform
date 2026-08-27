@@ -6,15 +6,15 @@ Central index for product, engineering, and operations documentation. For long-t
 
 ## Current Platform Status
 
-| Field                          | Value                                                                                                 |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| **Current Platform Version**   | Creator Studio v1.0 + Manager Portal v1.0 — **Complete**                                              |
-| **Current Version**            | v0.8 — Manager Portal (shipped) · PAR-01 review gate (active)                                         |
-| **Current Milestone**          | **PAR-01.1** — Repository Architecture Review (complete) · PAR-01.2 next                              |
-| **Current Product Focus**      | [PAR-01.1 Repository Architecture Review](./architecture/reviews/par-01-1-repository-architecture.md) |
-| **Current Active Development** | PAR-01 Block 1 review execution (documentation-led; no stealth refactors)                             |
-| **Current Development Branch** | `feature/par-01-1-repository-review`                                                                  |
-| **Platform Maturity**          | See [Platform Maturity Dashboard](./roadmap/master-roadmap.md#platform-maturity-dashboard)            |
+| Field                          | Value                                                                                                           |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| **Current Platform Version**   | Creator Studio v1.0 + Manager Portal v1.0 — **Complete**                                                        |
+| **Current Version**            | v0.8 — Manager Portal (shipped) · PAR-01 review gate (active)                                                   |
+| **Current Milestone**          | **PAR-01.2** — Shared Packages Review (complete) · PAR-01.3 next                                                |
+| **Current Product Focus**      | [PAR-01.2 Shared Packages Architecture Review](./architecture/reviews/par-01-2-shared-packages-architecture.md) |
+| **Current Active Development** | PAR-01 Block 1 review execution (documentation-led; no stealth refactors)                                       |
+| **Current Development Branch** | `feature/par-01-2-shared-packages-review`                                                                       |
+| **Platform Maturity**          | See [Platform Maturity Dashboard](./roadmap/master-roadmap.md#platform-maturity-dashboard)                      |
 
 ### Operational references
 
@@ -40,6 +40,7 @@ Central index for product, engineering, and operations documentation. For long-t
 | **Business**     | [Business Model](./business/business-model.md)                                                        | Revenue streams and sustainability                         |
 | **Business**     | [Risk Register](./business/risk-register.md)                                                          | Strategic and technical risk tracking                      |
 | **Architecture** | [PAR-01 Platform Architecture Review](./architecture/par-01-platform-architecture-review.md)          | Post-v1 review framework and Phase 2 gate                  |
+| **Architecture** | [PAR-01.2 Shared Packages Review](./architecture/reviews/par-01-2-shared-packages-architecture.md)    | Shared package assessment (complete)                       |
 | **Architecture** | [PAR-01.1 Repository Architecture Review](./architecture/reviews/par-01-1-repository-architecture.md) | Monorepo structure assessment (complete)                   |
 | **Architecture** | [System Map](./architecture/system-map.md)                                                            | Platform layers and relationships                          |
 | **Architecture** | [Decision Log](./architecture/decision-log.md)                                                        | Major architectural decisions (ADR)                        |
@@ -77,6 +78,7 @@ Central index for product, engineering, and operations documentation. For long-t
 - [Architecture overview](./architecture/README.md)
 - [PAR-01 Platform Architecture Review](./architecture/par-01-platform-architecture-review.md)
 - [PAR-01.1 Repository Architecture Review](./architecture/reviews/par-01-1-repository-architecture.md)
+- [PAR-01.2 Shared Packages Architecture Review](./architecture/reviews/par-01-2-shared-packages-architecture.md)
 - [System Map](./architecture/system-map.md)
 - [Identity](./architecture/identity.md)
 - [Recruitment CRM](./architecture/recruitment-crm.md)
@@ -157,7 +159,7 @@ Central index for product, engineering, and operations documentation. For long-t
 1. **Planning a feature** — [Product Principles](./vision/product-principles.md) → [Master Roadmap](./roadmap/master-roadmap.md) → [Developer Workflow](./engineering/developer-workflow.md).
 2. **Building Creator Studio** — [Product brief](./product/creator-studio.md) → [Architecture](./architecture/creator-studio.md) → [UX](./design/creator-studio-ux.md). _(v1.0 complete.)_
 3. **Building Manager Portal** — [Master Roadmap — Manager Portal](./roadmap/master-roadmap.md#manager-portal) → [Release v0.8](./roadmap/releases.md#v08--manager-portal). _(v1.0 complete.)_
-4. **Running PAR-01 architecture review** — [PAR-01 framework](./architecture/par-01-platform-architecture-review.md) → [PAR-01.1 review](./architecture/reviews/par-01-1-repository-architecture.md) → [Master Roadmap — PAR-01](./roadmap/master-roadmap.md).
+4. **Running PAR-01 architecture review** — [PAR-01 framework](./architecture/par-01-platform-architecture-review.md) → [PAR-01.2 review](./architecture/reviews/par-01-2-shared-packages-architecture.md) → next: **PAR-01.3 Backend Architecture**.
 5. **Understanding the platform** — [System Map](./architecture/system-map.md) → [Architecture overview](./architecture/README.md).
 6. **Shipping API work** — [API index](./api/README.md) → [Backend standards](./engineering/backend-standards.md).
 7. **Strategic reviews** — [Platform Maturity Dashboard](./roadmap/master-roadmap.md#platform-maturity-dashboard) → [Business Model](./business/business-model.md).
